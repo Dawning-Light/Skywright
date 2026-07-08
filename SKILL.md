@@ -85,7 +85,9 @@ that run only, not future runs:
   failed subagent, anything the write-up couldn't settle
 
 **Location** — `research/<slug>-<date>.md` at the *current* project's root (`slug`:
-lowercase, hyphen-separated words drawn from the topic; `date`: `YYYY-MM-DD`):
+lowercase, hyphen-separated words drawn from the topic; `date`: `YYYY-MM-DD`, the
+actual current date — check it rather than guessing, since a wrong date also
+breaks the collision check below):
 
 - Create the `research/` folder if it doesn't exist.
 - Tracked in git, not gitignored — a durable artifact, same tier as
