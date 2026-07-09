@@ -147,15 +147,25 @@ own interactive `gemini` sessions run without that flag.
 **Live verification status:** confirmed 2026-07-08 against `gemini` v0.50.0 — the
 response text is the parsed JSON's top-level `response` field (a bare string, not
 nested under `candidates`/`content`). Deny-by-default enforcement was exercised
-with direct evidence, not just an absent side effect: prompted (twice, with
+with comparative evidence, not just an absent side effect: prompted (twice, with
 different phrasing) to write a file under this policy, the model reported it had no
-file-write or shell-execution tool in its available declarations at all — it wasn't
-merely declining, the disallowed tools were never exposed to it — and no file was
-created in either attempt. Comparatively, in the same policy-restricted
-environment, `web_fetch` was confirmed as the real tool name and was successfully
-invoked (`tools.byName.web_fetch` recorded a successful call, and the fetched
-content was quoted back accurately) — proving the Policy Engine differentiates
-allowed from denied tools by rule, not just running tool-free across the board.
+file-write or shell-execution tool in its available declarations at all — it
+stated it wasn't merely declining, that the disallowed tools weren't exposed to
+it (the model's own self-report, not an independently inspected declaration
+manifest) — and no file was created in either attempt. In the same
+policy-restricted environment, `web_fetch` was confirmed as the real tool name
+and was successfully invoked (`tools.byName.web_fetch` recorded a successful
+call, and the fetched content was quoted back accurately) — consistent with the
+Policy Engine filtering denied tools from the model's declarations by rule,
+rather than the model simply running tool-free across the board. This
+attribution is inferred, not conclusively isolated: a true differential control
+run (the identical file-write prompt, same `--skip-trust`, but *without*
+`--policy`) was attempted to rule out the competing explanation that headless
+`-p` mode never exposes file/shell tools regardless of policy — that control run
+required interactive tool-call approval unavailable in headless mode and hung,
+and was abandoned rather than completed. If a future Gemini version changes
+headless tool-exposure behavior, this comparative evidence should be
+re-verified with a completed control run rather than assumed to still hold.
 `google_web_search` was confirmed as a real, invocable tool name — its execution
 was observed starting (`WebSearchToolInvocation.execute`) before hitting the
 Gemini API's free-tier daily quota (HTTP 429, 20 requests/day on
