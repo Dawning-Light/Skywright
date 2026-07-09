@@ -101,9 +101,9 @@ missing `permissions.allow` key, as "not granted yet").
   characters like `"`, `` ` ``, `$`, or `\` inside it.
 
   Once each background call completes, read its output, parse the JSON, and
-  extract the response text — that becomes the subtopic's digest, flowing into
+  extract the `response` field — that becomes the subtopic's digest, flowing into
   synthesis identically to an Agent subagent's digest. (See "Invocation & security
-  mechanics" for the exact field name and any parsing caveats.)
+  mechanics" for verification details and parsing caveats.)
 
 If a subagent or `gemini` call fails, times out, or (for `gemini`) returns
 unparseable JSON, don't block the whole write-up on it, don't silently drop the
@@ -122,6 +122,47 @@ silently pick a side.
 Write the doc to disk (see Output) *before* reporting anything in chat. Then post a
 brief chat-visible summary — a few sentences on the key findings — plus the file
 path. Don't paste the full write-up into chat; the file holds the detail.
+
+## Invocation & security mechanics (Gemini backend)
+
+A policy file ships with this skill at `skills/research/gemini-policy.toml`
+(absolute path `C:/Projects/Orrery/skills/research/gemini-policy.toml`),
+deny-by-default: only `google_web_search` and `web_fetch` are allowed, everything
+else — shell execution, file read/write/edit — is denied regardless of what the
+model attempts.
+
+The durable Bash permission rule (granted to **global** `~/.claude/settings.json`,
+not project-scoped, since this skill must work from any project directory) is
+scoped to this exact command shape:
+
+```
+Bash(gemini -o json --policy "C:/Projects/Orrery/skills/research/gemini-policy.toml" --skip-trust -p *)
+```
+
+`--policy` is a runtime flag (confirmed via `gemini --help`, not a paraphrase): it
+loads additional policy files for that invocation only — it doesn't touch
+`~/.gemini/policies/` or any other on-disk default, and doesn't affect the owner's
+own interactive `gemini` sessions run without that flag.
+
+**Live verification status:** confirmed 2026-07-08 against `gemini` v0.50.0 — the
+response text is the parsed JSON's top-level `response` field (a bare string, not
+nested under `candidates`/`content`). Deny-by-default enforcement was exercised
+with direct evidence, not just an absent side effect: prompted (twice, with
+different phrasing) to write a file under this policy, the model reported it had no
+file-write or shell-execution tool in its available declarations at all — it wasn't
+merely declining, the disallowed tools were never exposed to it — and no file was
+created in either attempt. Comparatively, in the same policy-restricted
+environment, `web_fetch` was confirmed as the real tool name and was successfully
+invoked (`tools.byName.web_fetch` recorded a successful call, and the fetched
+content was quoted back accurately) — proving the Policy Engine differentiates
+allowed from denied tools by rule, not just running tool-free across the board.
+`google_web_search` was confirmed as a real, invocable tool name — its execution
+was observed starting (`WebSearchToolInvocation.execute`) before hitting the
+Gemini API's free-tier daily quota (HTTP 429, 20 requests/day on
+`gemini-3.5-flash`) — an external quota limit, not a policy or tooling failure, but
+a full successful search round-trip was not confirmed live on this date. Re-confirm
+`google_web_search` end-to-end once quota resets if this residual gap needs
+closing.
 
 ## Output
 
