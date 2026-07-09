@@ -1,6 +1,6 @@
 ---
 name: research
-description: Use when asked to research a topic using the internet and produce a written findings doc — e.g. "research X", "look into X and write it up", "find out about X". Not for a narrow single-fact lookup the user clearly wants answered inline rather than saved to a file, and not for delegating research to another AI CLI (e.g. Gemini), automatic folder-drop pickup of research tasks, or checking API rate limits before starting — none of that is implemented.
+description: Use when asked to research a topic using the internet and produce a written findings doc — e.g. "research X", "look into X and write it up", "find out about X". Not for a narrow single-fact lookup the user clearly wants answered inline rather than saved to a file, and not for automatic folder-drop pickup of research tasks or checking API rate limits before starting — neither is implemented. Thorough/deep-dive runs may delegate subtopic research to the `gemini` CLI instead of parallel `Agent` subagents, when `GEMINI_API_KEY` is set and `gemini` is on PATH.
 ---
 
 # research
@@ -8,10 +8,10 @@ description: Use when asked to research a topic using the internet and produce a
 ## Overview
 
 Researches a topic using web tools (`WebSearch`/`WebFetch`, plus parallel `Agent`
-subagents at higher depth) and writes the findings to a durable markdown doc in the
-current project's `research/` folder. Every run is a fresh investigation — no
-folder-watching, no delegation to another AI CLI, no rate-limit checking before
-starting. Works from any project directory, not just this repo.
+subagents or the `gemini` CLI at higher depth) and writes the findings to a durable
+markdown doc in the current project's `research/` folder. Every run is a fresh
+investigation — no folder-watching, no rate-limit checking before starting. Works
+from any project directory, not just this repo.
 
 ## When to Use
 
@@ -20,7 +20,6 @@ starting. Works from any project directory, not just this repo.
 **Not for:**
 - A narrow factual lookup the user clearly wants answered inline, not saved to a
   file — if unsure which they want, ask during the clarifying round below.
-- Delegating research to another AI CLI/agent (e.g. Gemini) — not implemented.
 - Automatic/folder-drop pickup of research tasks — explicit request only.
 - Checking usage/rate limits before starting — not implemented.
 
@@ -40,10 +39,41 @@ session. Establish:
     independently and in parallel.
   - **deep dive** — same as thorough, with more subtopics and/or more sources
     pursued per subtopic.
+- **Backend for thorough/deep dive** (asked only when relevant, after depth is
+  chosen): if depth is thorough or deep dive, check whether `GEMINI_API_KEY` is set
+  in the environment and `gemini` is on PATH.
+  - Either missing → proceed with Agent subagents; don't ask, don't mention it —
+    this is the expected common case, not a failure.
+  - Both present → ask one more question: use Gemini or Agent subagents for this
+    run's subtopic research? Whatever's picked applies to the whole run, not
+    per-subtopic.
 
 No hard cap on question count, but don't over-interview — keep it a short exchange.
 
-### 2. Execution (depth-gated)
+### 2. First-time Gemini permission setup (conditional)
+
+Only relevant if the question above was asked and answered "Gemini." Before
+dispatching anything, check whether the durable Bash permission rule from
+"Invocation & security mechanics" (below) is already present in
+`~/.claude/settings.json`'s `permissions.allow` array (treat a missing file, or a
+missing `permissions.allow` key, as "not granted yet").
+
+- **Already granted** → skip straight to Execution.
+- **Not yet granted**:
+  - Explain what's needed: the checked-in deny-by-default policy file at
+    `skills/research/gemini-policy.toml`, plus a Bash permission rule scoped to the
+    exact invocation shape in "Invocation & security mechanics" — never
+    `--approval-mode yolo`.
+  - Ask whether to set it up now. Use the `update-config` skill to make the
+    settings change, following its confirmation flow — never write the rule
+    silently.
+  - **Declined** → fall back to Agent subagents for this run only. The offer
+    returns on a future Gemini-eligible run; declining once doesn't permanently
+    disable the feature.
+  - **Accepted** → once `update-config` confirms the rule is written, proceed to
+    Execution with Gemini.
+
+### 3. Execution (depth-gated)
 
 - **Quick** — run inline in the main conversation. A handful of direct
   `WebSearch`/`WebFetch` calls. No subagents.
@@ -54,18 +84,40 @@ No hard cap on question count, but don't over-interview — keep it a short exch
 - **Deep dive** — same subagent-per-subtopic pattern as thorough, but with more
   subtopics and/or more sources pursued per subagent. Judge the right count at run
   time based on the topic — there's no fixed number.
+- **Thorough / Deep dive, Gemini backend** (chosen in the clarifying round and set
+  up per §2 above) — break the topic into subtopics exactly as the Agent-subagent
+  path would. For each subtopic, dispatch one `gemini` call via a **background**
+  `Bash` call (`run_in_background: true`) so subtopics run in parallel, mirroring
+  the Agent-subagent fan-out:
 
-If a subagent fails or times out (thorough/deep dive), don't block the whole
-write-up on it and don't silently drop the subtopic — note the gap explicitly in
-Open Questions (see Output).
+  ```
+  gemini -o json --policy "C:/Projects/Orrery/skills/research/gemini-policy.toml" --skip-trust -p '<subtopic prompt>'
+  ```
 
-### 3. Synthesis
+  **Quote the subtopic prompt safely before interpolating it**: replace every `'`
+  in the prompt text with `'\''`, then wrap the whole result in single quotes. Use
+  single quotes (not double quotes) for this argument — the prompt text is
+  arbitrary and a double-quoted form is vulnerable to shell injection from
+  characters like `"`, `` ` ``, `$`, or `\` inside it.
 
-Fold every result — direct findings (quick) or subagents' digests (thorough/deep
-dive) — into one write-up following the Output template below. Contradictory
-findings across sources go into Open Questions/caveats; never silently pick a side.
+  Once each background call completes, read its output, parse the JSON, and
+  extract the response text — that becomes the subtopic's digest, flowing into
+  synthesis identically to an Agent subagent's digest. (See "Invocation & security
+  mechanics" for the exact field name and any parsing caveats.)
 
-### 4. Write and report
+If a subagent or `gemini` call fails, times out, or (for `gemini`) returns
+unparseable JSON, don't block the whole write-up on it, don't silently drop the
+subtopic, and don't retry the subtopic on the other backend — note the gap
+explicitly in Open Questions (see Output).
+
+### 4. Synthesis
+
+Fold every result — direct findings (quick) or subagents'/`gemini`'s digests
+(thorough/deep dive) — into one write-up following the Output template below.
+Contradictory findings across sources go into Open Questions/caveats; never
+silently pick a side.
+
+### 5. Write and report
 
 Write the doc to disk (see Output) *before* reporting anything in chat. Then post a
 brief chat-visible summary — a few sentences on the key findings — plus the file
@@ -105,6 +157,9 @@ breaks the collision check below):
 | Contradictory findings across sources | Capture in Open Questions/caveats — don't silently pick a side |
 | `research/` folder missing | Create it |
 | Same slug+date already exists | Append a numeric suffix, don't overwrite |
+| `gemini` call fails, times out, or returns unparseable JSON (Gemini backend) | Same as an Agent subagent failing — note the gap in Open Questions, don't block the write-up, don't silently drop the subtopic, don't retry on the other backend |
+| `GEMINI_API_KEY` unset or `gemini` not on PATH | Skip the backend-choice question; use Agent subagents — expected, not an error |
+| Gemini permission rule not yet granted and setup declined | Fall back to Agent subagents for this run only |
 
 ## Common Mistakes
 
@@ -117,3 +172,12 @@ breaks the collision check below):
   instead.
 - Overwriting a same-day prior doc on the same topic instead of appending a
   numeric suffix.
+- Asking the backend-choice question when `GEMINI_API_KEY`/`gemini` aren't both
+  available — check first, ask only when genuinely eligible.
+- Writing the Gemini permission rule to `~/.claude/settings.json` silently instead
+  of confirming via the `update-config` skill.
+- Using `--approval-mode yolo` instead of the checked-in policy file — never bypass
+  the Policy Engine.
+- Double-quoting the subtopic prompt when building the `gemini` command, or
+  otherwise skipping the single-quote escaping step — both are shell-injection
+  risks.
