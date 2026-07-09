@@ -1,0 +1,14 @@
+[[rule]]
+toolName = "google_web_search"
+decision = "allow"
+priority = 100
+
+[[rule]]
+toolName = "web_fetch"
+decision = "allow"
+priority = 100
+
+[[rule]]
+toolName = "*"
+decision = "deny"
+priority = 10
