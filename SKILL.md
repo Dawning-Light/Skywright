@@ -27,11 +27,20 @@ directory, not just this repo.
 
 ### 1. Clarifying round
 
-Iterative, one question at a time — mirrors `superpowers:brainstorming`'s style, not
-a fixed intake form. Converge quickly; this is orientation, not a full brainstorming
-session. Establish:
+Adaptive, one question at a time — mirrors `superpowers:brainstorming`'s style.
+State once, at the very start of the round, that the owner can say "just dive in"
+at any point to cut the round short; the skill then fills in best-guess defaults
+for anything left unasked. Don't repeat this reminder on later questions.
 
+No fixed sequence — ask whichever of the following is most useful to ask next
+given what's already in the request, skipping anything the initial request
+already answered:
+
+- **Purpose** — what the findings are for, or what decision they inform.
 - **Scope/angle** — narrow an ambiguous or overly broad topic.
+- **Sub-questions** — the specific things that matter most within the topic.
+- **Prior context** — what the owner already knows, and any docs/sources the
+  write-up should build on rather than re-derive.
 - **Depth for this run** — exactly one of:
   - **quick** — a handful of direct searches; best for a narrow, single-fact-shaped
     ask.
@@ -40,7 +49,9 @@ session. Establish:
   - **deep dive** — same as thorough, with more subtopics and/or more sources
     pursued per subtopic.
 
-No hard cap on question count, but don't over-interview — keep it a short exchange.
+Applies at every depth, including quick. No hard cap on question count, but the
+round itself should stay a short exchange — it's the depth of the questions that's
+increasing, not the length of the round.
 
 ### 2. Execution (depth-gated)
 
@@ -108,8 +119,11 @@ breaks the collision check below):
 
 ## Common Mistakes
 
-- Skipping the clarifying round and guessing depth/scope — always confirm both,
-  even briefly.
+- Skipping the clarifying round and guessing purpose/scope/depth instead of asking
+  — the round was deepened because shallow orientation produced write-ups that
+  missed what was actually wanted.
+- Repeating the "just dive in" skip-ahead reminder on every question instead of
+  stating it once at the start of the round.
 - Using subagents for a "quick" run, or running "thorough"/"deep dive" inline
   without subagents — depth determines execution mode, not the other way around.
 - Pasting the full write-up into chat instead of a short summary plus file path.
