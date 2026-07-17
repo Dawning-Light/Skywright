@@ -7,8 +7,8 @@ description: Use when asked to research a topic using the internet and produce a
 
 ## Overview
 
-Researches a topic using web tools (`WebSearch`/`WebFetch`, plus parallel `Agent`
-subagents at higher depth) and writes the findings to a durable markdown doc in the
+Researches a topic using the host's web-research tools, plus parallel subagents at
+higher depth, and writes the findings to a durable markdown doc in the
 current project's `research/` folder. Every run is a fresh investigation — no
 folder-watching, no rate-limit checking before starting. Works from any project
 directory, not just this repo.
@@ -55,11 +55,10 @@ increasing, not the length of the round.
 
 ### 2. Execution (depth-gated)
 
-- **Quick** — run inline in the main conversation. A handful of direct
-  `WebSearch`/`WebFetch` calls. No subagents.
-- **Thorough** — break the topic into subtopics. Dispatch one parallel `Agent`
-  (general-purpose) per subtopic; each researches independently via
-  `WebSearch`/`WebFetch` and reports back a digest. This keeps heavy search output
+- **Quick** — run inline in the main conversation. A handful of direct web-research
+  calls. No subagents.
+- **Thorough** — break the topic into subtopics. Dispatch one parallel general-purpose
+  subagent per subtopic; each researches independently and reports back a digest. This keeps heavy search output
   out of the main conversation's context.
 - **Deep dive** — same subagent-per-subtopic pattern as thorough, but with more
   subtopics and/or more sources pursued per subagent. Judge the right count at run
