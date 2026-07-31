@@ -9,7 +9,7 @@ description: Use when asked to research a topic using the internet and produce a
 
 Researches a topic using the host's web-research tools, plus parallel subagents at
 higher depth, and writes the findings to a durable markdown doc in the
-current project's `research/` folder. Every run is a fresh investigation — no
+current project's `docs/research/` folder. Every run is a fresh investigation — no
 folder-watching, no rate-limit checking before starting. Works from any project
 directory, not just this repo.
 
@@ -94,12 +94,12 @@ that run only, not future runs:
 - Open questions / caveats — unresolved or contradictory findings, gaps from a
   failed subagent, anything the write-up couldn't settle
 
-**Location** — `research/<slug>-<date>.md` at the *current* project's root (`slug`:
-lowercase, hyphen-separated words drawn from the topic; `date`: `YYYY-MM-DD`, the
-actual current date — check it rather than guessing, since a wrong date also
-breaks the collision check below):
+**Location** — `docs/research/<slug>-<date>.md` at the *current* project's root
+(`slug`: lowercase, hyphen-separated words drawn from the topic; `date`:
+`YYYY-MM-DD`, the actual current date — check it rather than guessing, since a
+wrong date also breaks the collision check below):
 
-- Create the `research/` folder if it doesn't exist.
+- Create the `docs/research/` folder if it doesn't exist.
 - Tracked in git, not gitignored — a durable artifact, same tier as
   `docs/superpowers/specs/` and `plans/` in this repo.
 - Docs accumulate indefinitely; never prune or overwrite a prior run's doc.
@@ -113,7 +113,7 @@ breaks the collision check below):
 | No useful results found (obscure/niche topic) | Say so plainly in Open Questions/caveats — don't fabricate findings to fill the template |
 | A subagent fails or times out (thorough/deep dive) | Note the gap explicitly in Open Questions; don't block the write-up, don't silently drop the subtopic |
 | Contradictory findings across sources | Capture in Open Questions/caveats — don't silently pick a side |
-| `research/` folder missing | Create it |
+| `docs/research/` folder missing | Create it |
 | Same slug+date already exists | Append a numeric suffix, don't overwrite |
 
 ## Common Mistakes
