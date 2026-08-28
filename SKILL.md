@@ -31,7 +31,7 @@ fix and are not negotiable at run time.
 
 ### 1. Clarifying round
 
-Adaptive, one question at a time — mirrors `superpowers:brainstorming`'s style.
+Adaptive, one question at a time.
 State once, at the very start of the round, that the owner can say "just dive in"
 at any point to cut the round short; the skill then fills in best-guess defaults
 for anything left unasked. Don't repeat this reminder on later questions.
@@ -148,7 +148,7 @@ wrong date also breaks the collision check below):
 
 - Create the `docs/research/` folder if it doesn't exist.
 - Tracked in git, not gitignored — a durable artifact, same tier as
-  `docs/superpowers/specs/` and `plans/` in this repo.
+  `docs/traverse/specs/` and `plans/` in this repo.
 - Docs accumulate indefinitely; never prune or overwrite a prior run's doc.
 - Naming collision (same slug+date, e.g. two runs on the same topic same day):
   append a numeric suffix (`-2`, `-3`, ...) rather than overwriting.
