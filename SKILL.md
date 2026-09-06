@@ -13,6 +13,11 @@ reads is defined once, by the skill that writes it, and this file names that
 skill rather than restating the fields. It defines exactly one shape: the
 critique note.
 
+A **unit** is the thing a critic is pointed at: one pillar record, one mechanic
+entry, or one GDD section. Everything below is measured in units — what a
+dispatch carries, what the budget counts, what a critique note is filed
+against.
+
 The point of dispatching rather than critiquing inline is that a session which
 authored a design validates it instead of finding its flaws. Every rule under
 **The dispatch contract** exists to keep the critic away from the reasoning
@@ -47,7 +52,10 @@ persona knows about how to critique.
 This table is the persona list. A persona is added by adding a row and its
 reference file; nothing else in this skill changes, because every rule below
 is written against "each persona in the table" rather than against any
-persona by name.
+persona by name. The skillset's design names three personas — a
+mechanics-literalist, a player-motivation critic, and a pillar-fit critic —
+and each lands here as one more row as its reference file is written, so the
+table is the current set rather than the intended one.
 
 **Subsetting.** An invocation may name a subset of the personas in the table
 and dispatch only those — a targeted follow-up pass after addressing an
@@ -70,9 +78,8 @@ are "dispatch an agent", both succeed silently, and a fork produces a critique
 that reads as independent while having read exactly the material the critic is
 supposed to be blind to.
 
-**Exactly one unit per dispatch.** A unit is one pillar record, one mechanic
-entry, or one GDD section — never the whole design, and never two units in one
-prompt. Each persona critiques **one unit at a time** because independent LLM
+**Exactly one unit per dispatch.** Never the whole design, and never two units
+in one prompt. Each persona critiques **one unit at a time** because independent LLM
 critique degrades past a few thousand characters of input and under-identifies
 weaknesses relative to a human reviewer (the spec's Problem §2). One unit per
 dispatch is what keeps every individual read inside the length the research
@@ -151,11 +158,15 @@ enables is precisely where the sycophancy failure would otherwise reopen.
 ## The dispatch budget
 
 **Hard cap: 9 agents per invocation.** Every persona-times-unit pair is one
-agent, so the cap is on their product, not on either factor alone. Nine is
-three personas over three units — the smallest cap that still lets a full
-default pass cover more than a single unit — and it sits one above
-`research`'s absolute ceiling of 8 for a comparably bounded, deliberately
-non-open-ended fan-out.
+agent, so the cap is on their product, not on either factor alone. Two things
+fix the number at nine. It sits at the order of magnitude `research` already
+established for a deliberately bounded fan-out — that skill's hardest ceiling
+is 8 — rather than at whatever number a given project's contents would ask
+for. And it divides evenly by the full persona set of three, so a default pass
+spends the whole budget on three units with nothing stranded: a cap of 8 would
+leave one agent unusable by a full pass, and a cap of 6 would hold a default
+pass to two units, thin for a round-trip that asks the owner to read every
+note it produces.
 
 Before the first dispatch, multiply the chosen persona count by the chosen
 unit count. If the product exceeds 9, stop and put the arithmetic to the
