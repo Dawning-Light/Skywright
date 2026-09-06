@@ -48,14 +48,16 @@ persona knows about how to critique.
 | Persona | Framework | Reference file |
 | --- | --- | --- |
 | `mechanics-literalist` | Björk & Holopainen's game design pattern catalog, and the Game Ontology Project taxonomy | `references/mechanics-literalist.md` |
+| `player-motivation` | Quantic Foundry's twelve validated player motivations | `references/player-motivation.md` |
+| `pillar-fit` | Jesse Schell's lens method, and design-pillars-as-filter practice | `references/pillar-fit.md` |
 
 This table is the persona list. A persona is added by adding a row and its
 reference file; nothing else in this skill changes, because every rule below
 is written against "each persona in the table" rather than against any
 persona by name. The skillset's design names three personas — a
 mechanics-literalist, a player-motivation critic, and a pillar-fit critic —
-and each lands here as one more row as its reference file is written, so the
-table is the current set rather than the intended one.
+and all three now have a row and a reference file, so the table is the full
+intended set.
 
 **Subsetting.** An invocation may name a subset of the personas in the table
 and dispatch only those — a targeted follow-up pass after addressing an
@@ -112,8 +114,8 @@ What travels depends on the unit type:
 | Unit type | What travels with it |
 | --- | --- |
 | Pillar record, `design/pillars/<slug>.md` | that file's full text; `design/concept.md`'s body |
-| Mechanic entry, `design/mechanics/<slug>.md` | that file's full text; the taxonomy index (below); the `title` and `## Description` only of its `parent` and of each entry in its `children`; the nodes and connections of `design/economy.md` that the entry's own text names |
-| GDD section, a section of `design/gdd.md` | that section's text; the record it addresses, by the path or identifier the section names (`game-gdd` guarantees every rendered section names its record) |
+| Mechanic entry, `design/mechanics/<slug>.md` | that file's full text; the taxonomy index (below); the `title` and `## Description` only of its `parent` and of each entry in its `children`; the nodes and connections of `design/economy.md` that the entry's own text names; every `design/pillars/<slug>.md` record whose `status` is `approved`, in full |
+| GDD section, a section of `design/gdd.md` | that section's text; the record it addresses, by the path or identifier the section names (`game-gdd` guarantees every rendered section names its record); every `design/pillars/<slug>.md` record whose `status` is `approved`, in full |
 
 **The taxonomy index** is every mechanic entry's `name` and `parent`, and
 nothing else — two fields per entry, no titles, no descriptions, no bodies. It
@@ -127,6 +129,14 @@ is not.
 Related entries travel as title-plus-description rather than in full, and the
 economy graph travels only as the nodes the unit names, for that same reason —
 the bound on the read is what preserves the critique.
+
+**Approved pillar records travel in full**, unlike related mechanic entries,
+because a pillar-fit check run against a trimmed pillar cannot read the
+keep-or-cut test the check exists to apply — a title alone gives nothing to
+run the unit against. This still holds the same bound: `game-pillars` guides
+a project toward 2-4 approved pillars rather than refusing a larger count, so
+in the ordinary case "every approved pillar record" is a small, fixed-shape
+read, not a directory.
 
 **Every check a persona runs is runnable against this payload.** The table
 above is the single authoritative statement of what a persona holds; a persona
