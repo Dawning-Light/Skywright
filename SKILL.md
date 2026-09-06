@@ -102,12 +102,11 @@ Each **node** has:
 - `value_progression` — optional. An object with fields `{ model,
   coefficients, domain, fit }`, holding a fitted or chosen curve for how this
   node's value changes (for example, a cost-by-level curve). This skill
-  declares the field and its four sub-fields; it does not compute them. A
-  later procedure (this same skill, extended by a companion script) reads
-  this node's raw value series, fits a curve to it, and writes the result
-  back into `model`/`coefficients`/`domain`/`fit` — that fitting math is not
-  part of this file. Until that procedure runs, `value_progression` is
-  simply absent from a node that hasn't had it computed.
+  declares the field and its four sub-fields; it does not compute them. The
+  procedure under **Fitting a value progression** below computes them with a
+  companion script, and that fitting math is not part of this file. Until
+  that procedure runs, `value_progression` is simply absent from a node that
+  hasn't had it computed.
 
 Each **connection** has:
 
@@ -139,6 +138,58 @@ Body: prose notes keyed by node `id` — one subsection per node worth
 annotating, for context that doesn't belong in the frontmatter (why a rate is
 what it is, a balancing concern still open, a design intent behind a
 `gate`).
+
+## Fitting a value progression
+
+A node whose value changes over levels or over time is elicited as a raw
+series — the owner names a cost at level 1, then at level 2, and so on — and a
+list of numbers is not yet a `value_progression`. Turning one into the other
+is a step this skill performs with a companion script,
+`scripts/curve-fit.sh`, rather than by reasoning about the numbers in prose.
+Choosing a curve by eye is exactly the kind of judgement that reads as
+confident and lands wrong, and an owner who later asks "why this curve?"
+deserves a coefficient of determination rather than a recollection.
+
+The procedure, once per node that has a value series:
+
+1. Collect that node's series from what the owner gave you, as x/y pairs — x
+   the level, tier, or time index the value is indexed by, y the value at it.
+2. Run the script's `fit` verb over the series. If the owner has already said
+   what shape the progression should be, pass that model. If the shape is
+   itself the open question, pass `auto` and let the fit choose among the
+   families the data admits.
+3. Write the fields the script prints into that node's `value_progression`
+   object, unchanged. They are named to match the four sub-fields declared
+   above, so the mapping is one to one and needs no translation — and the
+   reported fit travels with the coefficients, so a later reader can see how
+   well the curve actually described the series rather than trusting that it
+   did.
+4. If the script refuses, do not fit the curve by hand and do not quietly
+   substitute a shape it rejected. A refusal means the series does not
+   support the model asked of it. Report it to the owner, and either collect
+   more points or settle which shape they meant.
+
+The script's contract — its verbs, its options, the families it fits, and the
+constraint each one refuses on — lives in its own usage text; run it with no
+arguments to read it. That contract is deliberately not restated here: two
+copies of it would drift, and the copy in this file is the one nobody runs.
+For the same reason no curve formula appears anywhere in this file. The
+arithmetic lives in exactly one place, and this skill reaches it only by
+calling the script.
+
+The script reads and writes no files at all. It takes points as arguments and
+prints numbers; opening `design/economy.md`, finding the node, and editing
+its frontmatter are this procedure's work, not the script's. That split is
+deliberate — it keeps one parser for the economy file rather than two, and it
+keeps the script's own behaviour testable without a game project to point it
+at.
+
+The same script carries a second verb, `ev`, for the expected value of a
+probability table — a drop table, a randomised reward, a chance-gated `gate`.
+Reach for it when a node's value is a distribution rather than a series, and
+record what it prints in that node's prose notes: `value_progression` holds a
+curve over a domain, not a single expected number, so an expected value does
+not belong in that field.
 
 ## Accommodated future extensions (not implemented here)
 
