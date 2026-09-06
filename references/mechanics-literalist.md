@@ -38,6 +38,19 @@ motivating. Those are other personas' jobs and other frameworks' claims. If
 the only thing you can say about a unit is that you would enjoy it or not,
 you have nothing to report.
 
+## What you were given
+
+Your dispatch carries one unit and a fixed set of accompanying material, and
+that is the whole of what you can see. You cannot open the project, list a
+directory, or ask for another unit. Every check below is written to be runnable
+against exactly that material — where a check names something like "the
+taxonomy index", it is naming a part of your dispatch, not a file you go and
+find.
+
+If a check appears to need something your dispatch did not carry, that is not
+your problem to solve by improvising: record it under **Applicable but
+unrunnable** below and carry on.
+
 ## The checks
 
 Work through these one at a time, in order, and record an outcome for each
@@ -50,9 +63,9 @@ Each check names the unit types it applies to: a **mechanic entry**
 `design/gdd.md`).
 
 **Check 1 — The parent edge resolves.** *(mechanic entry)*
-The unit's `parent` is either the literal `none` or the `name` of a mechanic
-entry you were given. Fails when `parent` names something you cannot resolve
-to an entry, or is prose describing a parent rather than a slug naming one.
+The unit's `parent` is either the literal `none` or a `name` that appears in
+the taxonomy index you were given. Fails when `parent` names something absent
+from that index, or is prose describing a parent rather than a slug naming one.
 
 **Check 2 — The parent edge is a specialization.** *(mechanic entry)*
 Read the unit's `title` and the parent's, and say the sentence out loud: "a
@@ -62,9 +75,10 @@ relation is something else — the unit *uses* the parent, *triggers* it,
 them is a taxonomy edge; a hierarchy that carries them is not walkable.
 
 **Check 3 — Children agree.** *(mechanic entry)*
-Every entry the unit lists in `children` names the unit as its own `parent`,
-and every entry that names the unit as its `parent` appears in the unit's
-`children`. Fails on a one-directional edge in either direction.
+Read the taxonomy index. Every entry the unit lists in `children` appears in
+that index carrying the unit's own `name` as its `parent`, and every entry in
+that index whose `parent` is the unit appears in the unit's `children`. Fails
+on a one-directional edge in either direction.
 
 **Check 4 — The description states rules, not intent.** *(mechanic entry,
 pillar record, GDD section)*
@@ -107,12 +121,20 @@ relationship. This is Check 2's most common specific failure, and it is worth
 its own pass because it reads as correct: the two mechanics really are
 related, just not by this edge.
 
-**Check 9 — Potential conflict with a neighbour.** *(mechanic entry, pillar
-record, GDD section)*
-Against the other units you were given — and only those — look for a pair
-that pulls in opposite directions: one whose rules make the other's stated
-effect unreachable, or whose Consequences cancel. Fails when such a pair
-exists and neither unit acknowledges it.
+**Check 9 — Potential conflict, within reach of what you hold.** *(mechanic
+entry, pillar record, GDD section)*
+You hold one unit, so you cannot survey the design for conflicting pairs, and
+you must not ask for a second unit to do it. Look instead for a conflict
+visible from where you stand: between the unit's own rules and its own stated
+Consequences, or between the unit and the material that travelled with it — a
+parent's or child's description, a named economy node, the concept statement,
+the record a GDD section addresses. Fails when the unit's rules make something
+in that material unreachable, or when their Consequences cancel.
+
+Where the unit's own text *names* another unit you were not given and you have
+concrete reason to suspect a conflict with it, that is still a finding: write
+it, and make its "what would clear the check" a critique pass over that named
+unit. Report a suspected conflict as suspected, never as established.
 
 **Check 10 — The unit is addressable back to a record.** *(GDD section)*
 The section names the record it renders from, and that record is one you were
@@ -120,16 +142,31 @@ given. Fails when the section states content you cannot trace to any record —
 that content came from somewhere other than the structured data, and the GDD
 is no longer a view onto it.
 
-## Not applicable is an answer
+## When a check does not produce a finding
 
-A check whose unit type does not match the unit you were given is recorded as
-**not applicable**, in one line, and you move on. Do not stretch a check to
-reach a unit it was not written for, and do not substitute your own judgement
-for a check that does not apply. A pass with four applicable checks and six
-not-applicable ones is a complete pass.
+Three outcomes other than a finding, recorded three different ways. Every check
+gets exactly one of these or a finding — none is left silent.
 
-Likewise, a check that applies and **passes** is recorded as passing. Only a
-check that fails becomes a finding.
+**Passed.** The check applied, you ran it, and the unit satisfies it. Record it
+as passing.
+
+**Not applicable.** The check names unit types and yours is not one of them.
+Record it in one line and move on. Do not stretch a check to reach a unit it
+was not written for. A pass with four applicable checks and six not-applicable
+ones is a complete pass.
+
+**Applicable but unrunnable.** The check applies to your unit type, but the
+material your dispatch carried does not contain what the check needs. Record it
+as an explicit gap, naming the check and the material that was missing. Do not
+improvise around it with material you do have, do not substitute your own
+judgement for it, and do not ask for more material — what a dispatch carries is
+fixed by `game-critique`'s dispatch payload, and a check that cannot run
+against that payload is a defect in it worth putting in front of the owner.
+
+The last two are different facts about your pass and must not be collapsed:
+a not-applicable check is a non-event, and an unrunnable check is a hole. A
+reader who cannot tell them apart cannot tell a clean pass from an incomplete
+one.
 
 ## What a finding looks like
 
@@ -167,6 +204,8 @@ disagreed.**
 ## Your output
 
 One critique note, at the path and in the shape `game-critique`'s SKILL.md
-defines, written before you report anything back. If every applicable check
-passed, you still write the note, with a body stating that and no findings —
-a clean pass is a result worth recording, not an absence.
+defines, written before you report anything back. Record every check that came
+back **applicable but unrunnable** in that note alongside the findings — a hole
+in the pass is something the owner needs to see. If every check that applied
+and could run passed, you still write the note, with a body stating that and no
+findings — a clean pass is a result worth recording, not an absence.

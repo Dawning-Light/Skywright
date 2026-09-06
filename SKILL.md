@@ -98,19 +98,37 @@ session dispatches personas; personas are leaves. The ban lives inside each
 persona's own reference file, which is where the dispatched agent will
 actually read it.
 
-**Each dispatch carries the unit, what is needed to judge it, and nothing
-else.** What travels depends on the unit type:
+**The dispatch payload — the one and only definition of what a persona can
+see.** Each dispatch carries the unit, the material below, and nothing else.
+What travels depends on the unit type:
 
 | Unit type | What travels with it |
 | --- | --- |
 | Pillar record, `design/pillars/<slug>.md` | that file's full text; `design/concept.md`'s body |
-| Mechanic entry, `design/mechanics/<slug>.md` | that file's full text; the `title` and `## Description` only of its `parent` and of each entry in its `children`; the nodes and connections of `design/economy.md` that the entry's own text names |
+| Mechanic entry, `design/mechanics/<slug>.md` | that file's full text; the taxonomy index (below); the `title` and `## Description` only of its `parent` and of each entry in its `children`; the nodes and connections of `design/economy.md` that the entry's own text names |
 | GDD section, a section of `design/gdd.md` | that section's text; the record it addresses, by the path or identifier the section names (`game-gdd` guarantees every rendered section names its record) |
 
+**The taxonomy index** is every mechanic entry's `name` and `parent`, and
+nothing else — two fields per entry, no titles, no descriptions, no bodies. It
+travels with a mechanic entry because whether a `parent` edge resolves to an
+entry that exists, and whether `parent` and `children` agree in both
+directions, are properties of the taxonomy's *shape* that cannot be read off a
+single entry. It stays two fields wide for the same reason one unit per
+dispatch is the rule: a list of slugs is a bounded read, a directory of entries
+is not.
+
 Related entries travel as title-plus-description rather than in full, and the
-economy graph travels only as the nodes the unit names, for the same reason
-one unit per dispatch is the rule: the bound on the read is what preserves the
-critique.
+economy graph travels only as the nodes the unit names, for that same reason —
+the bound on the read is what preserves the critique.
+
+**Every check a persona runs is runnable against this payload.** The table
+above is the single authoritative statement of what a persona holds; a persona
+reference file states checks and never states its own data requirements. A new
+check that needs material this table does not carry is added to this table
+first — the payload widens by an edit here, never by an assumption there. A
+check that would need a **second unit** is not addable at all, because one unit
+per dispatch is the rule it would break; such a check is rewritten to run
+against what the payload does carry, and to report what it could not reach.
 
 **One note per pass.** Each persona writes exactly one critique note per
 dispatch, at the path and in the shape defined below.
@@ -190,9 +208,12 @@ Frontmatter:
   has been withdrawn under the re-grounding rule above.
 
 Body: one finding per check that failed, each naming the check it came from,
-in the finding shape that persona's reference file defines. A pass in which
-every applicable check passed still writes its note, with a body stating that
-and no findings — a clean pass is a recorded result, not a missing file.
+in the finding shape that persona's reference file defines, plus any check the
+persona recorded as applicable but unrunnable against its payload. A pass in
+which every check that applied and could run passed still writes its note, with
+a body stating that and no findings — a clean pass is a recorded result, not a
+missing file. An unrunnable check reported here is a defect in the dispatch
+payload above, not in the design under review; take it to the payload table.
 
 ## Procedure
 
@@ -204,13 +225,13 @@ and no findings — a clean pass is a recorded result, not a missing file.
 3. **Check the budget.** Multiply persona count by unit count. If it exceeds
    9, apply the overflow rule above and settle a smaller pass before
    dispatching anything.
-4. **Gather each unit's dispatch material** per the dispatch contract's table.
-   Where `design/gdd.md` is absent, drop GDD-section units and tell the owner
-   once.
+4. **Assemble each unit's dispatch payload** per the payload table above,
+   including the taxonomy index for every mechanic entry. Where
+   `design/gdd.md` is absent, drop GDD-section units and tell the owner once.
 5. **Dispatch.** For each persona-unit pair, make the **dispatch call** with a
    prompt carrying, in this order: the persona reference file's full text; the
-   unit; the unit's accompanying material from step 4; and the critique-note
-   path and shape above. Record the agent identifier the call returns — that
+   unit; that unit's dispatch payload from step 4; and the critique-note path
+   and shape above. Record the agent identifier the call returns — that
    identifier is what the follow-up call addresses.
 6. **Collect the notes.** Confirm each dispatched persona wrote its note at
    the expected path. A persona that returned findings without writing the
