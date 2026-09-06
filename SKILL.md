@@ -57,6 +57,14 @@ Applies at every depth, including quick. No hard cap on question count, but the
 round itself should stay a short exchange — it's the depth of the questions that's
 increasing, not the length of the round.
 
+**Log the round as it happens, not from memory afterward.** For every question
+asked — whether free-form or via a multiple-choice question tool — keep the
+verbatim question, the answer given, and (for multiple-choice) the options that
+were on offer but not picked. If the owner says "just dive in" partway through,
+note which questions were skipped and what best-guess default was assumed for
+each. This log is written into the doc verbatim in step 4 — don't paraphrase it
+after the fact, the exact wording is the point.
+
 ### 2. Execution (depth-gated)
 
 Depth sets a budget, not a mood. These caps are hard:
@@ -134,6 +142,14 @@ path. Don't paste the full write-up into chat; the file holds the detail.
 different shape (e.g. "just give me a comparison table") — the override applies to
 that run only, not future runs:
 
+- **Prompt provenance** (first section, before everything else) — this run's
+  trace, for tracking and for future context on what was actually asked:
+  - The originating request, verbatim (the exact prompt/message that triggered
+    this run).
+  - Every clarifying-round question asked, its answer, and — for multiple-choice
+    questions — the options that were offered but not selected.
+  - If the round was cut short ("just dive in"), which questions were skipped
+    and what default was assumed for each.
 - Header: topic, date, depth level used
 - Short executive summary
 - One section per subtopic, with findings
@@ -192,5 +208,8 @@ wrong date also breaks the collision check below):
 - Pasting the full write-up into chat instead of a short summary plus file path.
 - Fabricating findings when a topic turns up nothing useful — report the gap
   instead.
+- Skipping the Prompt provenance section, or reconstructing it from memory after
+  synthesis instead of logging each question/answer/unselected-option as the
+  clarifying round happens.
 - Overwriting a same-day prior doc on the same topic instead of appending a
   numeric suffix.
