@@ -110,15 +110,38 @@ Each **node** has:
 
 Each **connection** has:
 
-- `from` — a node `id`.
-- `to` — a node `id`.
+- `id` — unique within the file, and required. A connection with no `id` is
+  invalid, not merely unconventional — it is what makes a connection
+  referenceable at all. An **authored** id may not contain `:`, reserved for
+  the derived ids a family declaration produces; without that reservation an
+  authored id could collide with a derived one in the expanded graph.
+- `from` — on a `resource` connection, a node `id`. On a `state` connection,
+  a node `id` or `#<connection-id>`.
+- `to` — the same rule as `from`.
 - `kind` — exactly one of `resource` (this connection moves value from `from`
   to `to`) or `state` (this connection modifies another connection's or
   node's behaviour, rather than moving value itself). **This set is closed**
   the same way node `type` is: a connection that does neither is miscategorized,
   not a sign the set needs a third member.
-- `rate` — optional. How fast value moves along a `resource` connection, or
-  how strongly a `state` connection modifies its target.
+- `subtype` — optional, and meaningful only on a `state` connection: exactly
+  one of `label-modifier`, `node-modifier`, `trigger`, `activator`. **This
+  set is closed** on the same terms `type` and `kind` already are: a value
+  outside it means the graph is wrong, not that the set needs a fifth member.
+  An absent `subtype` means the connection has not been classified yet,
+  never a default. A renderer states the absence plainly, on the same terms
+  it already states an absent `value_progression` or an absent `rate`. A
+  consumer that must act on the value — a simulator — refuses to model that
+  connection rather than assuming one. Absence is never read as
+  `label-modifier`.
+- `rate` — optional. How fast value moves along a `resource` connection.
+  `rate` expresses the label-modifier case only: on a `state` connection it
+  is how strongly a `label-modifier` connection modifies its target, and it
+  carries no general-strength reading across the other three subtypes.
+
+**The sigil rule.** `#<id>` names a connection; a bare reference names a
+node. Connection ids and node ids are independent namespaces: the same
+string may name one of each, and the sigil is what tells them apart. A
+reference that resolves to nothing is invalid, not silently skipped.
 
 **`value_progression` is a property of a node, never of a connection, and
 `rate` is a property of a connection, never of a node.** A connection records
@@ -138,6 +161,14 @@ Body: prose notes keyed by node `id` — one subsection per node worth
 annotating, for context that doesn't belong in the frontmatter (why a rate is
 what it is, a balancing concern still open, a design intent behind a
 `gate`).
+
+**Meeting a file whose connections have no `id`.** A file written before this
+restructuring has connections with no `id`, no sigils on `from`/`to`, and no
+`subtype`. Meeting one, this skill neither silently re-writes it into the new
+shape nor refuses to proceed with the write already under way. It reports
+which behaviours the file fails and puts the upgrade to the owner; a
+confirmed upgrade is performed as part of that same write, and a declined one
+leaves the file exactly as it is.
 
 ## Fitting a value progression
 
@@ -215,6 +246,8 @@ builds:
   consuming the graph and its `value_progression` data as its model of the
   game rather than requiring a second one.
 
-None of the three is implemented by this skill. The schema above is shaped
-so each could be added later without changing what already exists — an
-addition, not a restructuring.
+None of the three is implemented by this skill. The schema above already
+rests on a restructuring rather than an addition: the required `id`, the
+sigil rule, and a `state` connection's new `#<connection-id>` target are what
+let the Monte Carlo extension above read which flow a state edge multiplies —
+none of the three needed a fresh field bolted on afterward.
