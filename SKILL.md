@@ -47,6 +47,40 @@ file by the time the conversation ends. Write `design/economy.md` once the
 graph stabilizes, and re-write it (not append to it) on any later invocation
 that adds or edits nodes or connections.
 
+### Detecting families
+
+**Families are never inferred.** Whenever this skill writes
+`design/economy.md`, it detects candidate families — sets of two or more
+same-type nodes whose connections are identical apart from their own ids —
+and puts each candidate, and its boundary, to the owner. **This runs on
+every write, not once**, so a family that emerges later, as nodes accrete
+matching connections across sessions the graph was never touched between,
+is caught the next time the graph is written rather than only at the
+moment it was first authored.
+
+**The boundary is the owner's call, and no signature can make it instead.**
+Two node sets with identical edge patterns may still be two families, and
+nothing in the edges themselves distinguishes them — a detector that
+proposes one merged candidate over both is behaving correctly, not
+failing to find a finer signature. Run against the one real graph this
+skill has produced, the detector finds three candidates with no false
+positives, and merges the seven weapon-proficiency pools with the three
+class-proficiency pools, because their edge patterns are genuinely
+identical: only the owner knows those are two families, not one. It also
+declines to group a fourth pool the file's own prose annotates alongside
+those three, because that pool's edge signature differs from theirs — the
+detector answers from the edges, not from how the prose already groups
+them. Putting the boundary to the owner alongside the candidate is what
+lets an owner facing the merged case split it back into two; a proposal
+that showed the candidate without it would get this specific case wrong
+silently.
+
+A family is written **only where the owner confirms** it. An unconfirmed
+candidate is **written longhand** — left as the separate nodes and
+connections it already was, with no `families` entry naming them.
+Detection puts the candidate and its boundary to the owner and stops
+there: propose and confirm, **never infer and write**.
+
 ## The mechanic entry
 
 One file per mechanic, at `design/mechanics/<slug>.md` in the consuming
@@ -205,13 +239,22 @@ a member id keying its own section overrides the family's for that member —
 its own notes stand in place of the family's shared ones for that heading,
 not beside them.
 
-**Meeting a file whose connections have no `id`.** A file written before this
-restructuring has connections with no `id`, no sigils on `from`/`to`, and no
-`subtype`. Meeting one, this skill neither silently re-writes it into the new
-shape nor refuses to proceed with the write already under way. It reports
-which behaviours the file fails and puts the upgrade to the owner; a
-confirmed upgrade is performed as part of that same write, and a declined one
-leaves the file exactly as it is.
+**Meeting a file written before either change.** A file written before this
+restructuring can fail either change's behaviours. From Change 1: connections
+with no `id`, no sigils on `from`/`to`, and no `subtype`. From Change 2:
+**block-style edges or slash-joined headings** — the three-line YAML block
+this schema replaced with the flow style above, or a heading joining two node
+ids for one shared paragraph instead of naming a node id, a family name, or a
+member id. Meeting either, this skill neither silently re-writes the file
+into the new shape nor refuses to proceed with the write already under way.
+It reports which of these behaviours the file fails and puts the upgrade to
+the owner, on the same propose-and-confirm terms detection (above) uses for
+a family: a confirmed upgrade is performed as part of that same write, and a
+declined one leaves the file exactly as it is. `game-gdd` and
+`game-critique`, which write nothing, report such a file as invalid rather
+than rendering it on a best-effort basis. This settles only that the
+question is asked; what any particular already-written graph should become
+stays the owner's call, and no migration procedure is specified here.
 
 ### Families
 
