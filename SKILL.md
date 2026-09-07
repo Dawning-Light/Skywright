@@ -193,10 +193,17 @@ concepts could just as easily attach a flow rate to a node or a value series
 to an edge, corrupting both. State this rule here so a later editor sees it
 before making that mistake rather than after.
 
-Body: prose notes keyed by node `id` — one subsection per node worth
-annotating, for context that doesn't belong in the frontmatter (why a rate is
-what it is, a balancing concern still open, a design intent behind a
-`gate`).
+Body: prose notes for context that doesn't belong in the frontmatter (why a
+rate is what it is, a balancing concern still open, a design intent behind a
+`gate`), organized one subsection per heading. A heading is a node id, a
+family name written `## @<name>`, or a member id — nothing else. A heading
+that resolves to neither a node id, a family name, nor a member id is
+invalid, which is what makes a slash-joined heading, joining two node ids for
+one shared paragraph, invalid rather than merely discouraged: it names two
+things and resolves to none of the three. When a member has its own section,
+a member id keying its own section overrides the family's for that member —
+its own notes stand in place of the family's shared ones for that heading,
+not beside them.
 
 **Meeting a file whose connections have no `id`.** A file written before this
 restructuring has connections with no `id`, no sigils on `from`/`to`, and no
@@ -244,6 +251,21 @@ existed only as the expanded form — and not as the family plus the
 declaration over it — would not survive the next write. Expansion is
 deterministic substitution with no judgement in it, which is what makes
 storing only the source and deriving the rest safe.
+
+**`applies: one-of-family`.** A state connection written as a declaration
+over a family may carry `applies: one-of-family`, meaning exactly one of the
+expanded edges is live at a time. Absent, all expanded edges are live
+simultaneously — the plain reading of a family declaration already applies to
+a `state` connection as much as to any other. This is what lets a set of
+mutually exclusive state edges record what it actually is: seven identical
+declarations over a family look like seven simultaneous dependencies, when
+only one is ever live. A renderer states the property on the declaration it
+qualifies and never presents a `one-of-family` declaration as N simultaneous
+edges — doing so restates the exact overstatement the field exists to remove.
+A consumer that must act on liveness — a simulator — models neither all N nor
+a member of its own choosing, and refuses to model the declaration: what this
+field records is *that* exactly one edge is live, and the condition selecting
+*which* one is out of scope, which this schema does not model.
 
 **Derived ids.** Each expanded connection's id is
 `<declaration-id>:<member-id>`. It is unique by construction and is never
