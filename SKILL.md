@@ -99,6 +99,14 @@ Each **node** has:
   six is a sign the graph needs two nodes and a connection between them, not
   a seventh type — this schema does not admit one, and a file that invents
   one is wrong rather than merely unconventional.
+- **Resource typing.** A `pool`, `source`, `drain`, or `gate` handles exactly
+  one resource type, named by its own `id` — a pool holds one, a source or a
+  drain moves one, and a gate routes what it receives without changing its
+  type, so its type is fixed by its inputs the same way. A node that would
+  handle two is two nodes. This is the schema-level statement of the same
+  differentiated, non-fungible resource design the research recommends over
+  one universal currency, and it is what makes the connection's `resource`
+  field (below) conditional rather than universal.
 - `value_progression` — optional. An object with fields `{ model,
   coefficients, domain, fit }`, holding a fitted or chosen curve for how this
   node's value changes (for example, a cost-by-level curve). This skill
@@ -107,6 +115,12 @@ Each **node** has:
   companion script, and that fitting math is not part of this file. Until
   that procedure runs, `value_progression` is simply absent from a node that
   hasn't had it computed.
+
+**The state-only node is a modelling error with a stated answer.** A node
+that holds a value but that no resource connection ever touches is modelled
+as two nodes and a connection, per the closed-set guidance above, rather than
+a seventh node type — the closed set of six is faithful to the research it
+was adapted from, and this case is not evidence it is short a member.
 
 Each **connection** has:
 
@@ -137,6 +151,28 @@ Each **connection** has:
   `rate` expresses the label-modifier case only: on a `state` connection it
   is how strongly a `label-modifier` connection modifies its target, and it
   carries no general-strength reading across the other three subtypes.
+- `resource` — meaningful only on a `resource` connection. A `resource`
+  connection whose `from` or `to` is a `trader` or a `converter` carries a
+  `resource` naming what moves; elsewhere it is optional. Those two node
+  types handle more than one resource type by definition — a trader
+  exchanges types, a converter emits a different type than it takes — so
+  their edges are the only ones whose content cannot be read off the
+  destination. **The partition is exhaustive over the closed set of six**:
+  four node types are single-type and need no field, two are not and require
+  one, and no node type falls outside both.
+
+**Flow style, one line per connection.** Every entry under `connections` is
+written as a single-line flow mapping, so a changed edge is a one-line diff:
+
+```yaml
+connections:
+  - { id: sale, from: shop, to: gold-pool, kind: resource, resource: gold, rate: 5 }
+```
+
+This is a serialization rule over the field set above, not a change to it:
+every field a connection carries — `id` and `subtype` included — sits on
+that same line, however many of the optional fields a given connection
+uses.
 
 **The sigil rule.** `#<id>` names a connection; a bare reference names a
 node. Connection ids and node ids are independent namespaces: the same
