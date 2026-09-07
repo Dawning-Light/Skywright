@@ -280,9 +280,10 @@ reference.
 
 **At most one end.** A family reference may appear on at most one end of a
 connection. Both ends is invalid: the Cartesian product of two N-member
-families would be unauditable, and no real case needs it. A declaration
-pairs one family against one concrete node (or connection, on a `state`
-edge) — never a family against a family.
+families would be unauditable, and no real case needs it. A **declaration** —
+a `connections:` entry whose `from` or `to` references a family via
+`@<name>` — pairs one family against one concrete node (or connection, on a
+`state` edge) — never a family against a family.
 
 **Expansion.** A declaration written over a family expands to one connection
 per member: a family of seven pools referenced by one declaration produces
