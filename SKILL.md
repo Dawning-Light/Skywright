@@ -44,9 +44,10 @@ redefine, rename, or add a field to any of them:
   `game-pillars`, including its `status` field (`approved` or `candidate`).
 - **The mechanic entry**, `design/mechanics/<slug>.md` — shape defined by
   `game-mechanics`.
-- **The economy graph**, `design/economy.md`, its `nodes` and `connections`
-  — shape defined by `game-mechanics`, including `value_progression`, `id`,
-  and `subtype`.
+- **The economy graph**, `design/economy.md`, read as its `nodes`,
+  `connections` and `families` — shape defined by `game-mechanics`, including
+  `value_progression`, `id`, `subtype`, `resource`, the `families` block, the
+  `@` sigil, and `applies: one-of-family`.
 - **The differentiation statement**, `design/comp-analysis.md` — shape
   defined by `game-comp-analysis`.
 
@@ -67,16 +68,20 @@ Three properties the template below is built to guarantee, because
 - **Local.** The template maps each record to exactly one section, and each
   section's content is derived only from that record's own fields — never
   from another record's fields, and never from the previous render. Editing
-  one field of one pillar, mechanic, node, or connection and re-rendering
-  changes exactly the section that field maps to, and nothing else in the
-  file. Section *order* follows a fixed, content-independent rule (slug or
+  one field of one pillar, mechanic, node, connection, or family and
+  re-rendering changes exactly the section that field maps to, and nothing
+  else in the file. A family section is the one section derived from two
+  records rather than one — the family record and the declarations written
+  over it — but both already live in `design/economy.md` beside it, never in
+  another family's record or in the previous render, so the same guarantee
+  holds. Section *order* follows a fixed, content-independent rule (slug or
   frontmatter-list order, below), so reordering never happens as a side
   effect of editing a field's value.
 - **Addressable.** Every rendered section names the record it came from — a
-  file path for a concept statement, pillar, or mechanic entry; a node or
-  connection identifier for the economy graph. A reader, or a `game-critique`
-  note, can always get from a section back to the exact record that must
-  change to affect it.
+  file path for a concept statement, pillar, or mechanic entry; a node,
+  family, or connection identifier for the economy graph. A reader, or a
+  `game-critique` note, can always get from a section back to the exact
+  record that must change to affect it.
 
 ## The template — the one and only definition of how `design/gdd.md` renders
 
@@ -116,31 +121,50 @@ A fixed section-per-record template, in this order:
    headings, unchanged. Absent when no mechanic entry exists yet: the section
    still appears, stating that plainly and pointing at `game-mechanics`.
 
-4. **`## Economy`** — from `design/economy.md`, split into two parts, each
-   with one section per record, so an individual node or connection is
-   addressable on its own rather than folded into one undifferentiated dump:
+4. **`## Economy`** — from `design/economy.md`, split into three parts, one
+   section per node, one section per family, and one section per connection
+   that is not a declaration over a family, so an individual node, family, or
+   connection is addressable on its own rather than folded into one
+   undifferentiated dump:
    - One section per node, in the order `nodes` lists them in the file's
      frontmatter (a content-independent order, for the same locality reason
      as above). Each is addressed by its `id`, and states its `type` and, if
      present, its `value_progression`; a node with no `value_progression`
      states that plainly rather than omitting the field silently.
-   - One section per connection, in the order `connections` lists them (a
-     content-independent order, the same as node order above, and a
-     different property from addressing: reordering the list changes order,
-     never identity). Each is addressed by its `id`. Each states its
-     `subtype` if present, or that none is recorded if absent, on the same
-     terms the node section above states an absent `value_progression`. Each
-     states its `rate` if present, or that none is recorded if absent.
+   - One section per family, in the order `families` lists them in the
+     file's frontmatter, addressed by `@<name>`. It names the family, its
+     `type`, and enumerates the member ids it expands to — the same ids the
+     node sections above already render in full, so both the family and its
+     members stay visible rather than one collapsing into the other. Beneath
+     it, the declarations written over the family are listed, each addressed
+     by its own `id` and stating how many edges it expands to and whether it
+     is `one-of-family`. A `one-of-family` declaration is never presented as
+     N simultaneous edges — the count and the flag are stated on the
+     declaration itself, never unrolled into one line per expanded member.
+     Each declaration states its `resource` where the record carries one, on
+     the same terms the connection section below does. Each expanded
+     connection stays addressable by the derived id `game-mechanics`
+     defines; this section references that rule rather than restating it.
+   - One section per connection that is not a declaration over a family, in
+     the order `connections` lists them (a content-independent order, the
+     same as node order above, and a different property from addressing:
+     reordering the list changes order, never identity). Each is addressed
+     by its `id`. Each states its `subtype` if present, or that none is
+     recorded if absent, on the same terms the node section above states an
+     absent `value_progression`. Each states its `rate` if present, or that
+     none is recorded if absent. Each states its `resource` where the record
+     carries one.
 
    Absent when `design/economy.md` does not exist: the whole `## Economy`
    section still appears, stating that plainly and pointing at
    `game-mechanics`.
 
-   Invalid when a connection in `design/economy.md` has no `id`: this skill
+   Invalid when a connection in `design/economy.md` has no `id`, or when the
+   file carries block-style edges or slash-joined headings: this skill
    writes nothing, so it proposes no upgrade of its own. It reports it as
    invalid rather than rendering it on a best-effort basis — a partial
    render of an invalid file is indistinguishable from a render of a valid
-   one to the reader holding it — naming the missing `id` as what the file
+   one to the reader holding it — naming which of these behaviours the file
    fails, and pointing to `game-mechanics`, where the upgrade is proposed and
    confirmed with the owner.
 
@@ -198,8 +222,10 @@ section for the source statement this section restates in the rendered file.
 3. Read every file under `design/mechanics/`. Render section 3 from them,
    alphabetically by slug, or the absent form if none exist.
 4. Read `design/economy.md`. Render section 4's node subsections in
-   frontmatter `nodes` order and connection subsections in frontmatter
-   `connections` order, or the absent form if the file doesn't exist.
+   frontmatter `nodes` order, family subsections in frontmatter `families`
+   order, and connection subsections (excluding declarations over a family,
+   rendered under their family instead) in frontmatter `connections` order,
+   or the absent form if the file doesn't exist.
 5. Read `design/comp-analysis.md`. Render section 5 from it, or its absent
    form.
 6. Append section 6, the fixed eight-absent-supporting-documents statement
