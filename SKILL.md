@@ -206,6 +206,67 @@ which behaviours the file fails and puts the upgrade to the owner; a
 confirmed upgrade is performed as part of that same write, and a declined one
 leaves the file exactly as it is.
 
+### Families
+
+Frontmatter carries an optional `families` block alongside `nodes` and
+`connections`. Each **family** declares a `name`, a node `type`, and a list
+of member node ids. Every member is a node declared in `nodes`, of the
+family's declared `type` — a family is a name for a set of existing nodes,
+not a place that creates them.
+
+**A family is never itself a node.** It holds no value and carries no
+`value_progression`; each member keeps its own, exactly as it would if the
+family didn't exist. A reader that collapses a family into a single pool has
+violated the never-shared rule the notation exists to preserve — the
+differentiated, non-fungible resource design this schema already commits to
+above, not a rule invented for families. Seven proficiency pools named by a
+family are still seven pools; the family is a way to address them together,
+not a seventh, bigger pool that replaces them.
+
+**The `@` sigil.** A reference to a family is written `@<name>`, alongside
+`#` for a connection and bare for a node — the third and last member of that
+sigil set. `@<name>` may appear anywhere a `from` or `to` accepts a
+reference.
+
+**At most one end.** A family reference may appear on at most one end of a
+connection. Both ends is invalid: the Cartesian product of two N-member
+families would be unauditable, and no real case needs it. A declaration
+pairs one family against one concrete node (or connection, on a `state`
+edge) — never a family against a family.
+
+**Expansion.** A declaration written over a family expands to one connection
+per member: a family of seven pools referenced by one declaration produces
+seven connections, one per member. **The expanded graph is derived; the file
+stores the family and the declarations that reference it, never the
+expansion.** This is load-bearing, not a style preference: this skill
+rewrites the economy file wholesale on every invocation, so anything that
+existed only as the expanded form — and not as the family plus the
+declaration over it — would not survive the next write. Expansion is
+deterministic substitution with no judgement in it, which is what makes
+storing only the source and deriving the rest safe.
+
+**Derived ids.** Each expanded connection's id is
+`<declaration-id>:<member-id>`. It is unique by construction and is never
+written into the file — a reader computes it from the declaration and the
+member, the same substitution that produces the connection itself. This is
+what step 2's reservation of `:` in authored connection ids was for: an
+authored id may not contain `:`, so a derived id built from two authored ids
+joined by `:` cannot collide with one.
+
+**Two-level addressing.** `#<declaration-id>` names the declaration, and so
+all of its expanded connections; `#<declaration-id>:<member-id>` names
+exactly one of them. Given a declaration `regen` written over a
+seven-member family, `#regen` refers to all seven expanded edges and
+`#regen:stamina` refers to the one over the `stamina` member alone.
+
+**Stated once, referenced by readers.** This is the only place the expansion
+rule is stated. `game-gdd` and `game-critique` reference it rather than
+restate it — the same deference they already give the rest of this file's
+record shape, needing no new rule to carry it here. **No expansion script
+exists**, and expansion is not delegated to one: an expander would
+necessarily know families, connections, and the sigils, making it a second
+parser of this format regardless of how the bytes reached it.
+
 ## Fitting a value progression
 
 A node whose value changes over levels or over time is elicited as a raw
