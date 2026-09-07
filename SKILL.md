@@ -114,7 +114,7 @@ What travels depends on the unit type:
 | Unit type | What travels with it |
 | --- | --- |
 | Pillar record, `design/pillars/<slug>.md` | that file's full text; `design/concept.md`'s body |
-| Mechanic entry, `design/mechanics/<slug>.md` | that file's full text; the taxonomy index (below); the `title` and `## Description` only of its `parent` and of each entry in its `children`; the nodes and connections of `design/economy.md` that the entry's own text names; every `design/pillars/<slug>.md` record whose `status` is `approved`, in full |
+| Mechanic entry, `design/mechanics/<slug>.md` | that file's full text; the taxonomy index (below); the `title` and `## Description` only of its `parent` and of each entry in its `children`; the nodes and connections of `design/economy.md` that the entry's own text names, connections each named by its `id`; every `design/pillars/<slug>.md` record whose `status` is `approved`, in full |
 | GDD section, a section of `design/gdd.md` | that section's text; the record it addresses, by the path or identifier the section names (`game-gdd` guarantees every rendered section names its record); every `design/pillars/<slug>.md` record whose `status` is `approved`, in full |
 
 **The taxonomy index** is every mechanic entry's `name` and `parent`, and
@@ -129,6 +129,13 @@ is not.
 Related entries travel as title-plus-description rather than in full, and the
 economy graph travels only as the nodes the unit names, for that same reason —
 the bound on the read is what preserves the critique.
+
+**Invalid when a connection in `design/economy.md` has no `id`:** this skill
+writes nothing, so it proposes no upgrade of its own. It reports it as invalid
+rather than critiquing it on a best-effort basis — a finding about a
+connection that cannot be cited back to a record is not a finding the owner
+can resolve — naming the missing `id` as what the file fails, and pointing to
+`game-mechanics`, where the upgrade is proposed and confirmed with the owner.
 
 **Approved pillar records travel in full**, unlike related mechanic entries,
 because a pillar-fit check run against a trimmed pillar cannot read the
