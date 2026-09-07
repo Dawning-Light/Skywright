@@ -45,7 +45,8 @@ redefine, rename, or add a field to any of them:
 - **The mechanic entry**, `design/mechanics/<slug>.md` — shape defined by
   `game-mechanics`.
 - **The economy graph**, `design/economy.md`, its `nodes` and `connections`
-  — shape defined by `game-mechanics`, including `value_progression`.
+  — shape defined by `game-mechanics`, including `value_progression`, `id`,
+  and `subtype`.
 - **The differentiation statement**, `design/comp-analysis.md` — shape
   defined by `game-comp-analysis`.
 
@@ -123,16 +124,25 @@ A fixed section-per-record template, in this order:
      as above). Each is addressed by its `id`, and states its `type` and, if
      present, its `value_progression`; a node with no `value_progression`
      states that plainly rather than omitting the field silently.
-   - One section per connection, in the order `connections` lists them.
-     Each is addressed by its `from`/`to` pair and `kind` (the triple that
-     identifies it, since a connection has no `id` of its own); if more than
-     one connection shares the same `from`/`to`/`kind`, they are
-     disambiguated by their position in the frontmatter list. Each states
-     its `rate` if present, or that none is recorded if absent.
+   - One section per connection, in the order `connections` lists them (a
+     content-independent order, the same as node order above, and a
+     different property from addressing: reordering the list changes order,
+     never identity). Each is addressed by its `id`. Each states its
+     `subtype` if present, or that none is recorded if absent, on the same
+     terms the node section above states an absent `value_progression`. Each
+     states its `rate` if present, or that none is recorded if absent.
 
    Absent when `design/economy.md` does not exist: the whole `## Economy`
    section still appears, stating that plainly and pointing at
    `game-mechanics`.
+
+   Invalid when a connection in `design/economy.md` has no `id`: this skill
+   writes nothing, so it proposes no upgrade of its own. It reports it as
+   invalid rather than rendering it on a best-effort basis — a partial
+   render of an invalid file is indistinguishable from a render of a valid
+   one to the reader holding it — naming the missing `id` as what the file
+   fails, and pointing to `game-mechanics`, where the upgrade is proposed and
+   confirmed with the owner.
 
 5. **`## Competitive Differentiation`** — one section, from
    `design/comp-analysis.md`. Body is that file's own differentiation
