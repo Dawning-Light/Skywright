@@ -6,7 +6,7 @@ category: persistence
 scope: contained
 drivers: []
 source: game-tech
-date: 2026-09-11
+updated: 2026-09-04T07:45Z
 ---
 
 ## Context

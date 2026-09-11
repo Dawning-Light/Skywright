@@ -142,6 +142,29 @@
   window.addEventListener("hashchange", schedule);
   update();
 })();
+(function () {
+  "use strict";
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  var stamps = document.querySelectorAll("time.updated[datetime]");
+  for (var i = 0; i < stamps.length; i++) {
+    var raw = stamps[i].getAttribute("datetime");
+    var when = new Date(raw);
+    if (isNaN(when.getTime())) { continue; }
+    var local = when.getFullYear() + "-" + pad(when.getMonth() + 1) + "-" +
+      pad(when.getDate()) + " " + pad(when.getHours()) + ":" + pad(when.getMinutes());
+    var zone = "";
+    try {
+      var parts = new Intl.DateTimeFormat(undefined, {
+        timeZoneName: "short"
+      }).formatToParts(when);
+      for (var j = 0; j < parts.length; j++) {
+        if (parts[j].type === "timeZoneName") { zone = parts[j].value; }
+      }
+    } catch (err) { zone = ""; }
+    stamps[i].textContent = zone ? local + " " + zone : local;
+    stamps[i].title = raw;
+  }
+})();
 </script>
 </body>
 </html>

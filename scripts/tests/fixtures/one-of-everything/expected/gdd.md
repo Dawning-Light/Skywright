@@ -2,18 +2,25 @@
 
 ## Concept
 
-*Source: `design/concept.md`*
+*Source: `design/concept.md` · Updated: 2026-09-10T09:15Z*
 
 Forge & Foray is a crafting-led action RPG in which the player mines ore, smelts
 it into ingots, and forges the weapons they then carry into short, hand-authored
 dungeon runs. Every run ends back at the forge, where the loot becomes the next
-weapon.
+weapon. What the genre's leaders do instead is recorded in [[comp-analysis]].
+
+### Open Questions
+
+Whether a run may end anywhere other than the forge is undecided.
 
 ## Design Pillars
 
 ### Every capability is earned through investment, never granted by a slot.
 
-*Source: `design/pillars/always-earned.md`*
+*Source: `design/pillars/always-earned.md` · Updated: 2026-09-09T18:20Z*
+
+The pillar [[concept]] leans on hardest: the forge is open to anyone who
+invests in it.
 
 #### The test
 
@@ -30,10 +37,11 @@ A "Smith" class that alone may use the forge. **Cut.**
 
 ### Progress always comes from a decision the player made, never from time they waited.
 
-*Source: `design/pillars/zero-grind.md`*
+*Source: `design/pillars/zero-grind.md` · Updated: 2026-09-10T08:05Z*
 
-Sits beside [[always-earned]], applies to [[combat]], and does *not* depend on
-[[no-such-record]].
+Sits beside [[pillar:always-earned]], applies to [[mechanic:combat]], and is
+what [[comp-analysis]] measures the competitors against. A literal `[[slug]]`
+inside a code span is prose about the syntax, not a reference.
 
 #### The test
 
@@ -49,13 +57,18 @@ different alloys. **Kept** — the gate is a decision.
 
 A daily login chest. **Cut** — the gate is the calendar.
 
+#### Open Questions
+
+Whether a cosmetic reward may be time-gated without failing this pillar is
+undecided.
+
 *1 candidate pillar proposed by `game-comp-analysis` awaits review — approve or discard it with `game-pillars`.*
 
 ## Mechanics
 
 ### Combat
 
-*Source: `design/mechanics/combat.md`*
+*Source: `design/mechanics/combat.md` · Updated: 2026-09-10T12:00Z*
 
 - Parent: none
 - Children: `melee`, `ranged`
@@ -63,7 +76,9 @@ A daily login chest. **Cut** — the gate is the calendar.
 #### Description
 
 Real-time combat resolved per swing. A hit lands when `atk > def`, and a
-critical multiplies damage by 1.5 & applies the weapon's "on-crit" rider.
+critical multiplies damage by 1.5 & applies the weapon's "on-crit" rider. The
+weapons it is fought with are paid for out of [[node:ingot-pool]], and the
+skills it advances are [[family:skill-xp]].
 
 #### Strong example
 
@@ -75,16 +90,28 @@ swings.
 A player brings a blade whose `atk` is below every enemy's `def` and cannot
 damage anything at all, with no in-run way to recover.
 
+#### Open Questions
+
+Whether a swing may be cancelled mid-animation is undecided.
+
 ### Melee
 
-*Source: `design/mechanics/melee.md`*
+*Source: `design/mechanics/melee.md` · Updated: 2026-09-10T12:04Z*
 
 - Parent: `combat`
 - Children: none
 
 #### Description
 
-Close-range swings that trade reach for damage.
+Close-range swings that trade reach for damage. Serves [[pillar:zero-grind]]:
+every swing is a decision, never a wait.
+
+A fenced block is never scanned for references, so the broken one below is
+inert text rather than a render failure:
+
+```
+[[no-such-type:no-such-id]]
+```
 
 #### Strong example
 
@@ -97,14 +124,15 @@ melee is the wrong tool here.
 
 ### Ranged
 
-*Source: `design/mechanics/ranged.md`*
+*Source: `design/mechanics/ranged.md` · Updated: 2026-09-10T12:07Z*
 
 - Parent: `combat`
 - Children: none
 
 #### Description
 
-Distance attacks that trade damage for safety.
+Distance attacks that trade damage for safety. Whether two players see the same
+shot land is what [[tech:netcode]] decides.
 
 #### Strong example
 
@@ -116,7 +144,7 @@ Every encounter is won by backing away and firing, which makes melee pointless.
 
 ## Economy
 
-*Source: `design/economy.md`*
+*Source: `design/economy.md` · Updated: 2026-09-10T16:44Z*
 
 ### Nodes
 
@@ -135,7 +163,8 @@ Every encounter is won by backing away and firing, which makes melee pointless.
 - Value progression: model power; coefficients 1.8, 1.42; domain 1-20; fit 0.987
 
 The one pool every forged weapon is paid for out of. Its cost-by-tier curve is
-fitted rather than chosen — see `scripts/curve-fit.sh`.
+fitted rather than chosen — see `scripts/curve-fit.sh`. What the player spends
+it on is [[mechanic:combat]].
 
 ###### Open question
 
@@ -180,8 +209,7 @@ Whether ingots stack per alloy or share one pool is undecided.
 
 Two named skills, `mining-xp` and `smith-xp`, each its own node with its own
 progression — never a shared "crafting" track. Only the member matching the
-action actually applies, which is what `#skill-rate`'s `applies: one-of-family`
-records.
+action actually applies, which is what [[connection:skill-rate]] records.
 
 Declarations over this family:
 
@@ -231,10 +259,10 @@ Declarations over this family:
 
 ## Competitive Differentiation
 
-*Source: `design/comp-analysis.md`*
+*Source: `design/comp-analysis.md` · Updated: 2026-09-10T14:02Z*
 
 Forge & Foray differentiates on loop length: its competitors all separate
-crafting from combat across sessions, where this concept closes both inside one
+crafting from combat across sessions, where [[concept]] closes both inside one
 fifteen-minute run. Where it currently looks like more of the same is its
 rarity-tier itemization, which every competitor below also ships.
 
@@ -249,11 +277,16 @@ What the concept does that they don't:
 - Makes the forge the run's *destination*, not its lobby.
 - Prices every weapon out of one visible pool.
 
+### Open Questions
+
+Whether the co-op runs [[tech:netcode]] is deciding are a differentiator at all
+is unsettled — one competitor above may ship them first.
+
 ## Technical Design
 
 ### How do two players share one dungeon run?
 
-*Source: `design/tech/netcode.md`*
+*Source: `design/tech/netcode.md` · Updated: 2026-09-11T11:00Z*
 
 **Open — not yet decided.**
 
@@ -275,7 +308,7 @@ a hit that lands on one client and not the other is visible immediately.
 
 ### Saves are a single append-only JSON document per guild.
 
-*Source: `design/tech/save-format.md`*
+*Source: `design/tech/save-format.md` · Updated: 2026-09-04T07:45Z*
 
 - Status: accepted
 - Category: persistence

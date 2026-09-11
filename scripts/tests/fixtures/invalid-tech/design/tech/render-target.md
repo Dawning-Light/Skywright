@@ -6,7 +6,7 @@ category: engine-architecture
 scope: contained
 drivers: []
 source: game-tech
-date: 2026-09-11
+updated: 2026-09-11T11:00Z
 ---
 
 ## Context

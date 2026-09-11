@@ -1,4 +1,5 @@
 ---
+updated: 2026-09-10T16:44Z
 nodes:
   - id: ore-vein
     type: source
@@ -33,7 +34,8 @@ connections:
 ## ingot-pool
 
 The one pool every forged weapon is paid for out of. Its cost-by-tier curve is
-fitted rather than chosen — see `scripts/curve-fit.sh`.
+fitted rather than chosen — see `scripts/curve-fit.sh`. What the player spends
+it on is [[mechanic:combat]].
 
 ### Open question
 
@@ -43,5 +45,4 @@ Whether ingots stack per alloy or share one pool is undecided.
 
 Two named skills, `mining-xp` and `smith-xp`, each its own node with its own
 progression — never a shared "crafting" track. Only the member matching the
-action actually applies, which is what `#skill-rate`'s `applies: one-of-family`
-records.
+action actually applies, which is what [[connection:skill-rate]] records.

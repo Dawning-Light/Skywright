@@ -14,7 +14,11 @@ fonts, into the *consuming* project's ``design/`` directory:
 
 Invalid input blocks the whole render: nothing is written, one message goes to
 stderr naming the failing record, the rule it fails, and the upstream skill
-that fixes it, and the exit code is non-zero.
+that fixes it, and the exit code is non-zero. A body's typed ``[[...]]``
+references and a record's ``updated`` stamp are held to that same discipline --
+a reference that does not resolve to something this render anchors, and a
+timestamp outside ``YYYY-MM-DDTHH:MMZ``, each stop the render. Both forms are
+defined by ``game-authoring``.
 
 Stdlib only. Deterministic: byte-identical output for byte-identical input.
 """
@@ -234,6 +238,32 @@ def as_text(value):
 
 
 # ---------------------------------------------------------------------------
+# The ``updated`` field
+#
+# Every record shape may carry ``updated: YYYY-MM-DDTHH:MMZ`` -- UTC, 24-hour,
+# the form ``game-authoring`` defines. Absent is valid (records written before
+# the field existed carry none); malformed is not.
+# ---------------------------------------------------------------------------
+
+UPDATED_FORM = "YYYY-MM-DDTHH:MMZ"
+_UPDATED_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z$")
+
+
+def read_updated(fields, rel, skill):
+    """Return a record's ``updated`` value, or ``""`` when it carries none."""
+    value = as_text(fields.get("updated", "")).strip()
+    if not value:
+        return ""
+    if not _UPDATED_RE.match(value):
+        raise InvalidInput(
+            "%s: `updated: %s` is not the required `%s` UTC form (for example "
+            "`2026-09-11T20:42Z`); fix it with `%s`. The `updated` form is "
+            "defined by `game-authoring`." % (rel, value, UPDATED_FORM, skill)
+        )
+    return value
+
+
+# ---------------------------------------------------------------------------
 # Body helpers
 # ---------------------------------------------------------------------------
 
@@ -340,8 +370,14 @@ def load_design(root):
 
     concept_path = os.path.join(root, "concept.md")
     if os.path.isfile(concept_path):
-        fields, body = load_record(concept_path, "design/concept.md", "game-pillars")
-        data["concept"] = {"title": as_text(fields.get("title", "")), "body": body}
+        rel = "design/concept.md"
+        fields, body = load_record(concept_path, rel, "game-pillars")
+        data["concept"] = {
+            "rel": rel,
+            "title": as_text(fields.get("title", "")),
+            "updated": read_updated(fields, rel, "game-pillars"),
+            "body": body,
+        }
 
     pillars_dir = os.path.join(root, "pillars")
     for name in list_md(pillars_dir):
@@ -353,6 +389,7 @@ def load_design(root):
             "rel": rel,
             "title": as_text(fields.get("title", "")) or slug,
             "status": as_text(fields.get("status", "")),
+            "updated": read_updated(fields, rel, "game-pillars"),
             "body": body,
         }
         if record["status"] == "approved":
@@ -375,6 +412,7 @@ def load_design(root):
                 "title": as_text(fields.get("title", "")) or slug,
                 "parent": "" if parent in ("", "none") else parent,
                 "children": [c for c in as_list(fields.get("children")) if c != "none"],
+                "updated": read_updated(fields, rel, "game-mechanics"),
                 "body": body,
             }
         )
@@ -387,8 +425,13 @@ def load_design(root):
 
     comp_path = os.path.join(root, "comp-analysis.md")
     if os.path.isfile(comp_path):
-        _, body = load_record(comp_path, "design/comp-analysis.md", "game-comp-analysis")
-        data["comp"] = {"body": body}
+        rel = "design/comp-analysis.md"
+        fields, body = load_record(comp_path, rel, "game-comp-analysis")
+        data["comp"] = {
+            "rel": rel,
+            "updated": read_updated(fields, rel, "game-comp-analysis"),
+            "body": body,
+        }
 
     tech_dir = os.path.join(root, "tech")
     for name in list_md(tech_dir):
@@ -404,6 +447,7 @@ def load_design(root):
             "scope": as_text(fields.get("scope", "")).strip(),
             "drivers": as_list(fields.get("drivers")),
             "superseded_by": as_text(fields.get("superseded_by", "")).strip(),
+            "updated": read_updated(fields, rel, "game-tech"),
             "body": body,
             "headings": set(),
         }
@@ -506,6 +550,7 @@ def load_economy(path):
         "nodes": nodes,
         "families": families,
         "connections": connections,
+        "updated": read_updated(fields, rel, "game-mechanics"),
         "sections": sections,
         "section_order": order,
     }
@@ -722,39 +767,245 @@ def build_context(data):
         "connections": set(economy["conn_ids"]) if economy else set(),
         "has_concept": data["concept"] is not None,
         "has_comp": data["comp"] is not None,
+        # Loaded, but not rendered as a record of their own -- so nothing can
+        # link to them, and a reference naming one gets its own explanation.
+        "candidate_pillars": set(p["slug"] for p in data["candidates"]),
+        "superseded_tech": set(t["slug"] for t in data["tech_superseded"]),
     }
     return ctx
 
 
+# Every anchor this render emits, keyed by the reference type that reaches it.
+# One table, three callers: an economy `from`/`to` field, a tech `drivers`
+# entry, and a typed `[[...]]` reference in a body.
+_ANCHOR_LOOKUP = {
+    "pillar": ("pillars", "#pillar-%s"),
+    "mechanic": ("mechanics", "#mechanic-%s"),
+    "tech": ("tech", "#tech-%s"),
+    "node": ("nodes", "#node-%s"),
+    "family": ("families", "#family-%s"),
+    "connection": ("connections", "#connection-%s"),
+}
+
+_BARE_ANCHORS = {
+    "concept": ("has_concept", "#concept"),
+    "comp-analysis": ("has_comp", "#competitive-differentiation"),
+}
+
+
+def anchor_for_typed(kind, ident, ctx):
+    """The anchor one typed reference resolves to, or None."""
+    if kind in _BARE_ANCHORS:
+        flag, anchor = _BARE_ANCHORS[kind]
+        return anchor if ctx[flag] else None
+    entry = _ANCHOR_LOOKUP.get(kind)
+    if entry is None:
+        return None
+    key, template = entry
+    return template % ident if ident in ctx[key] else None
+
+
 def anchor_for_economy_ref(ref, ctx):
     if ref.startswith("@"):
-        if ref[1:] in ctx["families"]:
-            return "#family-%s" % ref[1:]
-    elif ref.startswith("#"):
-        if ref[1:] in ctx["connections"]:
-            return "#connection-%s" % ref[1:]
-    elif ref in ctx["nodes"]:
-        return "#node-%s" % ref
-    return None
+        return anchor_for_typed("family", ref[1:], ctx)
+    if ref.startswith("#"):
+        return anchor_for_typed("connection", ref[1:], ctx)
+    return anchor_for_typed("node", ref, ctx)
+
+
+_DRIVER_DIRS = (("pillar", "pillars"), ("mechanic", "mechanics"), ("tech", "tech"))
 
 
 def anchor_for_driver(ref, ctx):
-    if ref == "design/concept.md" and ctx["has_concept"]:
-        return "#concept"
-    if ref == "design/comp-analysis.md" and ctx["has_comp"]:
-        return "#competitive-differentiation"
-    match = re.match(r"^design/pillars/(.+)\.md$", ref)
-    if match and match.group(1) in ctx["pillars"]:
-        return "#pillar-%s" % match.group(1)
-    match = re.match(r"^design/mechanics/(.+)\.md$", ref)
-    if match and match.group(1) in ctx["mechanics"]:
-        return "#mechanic-%s" % match.group(1)
-    match = re.match(r"^design/tech/(.+)\.md$", ref)
-    if match and match.group(1) in ctx["tech"]:
-        return "#tech-%s" % match.group(1)
+    if ref == "design/concept.md":
+        return anchor_for_typed("concept", "", ctx)
+    if ref == "design/comp-analysis.md":
+        return anchor_for_typed("comp-analysis", "", ctx)
+    for kind, directory in _DRIVER_DIRS:
+        match = re.match(r"^design/%s/(.+)\.md$" % directory, ref)
+        if match:
+            return anchor_for_typed(kind, match.group(1), ctx)
     if ref.startswith("economy:"):
         return anchor_for_economy_ref(ref[len("economy:"):].strip(), ctx)
     return None
+
+
+# ---------------------------------------------------------------------------
+# Typed references
+#
+# A body cites another record with one of the eight `[[...]]` forms
+# ``game-authoring`` defines. Each resolves through ``anchor_for_typed``, the
+# same lookup the frontmatter fields use. A reference that is not one of the
+# eight, or that resolves to nothing, stops the render before anything is
+# written.
+# ---------------------------------------------------------------------------
+
+REFERENCE_TYPES = ("pillar", "mechanic", "node", "family", "connection", "tech")
+BARE_REFERENCE_TYPES = ("concept", "comp-analysis")
+REFERENCE_FORMS = (
+    "[[pillar:<slug>]], [[mechanic:<slug>]], [[node:<id>]], [[family:<name>]], "
+    "[[connection:<id>]], [[tech:<slug>]], [[concept]], [[comp-analysis]]"
+)
+
+
+class BadReference(Exception):
+    """One `[[...]]` that is malformed, or that resolves to nothing."""
+
+    def __init__(self, problem, reason):
+        Exception.__init__(self, reason)
+        self.problem = problem
+        self.reason = reason
+
+
+def parse_reference(inner):
+    """Return ``(kind, identifier)`` for the text inside one `[[...]]`."""
+    text = inner.strip()
+    if not text:
+        raise BadReference("is malformed", "the reference is empty")
+    kind, sep, ident = text.partition(":")
+    kind = kind.strip()
+    ident = ident.strip()
+    if not sep:
+        if kind in BARE_REFERENCE_TYPES:
+            return kind, ""
+        if kind in REFERENCE_TYPES:
+            raise BadReference(
+                "is malformed",
+                "`%s` names a reference type but carries no `:<identifier>`" % kind,
+            )
+        raise BadReference(
+            "is malformed",
+            "`%s` is an untyped reference; every reference names one of the "
+            "eight types" % kind,
+        )
+    if kind in BARE_REFERENCE_TYPES:
+        raise BadReference(
+            "is malformed",
+            "`%s` takes no identifier — its only form is `[[%s]]`" % (kind, kind),
+        )
+    if kind not in REFERENCE_TYPES:
+        raise BadReference(
+            "is malformed", "`%s` is not one of the eight reference types" % kind
+        )
+    if not ident:
+        raise BadReference(
+            "is malformed", "the identifier after `%s:` is empty" % kind
+        )
+    if kind == "family" and ident.startswith("@"):
+        raise BadReference(
+            "is malformed",
+            "`family:%s` carries a leading `@` — the form takes the bare family "
+            "name, `[[family:%s]]`" % (ident, ident[1:]),
+        )
+    if kind == "connection" and ident.startswith("#"):
+        raise BadReference(
+            "is malformed",
+            "`connection:%s` carries a leading `#` — the form takes the bare "
+            "connection id, `[[connection:%s]]`" % (ident, ident[1:]),
+        )
+    return kind, ident
+
+
+def unresolved_reason(kind, ident, ctx):
+    """Why one well-formed reference resolves to nothing."""
+    if kind == "pillar":
+        if ident in ctx["candidate_pillars"]:
+            return (
+                "pillar record `%s` is `status: candidate`, which this render "
+                "does not give a record of its own" % ident
+            )
+        return "no pillar record named `%s`" % ident
+    if kind == "mechanic":
+        return "no mechanic entry named `%s`" % ident
+    if kind == "tech":
+        if ident in ctx["superseded_tech"]:
+            return (
+                "technical decision record `%s` is `status: superseded`, which "
+                "this render does not give a record of its own" % ident
+            )
+        return "no technical decision record named `%s`" % ident
+    if kind == "node":
+        return "no economy node with `id: %s`" % ident
+    if kind == "family":
+        return "no economy family named `%s`" % ident
+    if kind == "connection":
+        return "no economy connection with `id: %s`" % ident
+    if kind == "concept":
+        return "`design/concept.md` does not exist"
+    return "`design/comp-analysis.md` does not exist"
+
+
+def resolve_reference(inner, ctx):
+    """Return ``(anchor, link_text)`` for one `[[...]]` body."""
+    kind, ident = parse_reference(inner)
+    anchor = anchor_for_typed(kind, ident, ctx)
+    if anchor is None:
+        raise BadReference("resolves to nothing", unresolved_reason(kind, ident, ctx))
+    return anchor, (ident if ident else kind)
+
+
+def body_references(body):
+    """Every `[[...]]` literal in ``body`` that is prose rather than code.
+
+    A fenced code block and an inline code span are never references -- the
+    same text ``inline()`` leaves alone when it renders the body.
+    """
+    found = []
+    in_fence = False
+    for line in body.split("\n"):
+        if _FENCE_RE.match(line):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        for match in _WIKILINK_RE.finditer(_CODE_SPAN_RE.sub(" ", line)):
+            found.append(match.group(0))
+    return found
+
+
+def record_bodies(data):
+    """``(path, writing skill, body)`` for every record body this render reads.
+
+    Includes the two shapes no anchor points at -- a candidate pillar and a
+    superseded technical decision -- because a citation in one is still a
+    citation, and a broken one is still worth surfacing.
+    """
+    out = []
+    if data["concept"] is not None:
+        out.append(("design/concept.md", "game-pillars", data["concept"]["body"]))
+    for pillar in data["pillars"] + data["candidates"]:
+        out.append((pillar["rel"], "game-pillars", pillar["body"]))
+    for mech in data["mechanics"]:
+        out.append((mech["rel"], "game-mechanics", mech["body"]))
+    economy = data["economy"]
+    if economy is not None:
+        for heading in economy["section_order"]:
+            out.append(
+                ("design/economy.md", "game-mechanics", economy["sections"][heading])
+            )
+    if data["comp"] is not None:
+        out.append(
+            ("design/comp-analysis.md", "game-comp-analysis", data["comp"]["body"])
+        )
+    for record in data["tech_live"] + data["tech_superseded"]:
+        out.append((record["rel"], "game-tech", record["body"]))
+    return out
+
+
+def validate_references(data, ctx):
+    """Every `[[...]]` in every body resolves, or the render stops."""
+    for rel, skill, body in record_bodies(data):
+        if not body:
+            continue
+        for literal in body_references(body):
+            try:
+                resolve_reference(literal[2:-2], ctx)
+            except BadReference as exc:
+                raise InvalidInput(
+                    "%s: body reference `%s` %s — %s; fix it with `%s`. The "
+                    "eight reference forms are defined by `game-authoring`: %s."
+                    % (rel, literal, exc.problem, exc.reason, skill, REFERENCE_FORMS)
+                )
 
 
 def is_declaration(conn):
@@ -947,7 +1198,14 @@ def build_markdown(data):
     return text.rstrip("\n") + "\n"
 
 
-def md_caption(text):
+def md_caption(text, updated=""):
+    """The addressing caption under a heading, with `updated` when present.
+
+    The timestamp is the record's raw UTC string: a plain-text file has no way
+    to know the reader's timezone, so it is never converted.
+    """
+    if updated:
+        return "*Source: %s · Updated: %s*" % (text, updated)
     return "*Source: %s*" % text
 
 
@@ -957,7 +1215,7 @@ def md_concept(data):
     if concept is None:
         out.append(ABSENT_CONCEPT)
         return out
-    out.append(md_caption("`design/concept.md`"))
+    out.append(md_caption("`design/concept.md`", concept["updated"]))
     if concept["body"]:
         out.append(demote_headings(concept["body"], 1))
     return out
@@ -970,7 +1228,7 @@ def md_pillars(data):
         out.append(ABSENT_PILLARS)
     for pillar in pillars:
         out.append("### %s" % pillar["title"])
-        out.append(md_caption("`%s`" % pillar["rel"]))
+        out.append(md_caption("`%s`" % pillar["rel"], pillar["updated"]))
         if pillar["body"]:
             out.append(demote_headings(pillar["body"], 2))
     if data["candidates"]:
@@ -986,7 +1244,7 @@ def md_mechanics(data):
         return out
     for mech in mechanics:
         out.append("### %s" % mech["title"])
-        out.append(md_caption("`%s`" % mech["rel"]))
+        out.append(md_caption("`%s`" % mech["rel"], mech["updated"]))
         parent = ref_code(mech["parent"]) if mech["parent"] else "none"
         children = code_list(mech["children"]) if mech["children"] else "none"
         out.append("- Parent: %s\n- Children: %s" % (parent, children))
@@ -1001,7 +1259,7 @@ def md_economy(data):
     if economy is None:
         out.append(ABSENT_ECONOMY)
         return out
-    out.append(md_caption("`design/economy.md`"))
+    out.append(md_caption("`design/economy.md`", economy["updated"]))
 
     out.append("### Nodes")
     if not economy["nodes"]:
@@ -1111,7 +1369,7 @@ def md_comp(data):
     if comp is None:
         out.append(ABSENT_COMP)
         return out
-    out.append(md_caption("`design/comp-analysis.md`"))
+    out.append(md_caption("`design/comp-analysis.md`", comp["updated"]))
     if comp["body"]:
         out.append(demote_headings(comp["body"], 1))
     return out
@@ -1124,7 +1382,7 @@ def md_tech(data):
         out.append(ABSENT_TECH)
     for record in live:
         out.append("### %s" % record["title"])
-        out.append(md_caption("`%s`" % record["rel"]))
+        out.append(md_caption("`%s`" % record["rel"], record["updated"]))
         if record["status"] == "open":
             out.append("**Open — not yet decided.**")
         drivers = record["drivers"]
@@ -1170,7 +1428,7 @@ def h(text):
 
 
 _CODE_SPAN_RE = re.compile(r"`([^`]+)`")
-_WIKILINK_RE = re.compile(r"\[\[([^\[\]]+)\]\]")
+_WIKILINK_RE = re.compile(r"\[\[([^\[\]]*)\]\]")
 _LINK_RE = re.compile(r"\[([^\[\]]*)\]\(([^()\s]*)\)")
 _STRONG_RE = re.compile(r"\*\*(.+?)\*\*")
 _EM_STAR_RE = re.compile(r"(?<![\w*])\*([^*\n]+)\*(?![\w*])")
@@ -1195,12 +1453,14 @@ def _inline_plain(text, ctx):
     escaped = h(text)
 
     def wiki(match):
-        slug = match.group(1).strip()
-        if slug in ctx["pillars"]:
-            return '<a href="#pillar-%s">%s</a>' % (slug, slug)
-        if slug in ctx["mechanics"]:
-            return '<a href="#mechanic-%s">%s</a>' % (slug, slug)
-        return "<code>%s</code>" % slug
+        try:
+            anchor, label = resolve_reference(match.group(1), ctx)
+        except BadReference:
+            # Unreachable: validate_references has already stopped the render
+            # for anything that does not resolve. Left as the literal text so a
+            # future caller that skips validation loses nothing.
+            return match.group(0)
+        return '<a href="%s">%s</a>' % (anchor, label)
 
     escaped = _WIKILINK_RE.sub(wiki, escaped)
     escaped = _LINK_RE.sub(
@@ -1211,6 +1471,8 @@ def _inline_plain(text, ctx):
     escaped = _EM_UNDER_RE.sub(lambda m: "<em>%s</em>" % m.group(1), escaped)
     return escaped
 
+
+OPEN_QUESTIONS = "Open Questions"
 
 _HR_RE = re.compile(r"^\s*(?:(?:\*\s*){3,}|(?:-\s*){3,}|(?:_\s*){3,})$")
 _BULLET_RE = re.compile(r"^(\s*)[-*]\s+(.*)$")
@@ -1250,8 +1512,12 @@ def _md_to_html(text, demote, ctx):
         heading = _ATX_RE.match(line)
         if heading:
             level = min(6, len(heading.group(1)) + demote)
+            label = heading.group(2).strip()
+            # The one heading text the stylesheet knows by name: every shape
+            # that has a home for unsettled content calls it the same thing.
+            cls = ' class="open-questions"' if label == OPEN_QUESTIONS else ""
             out.append(
-                "<h%d>%s</h%d>" % (level, inline(heading.group(2).strip(), ctx), level)
+                "<h%d%s>%s</h%d>" % (level, cls, inline(label, ctx), level)
             )
             i += 1
             continue
@@ -1489,6 +1755,7 @@ def build_html(data, ctx):
     out.add(0, "</div>")
     out.add(0, "<script>")
     out.extend(0, TOC_SCRIPT.strip("\n").split("\n"))
+    out.extend(0, LOCAL_TIME_SCRIPT.strip("\n").split("\n"))
     out.add(0, "</script>")
     out.add(0, "</body>")
     out.add(0, "</html>")
@@ -1570,6 +1837,38 @@ TOC_SCRIPT = r"""
 """
 
 
+# The second half of the same progressive enhancement: every `updated`
+# timestamp is written into the markup as the raw UTC string the record
+# carries, and rewritten here to the reader's own clock. The `datetime`
+# attribute is never touched, so the absolute value stays in the document, and
+# a value this can't parse is left exactly as it was rendered.
+LOCAL_TIME_SCRIPT = r"""
+(function () {
+  "use strict";
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  var stamps = document.querySelectorAll("time.updated[datetime]");
+  for (var i = 0; i < stamps.length; i++) {
+    var raw = stamps[i].getAttribute("datetime");
+    var when = new Date(raw);
+    if (isNaN(when.getTime())) { continue; }
+    var local = when.getFullYear() + "-" + pad(when.getMonth() + 1) + "-" +
+      pad(when.getDate()) + " " + pad(when.getHours()) + ":" + pad(when.getMinutes());
+    var zone = "";
+    try {
+      var parts = new Intl.DateTimeFormat(undefined, {
+        timeZoneName: "short"
+      }).formatToParts(when);
+      for (var j = 0; j < parts.length; j++) {
+        if (parts[j].type === "timeZoneName") { zone = parts[j].value; }
+      }
+    } catch (err) { zone = ""; }
+    stamps[i].textContent = zone ? local + " " + zone : local;
+    stamps[i].title = raw;
+  }
+})();
+"""
+
+
 def html_toc(out, data):
     out.add(0, '<nav class="toc" aria-label="Table of contents">')
     out.add(2, '<p class="toc-title">Contents</p>')
@@ -1643,15 +1942,38 @@ def _toc_entry(out, href, label, children, pad=4):
     out.add(pad + 2, "</ol></li>")
 
 
-def section_open(out, section_id, classes, source, absent):
+def section_open(out, section_id, classes, source, absent, updated=""):
     cls = "gdd-section %s" % classes
     if absent:
         cls += " absent"
     out.add(
         0,
-        '<section id="%s" class="%s" data-source="%s">'
-        % (section_id, cls, h(source)),
+        '<section id="%s" class="%s"%s>'
+        % (section_id, cls, source_attrs(source, updated)),
     )
+
+
+def source_attrs(source, updated=""):
+    """``data-source`` — and ``data-updated`` beside it when there is one."""
+    attrs = ' data-source="%s"' % h(source)
+    if updated:
+        attrs += ' data-updated="%s"' % h(updated)
+    return attrs
+
+
+def source_caption(inner_html, updated=""):
+    """The `<p class="source">` caption under a heading.
+
+    ``updated`` rides along as a `<time>` holding the raw UTC string, which is
+    what a reader without JavaScript sees; the inline script at the end of the
+    document rewrites the text to local time and leaves `datetime` alone.
+    """
+    if updated:
+        inner_html += ' <time class="updated" datetime="%s">%s</time>' % (
+            h(updated),
+            h(updated),
+        )
+    return '<p class="source">%s</p>' % inner_html
 
 
 def html_body(out, pad, body, demote, ctx):
@@ -1662,12 +1984,21 @@ def html_body(out, pad, body, demote, ctx):
 
 def html_concept(out, data, ctx):
     concept = data["concept"]
-    section_open(out, "concept", "concept", "design/concept.md", concept is None)
+    section_open(
+        out,
+        "concept",
+        "concept",
+        "design/concept.md",
+        concept is None,
+        concept["updated"] if concept else "",
+    )
     out.add(2, "<h2>Concept</h2>")
     if concept is None:
         out.add(2, '<p class="absent">%s</p>' % inline(ABSENT_CONCEPT, ctx))
     else:
-        out.add(2, '<p class="source"><code>design/concept.md</code></p>')
+        out.add(
+            2, source_caption("<code>design/concept.md</code>", concept["updated"])
+        )
         if concept["body"]:
             html_body(out, 2, concept["body"], 1, ctx)
     out.add(0, "</section>")
@@ -1682,11 +2013,14 @@ def html_pillars(out, data, ctx):
     for pillar in pillars:
         out.add(
             2,
-            '<article id="pillar-%s" class="record pillar" data-source="%s">'
-            % (h(pillar["slug"]), h(pillar["rel"])),
+            '<article id="pillar-%s" class="record pillar"%s>'
+            % (h(pillar["slug"]), source_attrs(pillar["rel"], pillar["updated"])),
         )
         out.add(4, "<h3>%s</h3>" % h(pillar["title"]))
-        out.add(4, '<p class="source"><code>%s</code></p>' % h(pillar["rel"]))
+        out.add(
+            4,
+            source_caption("<code>%s</code>" % h(pillar["rel"]), pillar["updated"]),
+        )
         if pillar["body"]:
             html_body(out, 4, pillar["body"], 2, ctx)
         out.add(2, "</article>")
@@ -1724,11 +2058,14 @@ def _html_mechanic_forest(out, pad, forest, ctx):
 def _html_mechanic(out, pad, mech, ctx):
     out.add(
         pad,
-        '<article id="mechanic-%s" class="record mechanic" data-source="%s">'
-        % (h(mech["slug"]), h(mech["rel"])),
+        '<article id="mechanic-%s" class="record mechanic"%s>'
+        % (h(mech["slug"]), source_attrs(mech["rel"], mech["updated"])),
     )
     out.add(pad + 2, "<h3>%s</h3>" % h(mech["title"]))
-    out.add(pad + 2, '<p class="source"><code>%s</code></p>' % h(mech["rel"]))
+    out.add(
+        pad + 2,
+        source_caption("<code>%s</code>" % h(mech["rel"]), mech["updated"]),
+    )
     dl_open(out, pad + 2)
     if mech["parent"]:
         anchor = (
@@ -1755,13 +2092,22 @@ def _html_mechanic(out, pad, mech, ctx):
 
 def html_economy(out, data, ctx):
     economy = data["economy"]
-    section_open(out, "economy", "economy", "design/economy.md", economy is None)
+    section_open(
+        out,
+        "economy",
+        "economy",
+        "design/economy.md",
+        economy is None,
+        economy["updated"] if economy else "",
+    )
     out.add(2, "<h2>Economy</h2>")
     if economy is None:
         out.add(2, '<p class="absent">%s</p>' % inline(ABSENT_ECONOMY, ctx))
         out.add(0, "</section>")
         return
-    out.add(2, '<p class="source"><code>design/economy.md</code></p>')
+    out.add(
+        2, source_caption("<code>design/economy.md</code>", economy["updated"])
+    )
 
     out.add(2, '<h3 id="economy-nodes">Nodes</h3>')
     if not economy["nodes"]:
@@ -1774,7 +2120,7 @@ def html_economy(out, data, ctx):
             'data-source="design/economy.md#%s">' % (h(node_id), h(node_id)),
         )
         out.add(4, "<h4>%s</h4>" % h(node_id))
-        out.add(4, '<p class="source">node <code>%s</code></p>' % h(node_id))
+        out.add(4, source_caption("node <code>%s</code>" % h(node_id)))
         dl_open(out, 4)
         node_type = as_text(node.get("type", "")).strip()
         if node_type:
@@ -1808,7 +2154,7 @@ def html_economy(out, data, ctx):
             'data-source="design/economy.md#@%s">' % (h(fname), h(fname)),
         )
         out.add(4, "<h4>@%s</h4>" % h(fname))
-        out.add(4, '<p class="source">family <code>@%s</code></p>' % h(fname))
+        out.add(4, source_caption("family <code>@%s</code>" % h(fname)))
         dl_open(out, 4)
         ftype = as_text(family.get("type", "")).strip()
         if ftype:
@@ -1907,7 +2253,7 @@ def html_connection(out, conn, ctx):
         'data-source="design/economy.md#%s">' % (h(conn_id), kind_class, h(conn_id)),
     )
     out.add(4, "<h4>%s</h4>" % h(conn_id))
-    out.add(4, '<p class="source">connection <code>%s</code></p>' % h(conn_id))
+    out.add(4, source_caption("connection <code>%s</code>" % h(conn_id)))
     dl_open(out, 4)
     src = as_text(conn.get("from", "")).strip()
     dst = as_text(conn.get("to", "")).strip()
@@ -1940,12 +2286,16 @@ def html_comp(out, data, ctx):
         "comp-analysis",
         "design/comp-analysis.md",
         comp is None,
+        comp["updated"] if comp else "",
     )
     out.add(2, "<h2>Competitive Differentiation</h2>")
     if comp is None:
         out.add(2, '<p class="absent">%s</p>' % inline(ABSENT_COMP, ctx))
     else:
-        out.add(2, '<p class="source"><code>design/comp-analysis.md</code></p>')
+        out.add(
+            2,
+            source_caption("<code>design/comp-analysis.md</code>", comp["updated"]),
+        )
         if comp["body"]:
             html_body(out, 2, comp["body"], 1, ctx)
     out.add(0, "</section>")
@@ -1964,11 +2314,18 @@ def html_tech(out, data, ctx):
         )
         out.add(
             2,
-            '<article id="tech-%s" class="%s" data-source="%s">'
-            % (h(record["slug"]), classes, h(record["rel"])),
+            '<article id="tech-%s" class="%s"%s>'
+            % (
+                h(record["slug"]),
+                classes,
+                source_attrs(record["rel"], record["updated"]),
+            ),
         )
         out.add(4, "<h3>%s</h3>" % h(record["title"]))
-        out.add(4, '<p class="source"><code>%s</code></p>' % h(record["rel"]))
+        out.add(
+            4,
+            source_caption("<code>%s</code>" % h(record["rel"]), record["updated"]),
+        )
         if record["status"] == "open":
             out.add(4, '<p class="open-note">Open — not yet decided.</p>')
         dl_open(out, 4)
@@ -2052,6 +2409,7 @@ def main(argv=None):
     try:
         data = load_design(root)
         ctx = build_context(data)
+        validate_references(data, ctx)
         markdown = build_markdown(data)
         html = build_html(data, ctx)
     except InvalidInput as exc:

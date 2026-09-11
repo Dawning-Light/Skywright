@@ -1,0 +1,4 @@
+design/pillars/zero-grind.md
+`updated: 2026-09-11 20:42` is not the required `YYYY-MM-DDTHH:MMZ` UTC form
+game-pillars
+game-authoring

@@ -8,7 +8,7 @@ scope: cross-cutting
 drivers:
   - design/concept.md
 source: game-tech
-date: 2026-09-11
+updated: 2026-08-02T15:30Z
 ---
 
 ## Context

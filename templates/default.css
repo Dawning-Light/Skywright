@@ -16,8 +16,13 @@
      .mechanic-children     wraps the child mechanics that follow their
                             parent's card; nests as deep as the parent tree
      .source                the addressing caption under every heading
+     .updated               the <time> in that caption holding the record's
+                            `updated` stamp; the raw UTC string in the markup,
+                            rewritten to local time by the inline script
      .fields                <dl> of a record's frontmatter fields
      .body                  the record's own prose
+     .open-questions        a body heading whose text is exactly "Open
+                            Questions" — the shape's home for unsettled content
      .absent / .open-note / .candidate-note / .superseded-note
                             the non-record states a successful render can show
      .toc a.is-active       the TOC entry for what is on screen (set by the
@@ -482,6 +487,28 @@ hr {
   color: var(--text-faint);
 }
 
+/* The record's `updated` stamp, riding along in the caption. Deliberately
+   quieter than the path beside it: it answers "how stale is this?" for a
+   reader who goes looking, and recedes for one who doesn't. The raw UTC value
+   stays in the `datetime` attribute (and the `title`) whatever the script
+   does to the text. */
+.updated {
+  margin-left: 0.5rem;
+  padding-left: 0.55rem;
+  border-left: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.updated::before {
+  content: "updated ";
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.86em;
+  opacity: 0.8;
+}
+
 /* --------------------------------------------------------------------------
    Records — one card per rendered record, colour-coded by type
    -------------------------------------------------------------------------- */
@@ -720,6 +747,31 @@ hr {
 .record .body h5 {
   padding-left: 0.75rem;
   border-left: 3px solid var(--record-accent);
+}
+
+/* "Open Questions" — the one body heading the render names, so the unsettled
+   part of a record reads as unsettled at a glance. Light on purpose: it marks
+   the section without competing with the record's own accent. */
+.body .open-questions {
+  color: var(--text-muted);
+}
+
+.body .open-questions::after {
+  content: "unsettled";
+  margin-left: 0.6rem;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  vertical-align: 0.15em;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.record .body .open-questions {
+  border-left-color: var(--border-strong);
 }
 
 .body ul,
