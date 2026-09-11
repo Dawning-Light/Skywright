@@ -27,43 +27,75 @@
    usually means editing :root and nothing else.
    ========================================================================== */
 
+/* Inter (variable, upright + italic), shipped with the skill and copied into
+   gdd-fonts/ beside this file by the render — no network needed. Licence:
+   gdd-fonts/Inter-OFL.txt. If the files are missing the page falls back to
+   the system sans in --font-body, and the layout does not shift, because no
+   width below is measured in the font's own units. */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("gdd-fonts/InterVariable.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("gdd-fonts/InterVariable-Italic.woff2") format("woff2");
+}
+
 :root {
   color-scheme: dark;
 
+  /* Palette: neutral charcoal built as a lightness ladder so each layer
+     separates from the one beneath it — page, then lifted cards, then
+     recessed field panels inside them. Text has four distinct steps:
+     headings brightest, body a notch below (~12:1 on a card, easy on the
+     eyes), then muted, then faint (~4.7:1) for captions that should recede.
+     Only the amber accent is fully saturated, so links and the "you are
+     here" marker are what pop; the per-type colours are muted so they tag
+     without shouting. */
+
   /* Surfaces */
-  --bg: #0e1015;
-  --bg-elevated: #151821;
-  --bg-sunken: #0a0c10;
-  --border: #252a36;
-  --border-strong: #343b4b;
+  --bg: #0e0e0e;            /* page */
+  --bg-elevated: #1a1a1a;   /* cards and the table of contents */
+  --bg-sunken: #131313;     /* field lists, code, table heads inside cards */
+  --border: #333333;
+  --border-strong: #505050;
 
   /* Text */
-  --text: #e4e7ee;
-  --text-muted: #98a1b3;
-  --text-faint: #6b7385;
+  --text-strong: #f4f4f2;   /* headings and <strong> */
+  --text: #d6d4cf;          /* body copy */
+  --text-muted: #a3a19c;
+  --text-faint: #868480;
 
   /* Brand accent (links, focus, current-section marker) */
-  --accent: #7aa2f7;
-  --accent-soft: rgba(122, 162, 247, 0.14);
+  --accent: #ffb454;
+  --accent-soft: rgba(255, 180, 84, 0.13);
 
   /* Per-record accents — one hue per record type so a reader can tell at a
-     glance what kind of thing a subsection is. */
-  --c-pillar: #e0af68;
-  --c-mechanic: #2ac3a2;
-  --c-node: #bb9af7;
-  --c-family: #f7768e;
-  --c-connection: #7dcfff;
-  --c-tech: #9ece6a;
+     glance what kind of thing a subsection is. Earthy and low-saturation
+     (roughly 30–55%) so several on one screen sit together calmly. */
+  --c-pillar: #d99173;      /* terracotta */
+  --c-mechanic: #94c285;    /* sage */
+  --c-node: #83a9d0;        /* steel blue */
+  --c-family: #b395c4;      /* dusty mauve */
+  --c-connection: #72b9a9;  /* muted teal */
+  --c-tech: #c9b67f;        /* sand */
 
   /* Status colours */
-  --c-open: #e0af68;
-  --c-absent: #6b7385;
-  --c-candidate: #7aa2f7;
-  --c-superseded: #6b7385;
+  --c-open: #ff8f40;
+  --c-absent: #868480;
+  --c-candidate: #ffb454;
+  --c-superseded: #868480;
 
   /* Type */
-  --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Inter", "Inter Variable", ui-sans-serif, system-ui,
+    -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono",
     monospace;
   --fs-base: 1.0625rem;     /* 17px */
@@ -71,8 +103,11 @@
 
   /* Layout */
   --toc-width: 19rem;
-  --doc-width: 100ch;       /* content width of the document column; prose,
-                               cards, field lists and tables all fill it */
+  --doc-width: 42rem;       /* content width of the document column; prose,
+                               cards, field lists and tables all fill it, so
+                               this alone sets the line length (~75
+                               characters of Inter inside a card). In rem,
+                               not ch, so it doesn't change with the font */
   --gutter: clamp(1.25rem, 4vw, 3.5rem);
   --radius: 10px;
 }
@@ -266,12 +301,18 @@ hr {
   padding-left: 0.75rem;
 }
 
+/* Long titles clamp to two lines with an ellipsis. Overflow is clipped at the
+   padding edge, so vertical padding would leave the tops of the hidden third
+   line peeking through as specks; the vertical spacing is a transparent
+   border instead, which sits outside the clip but still takes the hover
+   background. */
 .toc-list ol a {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
-  padding: 0.22rem 0.5rem;
+  padding: 0 0.5rem;
+  border-block: 0.22rem solid transparent;
   margin-left: -0.5rem;
   border-radius: 5px;
   color: var(--text-muted);
@@ -302,10 +343,14 @@ hr {
   background: var(--accent-soft);
 }
 
+/* The marker bar is a background stripe rather than an inset shadow: an
+   inset shadow stops at the padding edge and would come up short of the
+   highlight's transparent top and bottom borders. */
 .toc-list ol a.is-active {
-  color: var(--text);
-  background: var(--accent-soft);
-  box-shadow: inset 3px 0 0 var(--accent);
+  color: var(--text-strong);
+  background:
+    linear-gradient(var(--accent), var(--accent)) left / 3px 100% no-repeat,
+    var(--accent-soft);
 }
 
 /* Document column */
@@ -367,6 +412,7 @@ hr {
   line-height: 1.15;
   letter-spacing: -0.015em;
   font-weight: 700;
+  color: var(--text-strong);
 }
 
 .gdd-note {
@@ -392,6 +438,7 @@ hr {
   line-height: 1.2;
   letter-spacing: -0.01em;
   font-weight: 700;
+  color: var(--text-strong);
   border-top: 2px solid var(--border-strong);
 }
 
@@ -456,6 +503,7 @@ hr {
   margin: 0 0 0.3rem;
   line-height: 1.3;
   font-weight: 650;
+  color: var(--text-strong);
 }
 
 .record > h3 {
@@ -507,10 +555,14 @@ hr {
    line down the side of the group the way an editor draws indentation
    guides. The line is flush with the parent card's left edge and uses the
    same colour as card outlines, so it is there when looked for and
-   otherwise recedes; grandchildren nest inside again, adding a second line. */
+   otherwise recedes; grandchildren nest inside again, adding a second line.
+   The negative right margin cancels the indent, so a child card keeps its
+   parent's full width and is shifted right rather than squeezed — each level
+   of depth reaches a little further into the right-hand margin. */
 .mechanic-children {
-  margin: 0 0 1.5rem;
-  padding-left: 1.5rem;
+  --nest-indent: 1.5rem;
+  margin: 0 calc(-1 * (var(--nest-indent) + 2px)) 1.5rem 0;
+  padding-left: var(--nest-indent);
   border-left: 2px solid var(--border);
 }
 
@@ -520,6 +572,14 @@ hr {
 
 .mechanic-children > :last-child {
   margin-bottom: 0;
+}
+
+/* On a narrow single-column screen there is no right-hand margin to reach
+   into, so child cards narrow with their indent instead. */
+@media (max-width: 900px) {
+  .mechanic-children {
+    margin-right: 0;
+  }
 }
 
 /* Economy records are numerous and short: keep them compact. */
@@ -646,6 +706,7 @@ hr {
   margin: 1.6rem 0 0.5rem;
   line-height: 1.3;
   font-weight: 650;
+  color: var(--text-strong);
 }
 
 .body h3 { font-size: 1.15rem; }
@@ -691,7 +752,7 @@ hr {
 
 .body strong {
   font-weight: 700;
-  color: #fff;
+  color: var(--text-strong);
 }
 
 .body em {
@@ -890,6 +951,7 @@ p.absent {
     --border: #ccc;
     --border-strong: #999;
     --text: #111;
+    --text-strong: #000;
     --text-muted: #444;
     --text-faint: #666;
     --accent: #1a4fd6;

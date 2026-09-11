@@ -44,6 +44,11 @@ never inside this skill's own repository:
   it belongs to the owner. A re-render never touches an existing `gdd.css`,
   so a style-only change needs no re-render at all, and only an explicit
   `--reset-css` overwrites it with the default again.
+- **`design/gdd-fonts/`** — the font files the default stylesheet loads
+  (Inter, with its OFL licence), copied from this skill's `templates/fonts/`
+  so `gdd.html` needs no network to look right. Same rule as `gdd.css`: a
+  file is written only when it is missing, and overwritten only by
+  `--reset-css`.
 
 `design/gdd.md` is the **core** GDD only: the ninth of nine
 supporting-document types the spec's research surveyed, and the only one
@@ -139,16 +144,17 @@ python3 <skill>/scripts/render_gdd.py [--reset-css]
 Stdlib-only Python 3; no packages to install.
 
 **On exit 0**, the script has written `design/gdd.md` and `design/gdd.html`,
-and has seeded `design/gdd.css` if it did not already exist (creating
-`design/` itself if needed — a project with no structured data at all is a
-legal starting state, and still gets a complete render made entirely of
-absent-section statements). With `--reset-css` it also overwrites
-`design/gdd.css` with the default template, discarding any hand-edits — the
-only destructive path the script has, and one it takes only when asked.
-Relay the outcome to the owner and name the three paths.
+and has seeded `design/gdd.css` and any missing `design/gdd-fonts/` file
+(creating `design/` itself if needed — a project with no structured data at
+all is a legal starting state, and still gets a complete render made
+entirely of absent-section statements). With `--reset-css` it also
+overwrites `design/gdd.css` and `design/gdd-fonts/` with the default
+template, discarding any hand-edits — the only destructive path the script
+has, and one it takes only when asked. Relay the outcome to the owner and
+name the three file paths.
 
 **On non-zero exit**, the script has written **nothing** — none of the three
-files, not even the CSS seed — and has printed one message to stderr naming
+files, not even the CSS or font seed — and has printed one message to stderr naming
 which record fails which rule and which upstream skill fixes it. The
 conditions that produce this are the ones the upstream skills define as
 invalid: an economy connection with no `id`, block-style edges, slash-joined
