@@ -3,12 +3,14 @@
 
 Reads the six inputs the ``game-gdd`` skill names (concept statement, pillar
 records, mechanic entries, the economy graph, the differentiation statement,
-technical decision records) and writes three files into the *consuming*
-project's ``design/`` directory:
+technical decision records) and writes three files, plus the stylesheet's
+fonts, into the *consuming* project's ``design/`` directory:
 
     design/gdd.md    the machine-readable render
     design/gdd.html  the human-readable render
     design/gdd.css   seeded once from <script dir>/../templates/default.css
+    design/gdd-fonts/  the stylesheet's font files, seeded once from
+                     <script dir>/../templates/fonts/
 
 Invalid input blocks the whole render: nothing is written, one message goes to
 stderr naming the failing record, the rule it fails, and the upstream skill
@@ -2035,7 +2037,10 @@ def main(argv=None):
     parser.add_argument(
         "--reset-css",
         action="store_true",
-        help="overwrite design/gdd.css from the skill's default template",
+        help=(
+            "overwrite design/gdd.css and design/gdd-fonts/ from the skill's "
+            "default template"
+        ),
     )
     args = parser.parse_args(argv)
 
@@ -2063,7 +2068,30 @@ def main(argv=None):
     if os.path.isfile(template) and (args.reset_css or not os.path.exists(css_path)):
         shutil.copyfile(template, css_path)
 
+    seed_fonts(os.path.join(os.path.dirname(template), "fonts"), root, args.reset_css)
+
     return 0
+
+
+def seed_fonts(fonts_dir, root, reset):
+    """Copy the template's font files into ``design/gdd-fonts/``.
+
+    Same rule as ``gdd.css``: each file is written when it is missing, and
+    overwritten only by ``--reset-css``. Files are copied in sorted order and
+    anything else already in ``gdd-fonts/`` is left alone.
+    """
+    if not os.path.isdir(fonts_dir):
+        return
+    dest_dir = os.path.join(root, "gdd-fonts")
+    for name in sorted(os.listdir(fonts_dir)):
+        src = os.path.join(fonts_dir, name)
+        if not os.path.isfile(src):
+            continue
+        dest = os.path.join(dest_dir, name)
+        if reset or not os.path.exists(dest):
+            if not os.path.isdir(dest_dir):
+                os.makedirs(dest_dir)
+            shutil.copyfile(src, dest)
 
 
 if __name__ == "__main__":

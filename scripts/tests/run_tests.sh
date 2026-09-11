@@ -41,6 +41,7 @@ else
   TEMPLATE="$WORK/skill/templates/default.css"
   TEMPLATE_NOTE="note: $REAL_TEMPLATE does not exist; CSS assertions ran against a throwaway placeholder."
 fi
+TEMPLATE_FONTS="$(dirname "$TEMPLATE")/fonts"
 
 FAILURES=0
 
@@ -125,6 +126,15 @@ run_valid_fixture() {
     fail "$name: gdd.css seeded from templates/default.css" "missing or not identical to $TEMPLATE"
   fi
 
+  # The template's font files are seeded into gdd-fonts/ beside gdd.css.
+  if [ -d "$TEMPLATE_FONTS" ]; then
+    if diff -r "$TEMPLATE_FONTS" "$dir/design/gdd-fonts" > /dev/null 2>&1; then
+      pass "$name: gdd-fonts/ seeded from templates/fonts/"
+    else
+      fail "$name: gdd-fonts/ seeded from templates/fonts/" "missing or not identical to $TEMPLATE_FONTS"
+    fi
+  fi
+
   # Determinism: a second run over the same input produces the same bytes.
   cp "$dir/design/gdd.md" "$WORK/first.md"
   cp "$dir/design/gdd.html" "$WORK/first.html"
@@ -156,6 +166,36 @@ run_valid_fixture() {
   else
     fail "$name: --reset-css restores gdd.css from the template" "gdd.css was not reset"
   fi
+
+  # Font files follow the same rule: kept across a re-render, restored by
+  # --reset-css, and a deleted one comes back on the next ordinary render.
+  if [ -d "$TEMPLATE_FONTS" ]; then
+    local font
+    font="$(ls "$TEMPLATE_FONTS" | head -1)"
+    printf 'hand-replaced\n' > "$dir/design/gdd-fonts/$font"
+    rc=0
+    run_render "$dir" "$WORK/out" "$WORK/err" || rc=$?
+    if [ "$rc" -eq 0 ] && grep -q 'hand-replaced' "$dir/design/gdd-fonts/$font"; then
+      pass "$name: existing gdd-fonts/ files survive a re-render"
+    else
+      fail "$name: existing gdd-fonts/ files survive a re-render" "$font was overwritten"
+    fi
+    rc=0
+    run_render "$dir" "$WORK/out" "$WORK/err" --reset-css || rc=$?
+    if [ "$rc" -eq 0 ] && diff -r "$TEMPLATE_FONTS" "$dir/design/gdd-fonts" > /dev/null 2>&1; then
+      pass "$name: --reset-css restores gdd-fonts/ from the template"
+    else
+      fail "$name: --reset-css restores gdd-fonts/ from the template" "gdd-fonts/ was not reset"
+    fi
+    rm "$dir/design/gdd-fonts/$font"
+    rc=0
+    run_render "$dir" "$WORK/out" "$WORK/err" || rc=$?
+    if [ "$rc" -eq 0 ] && cmp -s "$TEMPLATE_FONTS/$font" "$dir/design/gdd-fonts/$font"; then
+      pass "$name: a missing gdd-fonts/ file is re-seeded"
+    else
+      fail "$name: a missing gdd-fonts/ file is re-seeded" "$font was not restored"
+    fi
+  fi
 }
 
 run_invalid_fixture() {
@@ -185,7 +225,7 @@ run_invalid_fixture() {
 
   local wrote=""
   local f
-  for f in gdd.md gdd.html gdd.css; do
+  for f in gdd.md gdd.html gdd.css gdd-fonts; do
     if [ -e "$dir/design/$f" ]; then
       wrote="$wrote $f"
     fi
