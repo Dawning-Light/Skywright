@@ -7,9 +7,9 @@ description: Use when a game project needs to know how its concept differs from 
 
 Turns competitive analysis into a repeatable procedure: identify competitors,
 research each one, and map the findings into a differentiation statement and a
-set of candidate design pillars. This is one of five independent Orrery
+set of candidate design pillars. This is one of six independent Orrery
 skills for game design (`game-pillars`, `game-comp-analysis`,
-`game-mechanics`, `game-gdd`, `game-critique`). `game-pillars` is the sole
+`game-mechanics`, `game-tech`, `game-gdd`, `game-critique`). `game-pillars` is the sole
 definition of the pillar record shape and the `design/pillars/<slug>.md`
 path; this file names that skill rather than restating its fields, and adds
 only the two values described under Candidate pillar records below.
@@ -156,7 +156,7 @@ second record type to distinguish them.
 
 Run this skill against any game project that already has a concept statement
 (or a spoken stand-in, per Consumes above) — nothing here waits on
-`game-mechanics`, `game-gdd`, or `game-critique`, and none of their output is
-read or required. The suggested order across the five skills —
-`game-pillars` → `game-comp-analysis` → `game-mechanics` → `game-gdd` →
-`game-critique` — is a recommendation, not a requirement.
+`game-mechanics`, `game-tech`, `game-gdd`, or `game-critique`, and none of
+their output is read or required. The suggested order across the six skills
+— `game-pillars` → `game-comp-analysis` → `game-mechanics` → `game-tech` →
+`game-gdd` → `game-critique` — is a recommendation, not a requirement.
