@@ -88,7 +88,7 @@ uses: a YAML frontmatter block between `---` lines, then a markdown body.
 | `drivers` | A list, possibly empty, of what forces this decision. Each entry takes one of three forms. A path to a concept, pillar, mechanic, or comp-analysis record (`design/concept.md`, `design/pillars/<slug>.md`, `design/mechanics/<slug>.md`, `design/comp-analysis.md`). Or `economy:<ref>`, where `<ref>` follows `game-mechanics`' sigil rule: a bare node id, `#<connection-id>`, or `@<family>`. Or a path to another technical decision record, `design/tech/<slug>.md`. A driver that resolves to nothing is invalid. A decision forced only by owner constraints (skills, budget, an existing codebase) has an empty `drivers` list, and its `## Context` states the constraint. |
 | `superseded_by` | Present only when `status: superseded`: the `name` of the replacing record. |
 | `source` | Always `game-tech`. |
-| `date` | `YYYY-MM-DD` of the last `status` change. Check the real date rather than guessing it. |
+| `updated` | The UTC time of the last write to this file, `YYYY-MM-DDTHH:MMZ` (the form `game-authoring` defines). Moves on every edit — a status change, a new driver, a typo. Check the real clock rather than guessing it. |
 
 ### Body
 
@@ -107,9 +107,9 @@ One heading per section, so a reader and a renderer see the same structure:
 - **Supersede, never reverse in place.** An accepted decision's
   `## Decision` is never edited to say something different. A changed
   decision is a new record. The old record's `status` becomes `superseded`,
-  its `superseded_by` names the new one, and its `date` moves to the day of
-  that change. Every other edit — a typo, an added driver, a new assumption,
-  a refined consequence — is made in place. Superseded records are kept,
+  and its `superseded_by` names the new one. Every other edit — a typo, an
+  added driver, a new assumption, a refined consequence — is made in place,
+  and `updated` moves on every one of them. Superseded records are kept,
   never deleted: they are the project's record of decisions that turned out
   wrong, the source a future agent-facing digest would draw its
   "past mistakes to avoid" from.
@@ -133,7 +133,7 @@ drivers:
   - design/mechanics/party.md
   - design/mechanics/trading.md
 source: game-tech
-date: 2026-09-11
+updated: 2026-09-11T20:42Z
 ---
 
 ## Context
@@ -179,6 +179,14 @@ all and is reached only by a full walk or by the owner naming it.
 
 ## Procedure
 
+Before writing or revising any file this skill produces, invoke
+`game-authoring` if it has not already run earlier in this conversation. Its
+rules govern every body written below; in particular, a body that refers to
+a fact another record owns cites it with one of the typed wikilinks
+`game-authoring` defines (`[[mechanic:<slug>]]`, `[[node:<id>]]`,
+`[[pillar:<slug>]]`, and the rest) rather than restating it, while `drivers`
+keep their own path and `economy:<ref>` forms above.
+
 1. **Read what exists**, per Consumes above: `design/concept.md`; every
    `design/pillars/*.md` with `status: approved`; every
    `design/mechanics/*.md`; `design/economy.md` (or, if invalid, skip it and
@@ -187,7 +195,7 @@ all and is reached only by a full walk or by the owner naming it.
 2. **Open records first.** List every `open` record before proposing
    anything new, and offer to settle each now. An `open` record settled in
    this step is edited in place: `## Decision` and `## Consequences` are
-   added, `status` becomes `accepted`, and `date` moves to today.
+   added, `status` becomes `accepted`, and `updated` moves to now.
 3. **Match triggers.** Walk the catalog. Every category that some record
    triggers becomes a proposal carrying the record's address and a
    **verbatim quote** of the triggering phrase. A category no record
