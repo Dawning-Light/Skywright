@@ -1,6 +1,6 @@
 ---
 name: game-gdd
-description: Use when a game project's `design/` directory holds pillar, mechanic, economy, comp-analysis, or technical-decision data and the owner wants a current GDD — runs a script that renders `design/gdd.md` and a styled `design/gdd.html` fresh from whatever data exists, overwriting any prior render or hand-edit rather than merging. Not for eliciting that underlying data (see `game-pillars`, `game-mechanics`, `game-comp-analysis`, `game-tech`) or critiquing the render (see `game-critique`).
+description: Use when a game project's design data needs upkeep, not authoring — scripts here render a current GDD, check references, and cover whatever maintenance gets added next. Not for eliciting design data (see `game-pillars`, `game-mechanics`, `game-comp-analysis`, `game-tech`) or critiquing it (see `game-critique`).
 ---
 
 # Game GDD
@@ -57,6 +57,19 @@ rendered as a document of its own. One of the other eight, the Technical
 Design Document, folds into this file as its `## Technical Design` section;
 the remaining seven are named, with the reason each is absent, under "The
 seven absent supporting documents" below.
+
+## Scripts
+
+Two so far, both stdlib-only Python 3, both run from the consuming project's
+own working directory:
+
+- **`scripts/render_gdd.py`** — renders `design/gdd.md` and `design/gdd.html`.
+  See "Rendering is scripted" below.
+- **`scripts/find_references.py`** — lists every reference to one record. See
+  "Finding references" below.
+
+A future maintenance script gets named here, one line each, rather than in
+this skill's trigger description above.
 
 ## The six inputs — read, never restated
 
@@ -217,6 +230,40 @@ style change, and no re-render is needed to see one.
 output. Run it after any change to the script or to the record shapes it
 reads; `UPDATE=1` regenerates the expected files once a change to the
 render is intended.
+
+## Finding references
+
+Before renaming or removing a pillar, mechanic, tech decision, or economy
+node/family/connection, `scripts/find_references.py` lists every place that
+currently cites it — the reverse of `render_gdd.py`'s own reference check,
+and built from the same parsing.
+
+**Invocation.** Same working-directory rule as `render_gdd.py`:
+
+```
+python3 <skill>/scripts/find_references.py <target>
+```
+
+`<target>` is either a typed reference exactly as it appears inside
+`[[...]]` (`pillar:zero-grind`, `tech:netcode`, `concept`) or the record's
+own file path (`design/pillars/zero-grind.md`). A `node`, `family`, or
+`connection` lives inside `design/economy.md` rather than as a file of its
+own, so only the typed form works for those three.
+
+**Output.** One line per hit — `design/mechanics/combat.md:14: [[pillar:zero-grind]] (in "## Core Loop")`
+— or `No references to [[pillar:zero-grind]].` when there are none, which is
+itself the useful answer: nothing cites it, so it's safe to change or
+remove. A reference inside a code span or fenced block is never counted,
+same as `render_gdd.py`'s own render.
+
+**Exit codes.** 0 whether or not any references were found. Non-zero only
+when `<target>` itself is malformed — an unknown type, a missing
+identifier, or a path that isn't a recognized record shape — with the
+reason on stderr. It does not check that `<target>` resolves to a real
+record; that check is `render_gdd.py`'s, at render time.
+
+**Tests.** `scripts/tests/test_find_references.py`, run with
+`python3 -m unittest scripts/tests/test_find_references.py`.
 
 ## The seven absent supporting documents
 
