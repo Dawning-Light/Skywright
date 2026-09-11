@@ -376,6 +376,8 @@ def load_design(root):
                 "body": body,
             }
         )
+    data["mechanics_tree"] = mechanic_tree(data["mechanics"])
+    data["mechanics"] = flatten_tree(data["mechanics_tree"])
 
     economy_path = os.path.join(root, "economy.md")
     if os.path.isfile(economy_path):
@@ -412,6 +414,50 @@ def load_design(root):
             data["tech_live"].append(record)
 
     return data
+
+
+def mechanic_tree(mechanics):
+    """Arrange mechanics (already in slug order) as a forest by ``parent``.
+
+    Returns ``[{"mech": record, "children": [...]}, ...]``: roots in slug
+    order, each node's children in slug order beneath it. A mechanic whose
+    ``parent`` names no mechanic file (or names itself) is a root. One caught
+    in a parent cycle is unreachable from any root, so it is appended as a
+    root after the rest — every record renders exactly once either way.
+    """
+    slugs = set(m["slug"] for m in mechanics)
+    kids = {}
+    roots = []
+    for m in mechanics:
+        if m["parent"] in slugs and m["parent"] != m["slug"]:
+            kids.setdefault(m["parent"], []).append(m)
+        else:
+            roots.append(m)
+
+    seen = set()
+
+    def build(m):
+        seen.add(m["slug"])
+        node = {"mech": m, "children": []}
+        for child in kids.get(m["slug"], []):
+            if child["slug"] not in seen:
+                node["children"].append(build(child))
+        return node
+
+    forest = [build(m) for m in roots]
+    for m in mechanics:
+        if m["slug"] not in seen:
+            forest.append(build(m))
+    return forest
+
+
+def flatten_tree(forest):
+    """The records of a ``mechanic_tree`` forest in depth-first order."""
+    out = []
+    for node in forest:
+        out.append(node["mech"])
+        out.extend(flatten_tree(node["children"]))
+    return out
 
 
 def load_economy(path):
@@ -1534,12 +1580,7 @@ def html_toc(out, data):
         "Design Pillars",
         [("#pillar-%s" % p["slug"], p["title"]) for p in data["pillars"]],
     )
-    _toc_entry(
-        out,
-        "#mechanics",
-        "Mechanics",
-        [("#mechanic-%s" % m["slug"], m["title"]) for m in data["mechanics"]],
-    )
+    _toc_entry(out, "#mechanics", "Mechanics", _mechanic_toc(data["mechanics_tree"]))
     _toc_entry(
         out,
         "#economy",
@@ -1572,15 +1613,32 @@ def html_toc(out, data):
     out.add(0, "</nav>")
 
 
-def _toc_entry(out, href, label, children):
+def _mechanic_toc(forest):
+    """TOC entries for a mechanic forest: ``(href, label, children)`` tuples,
+    nested as deep as the parent tree goes."""
+    return [
+        (
+            "#mechanic-%s" % node["mech"]["slug"],
+            node["mech"]["title"],
+            _mechanic_toc(node["children"]),
+        )
+        for node in forest
+    ]
+
+
+def _toc_entry(out, href, label, children, pad=4):
+    """One TOC entry. ``children`` is a list of ``(href, label)`` or
+    ``(href, label, grandchildren)`` tuples; a nested ``<ol>`` is emitted per
+    level that has any."""
     if not children:
-        out.add(4, '<li><a href="%s">%s</a></li>' % (href, h(label)))
+        out.add(pad, '<li><a href="%s">%s</a></li>' % (h(href), h(label)))
         return
-    out.add(4, '<li><a href="%s">%s</a>' % (href, h(label)))
-    out.add(6, "<ol>")
-    for child_href, child_label in children:
-        out.add(8, '<li><a href="%s">%s</a></li>' % (h(child_href), h(child_label)))
-    out.add(6, "</ol></li>")
+    out.add(pad, '<li><a href="%s">%s</a>' % (h(href), h(label)))
+    out.add(pad + 2, "<ol>")
+    for child in children:
+        grandchildren = child[2] if len(child) > 2 else []
+        _toc_entry(out, child[0], child[1], grandchildren, pad + 4)
+    out.add(pad + 2, "</ol></li>")
 
 
 def section_open(out, section_id, classes, source, absent):
@@ -1645,37 +1703,52 @@ def html_mechanics(out, data, ctx):
     out.add(2, "<h2>Mechanics</h2>")
     if not mechanics:
         out.add(2, '<p class="absent">%s</p>' % inline(ABSENT_MECHANICS, ctx))
-    for mech in mechanics:
-        out.add(
-            2,
-            '<article id="mechanic-%s" class="record mechanic" data-source="%s">'
-            % (h(mech["slug"]), h(mech["rel"])),
-        )
-        out.add(4, "<h3>%s</h3>" % h(mech["title"]))
-        out.add(4, '<p class="source"><code>%s</code></p>' % h(mech["rel"]))
-        dl_open(out, 4)
-        if mech["parent"]:
-            anchor = (
-                "#mechanic-%s" % mech["parent"]
-                if mech["parent"] in ctx["mechanics"]
-                else None
-            )
-            dl_field(out, 4, "Parent", linked_code(mech["parent"], anchor))
-        else:
-            dl_field(out, 4, "Parent", "none", unrecorded=True)
-        if mech["children"]:
-            items = []
-            for child in mech["children"]:
-                anchor = "#mechanic-%s" % child if child in ctx["mechanics"] else None
-                items.append(linked_code(child, anchor))
-            dl_field(out, 4, "Children", ", ".join(items))
-        else:
-            dl_field(out, 4, "Children", "none", unrecorded=True)
-        dl_close(out, 4)
-        if mech["body"]:
-            html_body(out, 4, mech["body"], 2, ctx)
-        out.add(2, "</article>")
+    _html_mechanic_forest(out, 2, data["mechanics_tree"], ctx)
     out.add(0, "</section>")
+
+
+def _html_mechanic_forest(out, pad, forest, ctx):
+    """Each mechanic's card, then its children wrapped in a
+    ``.mechanic-children`` block so the stylesheet can indent them and draw
+    a guide line down their side, nesting as deep as the tree goes."""
+    for node in forest:
+        _html_mechanic(out, pad, node["mech"], ctx)
+        if node["children"]:
+            out.add(pad, '<div class="mechanic-children">')
+            _html_mechanic_forest(out, pad + 2, node["children"], ctx)
+            out.add(pad, "</div>")
+
+
+def _html_mechanic(out, pad, mech, ctx):
+    out.add(
+        pad,
+        '<article id="mechanic-%s" class="record mechanic" data-source="%s">'
+        % (h(mech["slug"]), h(mech["rel"])),
+    )
+    out.add(pad + 2, "<h3>%s</h3>" % h(mech["title"]))
+    out.add(pad + 2, '<p class="source"><code>%s</code></p>' % h(mech["rel"]))
+    dl_open(out, pad + 2)
+    if mech["parent"]:
+        anchor = (
+            "#mechanic-%s" % mech["parent"]
+            if mech["parent"] in ctx["mechanics"]
+            else None
+        )
+        dl_field(out, pad + 2, "Parent", linked_code(mech["parent"], anchor))
+    else:
+        dl_field(out, pad + 2, "Parent", "none", unrecorded=True)
+    if mech["children"]:
+        items = []
+        for child in mech["children"]:
+            anchor = "#mechanic-%s" % child if child in ctx["mechanics"] else None
+            items.append(linked_code(child, anchor))
+        dl_field(out, pad + 2, "Children", ", ".join(items))
+    else:
+        dl_field(out, pad + 2, "Children", "none", unrecorded=True)
+    dl_close(out, pad + 2)
+    if mech["body"]:
+        html_body(out, pad + 2, mech["body"], 2, ctx)
+    out.add(pad, "</article>")
 
 
 def html_economy(out, data, ctx):
