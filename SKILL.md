@@ -1,6 +1,6 @@
 ---
 name: game-mechanics
-description: Use when a game project needs its mechanics, systems, and economy written down as structured data rather than prose — eliciting mechanic entries and an economy graph from the owner and writing both into the consuming project's `design/` directory. Not for setting pillars (see `game-pillars`) or rendering a GDD from data that already exists (see `game-gdd`).
+description: Use when a game project needs its mechanics, systems, and economy written down as structured data, not prose — elicits mechanic entries and an economy graph from the owner and writes both into the consuming project's `design/` directory. Not for setting pillars (see `game-pillars`) or rendering a GDD from existing data (see `game-gdd`).
 ---
 
 # Game Mechanics
