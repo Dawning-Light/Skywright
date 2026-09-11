@@ -417,5 +417,74 @@
 </section>
 </main>
 </div>
+<script>
+(function () {
+  "use strict";
+  var toc = document.querySelector("nav.toc");
+  if (!toc) { return; }
+  var targets = [];
+  var links = toc.querySelectorAll('a[href^="#"]');
+  for (var i = 0; i < links.length; i++) {
+    var id = decodeURIComponent(links[i].getAttribute("href").slice(1));
+    var el = document.getElementById(id);
+    if (el) { targets.push({ el: el, link: links[i] }); }
+  }
+  if (!targets.length) { return; }
+  targets.sort(function (a, b) {
+    return a.el.compareDocumentPosition(b.el) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+  });
+  var active = null;
+  function parentLink(link) {
+    var li = link.closest(".toc-list > li");
+    return li ? li.querySelector(":scope > a") : null;
+  }
+  function setActive(target) {
+    if (target === active) { return; }
+    var parent;
+    if (active) {
+      active.link.classList.remove("is-active");
+      active.link.removeAttribute("aria-current");
+      parent = parentLink(active.link);
+      if (parent) { parent.classList.remove("is-active-parent"); }
+    }
+    active = target;
+    active.link.classList.add("is-active");
+    active.link.setAttribute("aria-current", "true");
+    parent = parentLink(active.link);
+    if (parent && parent !== active.link) { parent.classList.add("is-active-parent"); }
+    if (toc.scrollHeight > toc.clientHeight) {
+      var linkBox = active.link.getBoundingClientRect();
+      var tocBox = toc.getBoundingClientRect();
+      var margin = 48;
+      if (linkBox.top < tocBox.top + margin || linkBox.bottom > tocBox.bottom - margin) {
+        toc.scrollTop += linkBox.top - (tocBox.top + tocBox.height / 2);
+      }
+    }
+  }
+  function update() {
+    var offset = Math.round(window.innerHeight * 0.25);
+    var current = targets[0];
+    for (var i = 0; i < targets.length; i++) {
+      if (targets[i].el.getBoundingClientRect().top <= offset) { current = targets[i]; }
+      else { break; }
+    }
+    var doc = document.documentElement;
+    if (window.innerHeight + window.pageYOffset >= doc.scrollHeight - 2) {
+      current = targets[targets.length - 1];
+    }
+    setActive(current);
+  }
+  var scheduled = false;
+  function schedule() {
+    if (scheduled) { return; }
+    scheduled = true;
+    window.requestAnimationFrame(function () { scheduled = false; update(); });
+  }
+  window.addEventListener("scroll", schedule, { passive: true });
+  window.addEventListener("resize", schedule);
+  window.addEventListener("hashchange", schedule);
+  update();
+})();
+</script>
 </body>
 </html>

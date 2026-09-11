@@ -16,6 +16,8 @@
      .body                  the record's own prose
      .absent / .open-note / .candidate-note / .superseded-note
                             the non-record states a successful render can show
+     .toc a.is-active       the TOC entry for what is on screen (set by the
+     .toc a.is-active-parent   inline script at the end of gdd.html)
 
    Every colour and size lives in the custom properties below, so a restyle
    usually means editing :root and nothing else.
@@ -258,6 +260,29 @@ hr {
   color: var(--text);
   background: var(--accent-soft);
   text-decoration: none;
+}
+
+/* Where you are: the small script at the end of gdd.html marks the entry for
+   the section or record currently under the reader with `is-active`, and its
+   parent section with `is-active-parent`. */
+.toc-list > li > a.is-active,
+.toc-list > li > a.is-active-parent {
+  color: var(--accent);
+}
+
+.toc-list > li > a.is-active-parent::before,
+.toc-list > li > a.is-active::before {
+  color: var(--accent);
+}
+
+.toc-list > li > a.is-active {
+  background: var(--accent-soft);
+}
+
+.toc-list > li > ol > li > a.is-active {
+  color: var(--text);
+  background: var(--accent-soft);
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 
 /* Document column */
