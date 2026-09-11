@@ -71,12 +71,12 @@ skills write:
 
 | Form | Resolves to |
 | --- | --- |
-| `[[pillar:<slug>]]` | `design/pillars/<slug>.md` |
+| `[[pillar:<slug>]]` | `design/pillars/<slug>.md`, with `status: approved` |
 | `[[mechanic:<slug>]]` | `design/mechanics/<slug>.md` |
 | `[[node:<id>]]` | a node `id` in `design/economy.md` |
 | `[[family:<name>]]` | a family `name` in `design/economy.md` (bare, no `@`) |
 | `[[connection:<id>]]` | a connection `id` in `design/economy.md` (bare, no `#`) |
-| `[[tech:<slug>]]` | `design/tech/<slug>.md` |
+| `[[tech:<slug>]]` | `design/tech/<slug>.md`, with `status: open` or `accepted` |
 | `[[concept]]` | `design/concept.md` |
 | `[[comp-analysis]]` | `design/comp-analysis.md` |
 
@@ -85,7 +85,9 @@ differentiation statement exist per project. The type prefix is what makes a
 reference unambiguous — a pillar slug and a mechanic slug can never collide
 under one reference — and it is what lets a citation reach every record kind.
 An untyped `[[slug]]` is not a reference form; `game-gdd` refuses to render
-it.
+it. A candidate pillar and a superseded technical decision record have no
+section of their own in the render, so neither can be cited: a citation
+names something the reader can be taken to.
 
 `game-gdd`'s render resolves every reference to a real anchor in `gdd.html`
 and carries the same reference through to `gdd.md`. A reference that does
