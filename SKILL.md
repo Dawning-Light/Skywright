@@ -1,6 +1,6 @@
 ---
 name: game-gdd
-description: Use when a game project's `design/` directory holds any pillar, mechanic, economy, or comp-analysis data and the owner wants a current GDD — renders `design/gdd.md` fresh on every invocation from whatever structured data currently exists, overwriting any prior render (and any hand-edit made directly to it) rather than merging. Not for eliciting the underlying pillar, mechanic, economy, or comp-analysis data itself (see `game-pillars`, `game-mechanics`, `game-comp-analysis`) and not for critiquing what renders (see `game-critique`).
+description: Use when a game project's `design/` directory holds pillar, mechanic, economy, or comp-analysis data and the owner wants a current GDD — renders `design/gdd.md` fresh from whatever data exists, overwriting any prior render or hand-edit rather than merging. Not for eliciting that underlying data (see `game-pillars`, `game-mechanics`, `game-comp-analysis`) or critiquing the render (see `game-critique`).
 ---
 
 # Game GDD
