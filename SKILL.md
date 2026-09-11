@@ -32,6 +32,10 @@ for that.
 
 ## Process
 
+Before writing or revising any file this skill produces, invoke
+`game-authoring` if it has not already run earlier in this conversation. Its
+rules govern every body written below.
+
 Elicit conversationally, in whatever order the owner naturally gives it:
 
 1. **Mechanics.** For each mechanic the owner describes, ask enough to fill
@@ -104,6 +108,9 @@ Frontmatter:
 - `children` — a list of `name`s of other mechanic entries under
   `design/mechanics/`, possibly empty. Same rule: each entry in the list is a
   filename to resolve, not a description of the child mechanic.
+- `updated` — the UTC time of the last write to this file, in the
+  `YYYY-MM-DDTHH:MMZ` form `game-authoring` defines. Refreshed on every
+  write.
 
 Keeping `parent`/`children` as filenames rather than prose is what makes the
 taxonomy walkable: a later skill (or a human) can traverse the whole
@@ -117,10 +124,21 @@ structure:
 - `## Strong example` — one worked case of this mechanic doing what it's for.
 - `## Weak example` — one worked case of this mechanic failing, being
   misused, or producing an outcome the design didn't want.
+- `## Open Questions` — optional. What about this mechanic is unsettled,
+  stated plainly per `game-authoring`, never folded into the description or
+  the examples as a hedge. Omit the heading when nothing is open.
 
 A mechanic entry with no `## Weak example` is incomplete: the point of
 naming a failure mode is that it's what a later critique pass (see
 `game-critique`) checks a design against.
+
+Where any of these sections refers to a fact another record owns — a pillar
+it serves, a node or connection in the economy graph, a tech decision that
+constrains it — it cites that record with one of the typed wikilinks
+`game-authoring` defines (`[[pillar:<slug>]]`, `[[node:<id>]]`,
+`[[connection:<id>]]`, `[[tech:<slug>]]`, and the rest) rather than
+restating the fact. `parent` and `children` stay bare slugs in the
+frontmatter; the wikilink forms are for body prose.
 
 ## The economy graph
 
@@ -128,7 +146,11 @@ One file for the whole graph, at `design/economy.md` in the consuming
 project — a Machinations-style node/connection representation of how
 resources move through the game.
 
-Frontmatter carries `nodes` and `connections`.
+Frontmatter carries `nodes`, `connections`, the optional `families` block
+(below), and one file-level `updated` — the UTC time of the last write to
+the file, in the `YYYY-MM-DDTHH:MMZ` form `game-authoring` defines. The file
+is rewritten wholesale on every invocation, so the one field covers every
+node and connection in it, and moves on every rewrite.
 
 Each **node** has:
 
@@ -244,22 +266,22 @@ a member id keying its own section overrides the family's for that member —
 its own notes stand in place of the family's shared ones for that heading,
 not beside them.
 
-**Meeting a file written before either change.** A file written before this
-restructuring can fail either change's behaviours. From Change 1: connections
-with no `id`, no sigils on `from`/`to`, and no `subtype`. From Change 2:
-**block-style edges or slash-joined headings** — the three-line YAML block
-this schema replaced with the flow style above, or a heading joining two node
-ids for one shared paragraph instead of naming a node id, a family name, or a
-member id. Meeting either, this skill neither silently re-writes the file
-into the new shape nor refuses to proceed with the write already under way.
-It reports which of these behaviours the file fails and puts the upgrade to
-the owner, on the same propose-and-confirm terms detection (above) uses for
-a family: a confirmed upgrade is performed as part of that same write, and a
-declined one leaves the file exactly as it is. `game-gdd` and
-`game-critique`, which write nothing, report such a file as invalid rather
-than rendering it on a best-effort basis. This settles only that the
-question is asked; what any particular already-written graph should become
-stays the owner's call, and no migration procedure is specified here.
+**Meeting a file that fails this shape.** An economy file can fail the
+rules above in four ways: a connection with no `id`; a `from`/`to` reference
+with no sigil where one is required; a `state` connection with no `subtype`;
+or **block-style edges or slash-joined headings** — a connection written as
+a multi-line YAML block instead of the one-line flow mapping, or a heading
+joining two node ids for one shared paragraph instead of naming a node id, a
+family name, or a member id. Meeting any of these, this skill neither
+silently re-writes the file into shape nor refuses to proceed with the write
+already under way. It reports which rules the file fails and puts the
+upgrade to the owner, on the same propose-and-confirm terms detection
+(above) uses for a family: a confirmed upgrade is performed as part of that
+same write, and a declined one leaves the file exactly as it is. `game-gdd`
+and `game-critique`, which write nothing, report such a file as invalid
+rather than rendering it on a best-effort basis. This settles only that the
+question is asked; what any particular graph should become stays the owner's
+call, and no migration procedure is specified here.
 
 ### Families
 
@@ -320,7 +342,7 @@ field records is *that* exactly one edge is live, and the condition selecting
 `<declaration-id>:<member-id>`. It is unique by construction and is never
 written into the file — a reader computes it from the declaration and the
 member, the same substitution that produces the connection itself. This is
-what step 2's reservation of `:` in authored connection ids was for: an
+what the reservation of `:` in authored connection ids (above) is for: an
 authored id may not contain `:`, so a derived id built from two authored ids
 joined by `:` cannot collide with one.
 
@@ -415,7 +437,7 @@ builds:
   game rather than requiring a second one.
 
 None of the three is implemented by this skill. The schema above already
-rests on a restructuring rather than an addition: the required `id`, the
-sigil rule, and a `state` connection's new `#<connection-id>` target are what
-let the Monte Carlo extension above read which flow a state edge multiplies —
-none of the three needed a fresh field bolted on afterward.
+carries what they need: the required `id`, the sigil rule, and a `state`
+connection's `#<connection-id>` target are what let the Monte Carlo
+extension above read which flow a state edge multiplies — none of the three
+needs a fresh field.
