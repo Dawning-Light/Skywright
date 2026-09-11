@@ -1,15 +1,15 @@
 ---
 name: game-gdd
-description: Use when a game project's `design/` directory holds pillar, mechanic, economy, or comp-analysis data and the owner wants a current GDD — renders `design/gdd.md` fresh from whatever data exists, overwriting any prior render or hand-edit rather than merging. Not for eliciting that underlying data (see `game-pillars`, `game-mechanics`, `game-comp-analysis`) or critiquing the render (see `game-critique`).
+description: Use when a game project's `design/` directory holds pillar, mechanic, economy, comp-analysis, or technical-decision data and the owner wants a current GDD — renders `design/gdd.md` fresh from whatever data exists, overwriting any prior render or hand-edit rather than merging. Not for eliciting that underlying data (see `game-pillars`, `game-mechanics`, `game-comp-analysis`, `game-tech`) or critiquing the render (see `game-critique`).
 ---
 
 # Game GDD
 
 Renders the core Game Design Document as a **view** onto structured data that
 already exists elsewhere in the project, never as a document authored or
-hand-maintained in its own right. This is the fourth of five independent
+hand-maintained in its own right. This is the fifth of six independent
 Orrery skills for game design (`game-pillars`, `game-comp-analysis`,
-`game-mechanics`, `game-gdd`, `game-critique`). It defines no record shape of
+`game-mechanics`, `game-tech`, `game-gdd`, `game-critique`). It defines no record shape of
 its own — every field it reads is defined once, by the skill that writes it,
 and this file names that skill rather than restating the field.
 
@@ -20,19 +20,22 @@ of the structured data below currently exists. Nothing here waits on a
 complete set of inputs, and nothing here refuses to run because a pillar,
 mechanic, or comp-analysis file is missing — a project with only a concept
 statement and nothing else still gets a GDD, and so does a project with
-nothing at all. The suggested order across the five skills —
-`game-pillars` → `game-comp-analysis` → `game-mechanics` → `game-gdd` →
-`game-critique` — is a recommendation, not a requirement this skill enforces.
+nothing at all. The suggested order across the six skills —
+`game-pillars` → `game-comp-analysis` → `game-mechanics` → `game-tech` →
+`game-gdd` → `game-critique` — is a recommendation, not a requirement this
+skill enforces.
 
 ## What this skill produces
 
 One file, `design/gdd.md`, inside the *consuming* game project — never inside
 this skill's own repository. `design/gdd.md` is the **core** GDD only: the
 ninth of nine supporting-document types the spec's research surveyed, and the
-only one this pass renders. The other eight are named, with the reason each
-is absent, under "The eight absent supporting documents" below.
+only one rendered as a document of its own. One of the other eight, the
+Technical Design Document, folds into this file as its `## Technical Design`
+section; the remaining seven are named, with the reason each is absent,
+under "The seven absent supporting documents" below.
 
-## The five inputs — read, never restated
+## The six inputs — read, never restated
 
 Each rendered section below maps to exactly one of these shapes. This skill
 reads each at the path and field names its defining skill fixes, and does not
@@ -50,6 +53,11 @@ redefine, rename, or add a field to any of them:
   `@` sigil, and `applies: one-of-family`.
 - **The differentiation statement**, `design/comp-analysis.md` — shape
   defined by `game-comp-analysis`.
+- **The technical decision record**, `design/tech/<slug>.md` — shape
+  defined by `game-tech`, including its `status` field (`open`, `accepted`,
+  `superseded`), its `scope` field (`contained`, `cross-cutting`), its
+  `category`, `drivers`, and `superseded_by` fields, and which body headings
+  its status and scope require.
 
 ## Rendering is total, local, and addressable
 
@@ -57,7 +65,7 @@ Three properties the template below is built to guarantee, because
 `game-critique` (landing after this skill) relies on all three:
 
 - **Total.** Every render starts from nothing and is built up only from what
-  the five inputs above currently hold. No content survives from a prior
+  the six inputs above currently hold. No content survives from a prior
   render that isn't derivable from current data. Concretely: a hand-edit made
   directly to `design/gdd.md` — a paragraph added, a section reworded, a
   section deleted — does not survive the next render. This skill overwrites
@@ -175,42 +183,81 @@ A fixed section-per-record template, in this order:
    section still appears, stating that plainly and pointing at
    `game-comp-analysis`.
 
-6. **`## Supporting Documents Not Rendered`** — fixed content, not derived
+6. **`## Technical Design`** — one subsection per technical decision record
+   found under `design/tech/` whose `status` is `accepted` or `open`,
+   ordered alphabetically by slug. Ordering by `category` would break the
+   locality guarantee above, because editing a record's `category` would
+   move its section; slug order never shifts as a side effect of editing a
+   field's value. Each subsection is headed by the record's `title` and
+   addressed by its path, `design/tech/<slug>.md`. It states the record's
+   `status`, `category`, `scope`, and `drivers` as given, and carries the
+   record's body headings — `## Context`, `## Decision`,
+   `## Options considered`, `## Consequences`, `## Assumptions to verify`,
+   whichever the record holds — unchanged. An `open` record's subsection is
+   visibly marked as not yet decided, so the GDD never presents an open
+   question as settled design. `## Assumptions to verify` renders wherever
+   the record carries it: unverified assumptions are made visible here
+   rather than blocking a record from being `accepted` (`game-tech` states
+   that rule). A `superseded` record is not rendered in full; the section
+   closes with one line per superseded record, "`<slug>` superseded by
+   `<superseded_by>`", the same pattern as the candidate-pillar count line.
+   When no superseded record exists, that line is omitted. Absent when
+   `design/tech/` holds no records: the section still appears, stating that
+   no technical decisions are recorded and pointing at `game-tech`.
+
+   Invalid when a record's `status` or `scope` lies outside its closed set,
+   or when a body heading `game-tech` requires for that record's status and
+   scope is missing: this skill writes nothing into `design/tech/`, so it
+   proposes no repair of its own. It reports the record as invalid rather
+   than rendering it on a best-effort basis, on the same terms as an invalid
+   economy file above — naming which field or heading the record fails, and
+   pointing to `game-tech`.
+
+7. **`## Supporting Documents Not Rendered`** — fixed content, not derived
    from any project data; see the next section for what it states.
 
 No section in this list is ever dropped for lack of data — a project missing
-one or more of the five inputs still renders a complete `design/gdd.md`, with
+one or more of the six inputs still renders a complete `design/gdd.md`, with
 each missing part shown as an explicitly absent section carrying that
 statement and a pointer to the skill that would populate it, never invented
 content and never a silently missing heading.
 
-## The eight absent supporting documents
+## The seven absent supporting documents
 
 The spec's own research surveyed nine supporting-document types a GDD
 practice commonly names. `design/gdd.md` renders the core GDD — the ninth —
-and no other. The `## Supporting Documents Not Rendered` section states all
-eight of the rest, and why each is absent, rather than leaving a reader to
-wonder whether they were forgotten:
+as a document of its own, and folds one more into it. The
+`## Supporting Documents Not Rendered` section states all seven of the rest,
+and why each is absent, rather than leaving a reader to wonder whether they
+were forgotten:
 
+- **Technical Design Document** — not absent, and not a separate document:
+  at solo and small-team scale technical design folds into the GDD, so it
+  renders as the `## Technical Design` section above, from the technical
+  decision records `game-tech` writes, rather than as a standalone
+  `design/tdd.md`. The section states this in one sentence so a reader
+  looking for a TDD knows where it went.
 - **Concept Document** and **Marketing & Business Plan** — out of scope for
   this skillset, not merely undone in v1: the Concept Document is already
   served by `game-pillars`'s own concept statement, and the Marketing &
   Business Plan is a business concern outside this skillset's design-quality
   scope.
-- **Technical Design Document**, **Art Bible**, **Story/Narrative Bible**,
-  **Level Design Document**, **Sound Design Document**, and **Test Plan** —
-  absent for a grounding reason: the schema this skillset builds (pillars,
-  mechanic entries, the economy graph) carries none of the technical,
-  visual, narrative, audio, or QA data any of these six would need to render
-  from, and rendering one without that data would mean inventing content
-  rather than deriving it. Each is a documented future extension, not a
-  silent omission — a later pass would need its own research to determine
-  what schema each requires, exactly as this spec already documents for
+- **Art Bible**, **Story/Narrative Bible**, **Level Design Document**,
+  **Sound Design Document**, and **Test Plan** — absent for a grounding
+  reason: the schema this skillset builds (pillars, mechanic entries, the
+  economy graph, technical decision records) carries none of the visual,
+  narrative, audio, or QA data any of these five would need to render from,
+  and rendering one without that data would mean inventing content rather
+  than deriving it. Each is a documented future extension, not a silent
+  omission — a later pass would need its own research to determine what
+  schema each requires, exactly as this spec already documents for
   Elo/Monte Carlo/MCTS balancing in `game-mechanics`.
 
 This is the spec's own accounting, not one invented here — see
 `docs/traverse/specs/2026-09-06-game-design-skillset.md`'s `## Out of scope`
-section for the source statement this section restates in the rendered file.
+section for the source statement, and
+`docs/superpowers/specs/2026-09-11-game-tech-design.md` for the change that
+moved the Technical Design Document off the absent list.
 
 ## Rendering procedure
 
@@ -228,13 +275,18 @@ section for the source statement this section restates in the rendered file.
    or the absent form if the file doesn't exist.
 5. Read `design/comp-analysis.md`. Render section 5 from it, or its absent
    form.
-6. Append section 6, the fixed eight-absent-supporting-documents statement
+6. Read every file under `design/tech/`. Split by `status`; render section
+   6 from the `accepted` and `open` ones, alphabetically by slug, plus one
+   superseded line per `superseded` file; or the absent form if none exist
+   at all. Report any invalid record per section 6's invalid form instead
+   of rendering it.
+7. Append section 7, the fixed seven-absent-supporting-documents statement
    above — this section's content never varies with project data.
-7. Assemble sections 1–6, in that order, into one document and write it to
+8. Assemble sections 1–7, in that order, into one document and write it to
    `design/gdd.md`, replacing whatever content was there before. This is the
    only write this skill makes; it never reads the existing `design/gdd.md`
    before overwriting it, because there is nothing in a prior render that
-   this step needs — everything section 1–6 renders comes from the five
+   this step needs — everything section 1–7 renders comes from the six
    inputs, read fresh, every time.
 
 ## Writing the file
@@ -242,5 +294,5 @@ section for the source statement this section restates in the rendered file.
 Write `design/gdd.md` inside the game project you were invoked against —
 never into this skill's own repository. If `design/` does not yet exist in
 the consuming project, create it; a project with no structured data at all is
-a legal starting state, and step 7 above still produces a `design/gdd.md`
+a legal starting state, and step 8 above still produces a `design/gdd.md`
 made entirely of absent-section statements.
