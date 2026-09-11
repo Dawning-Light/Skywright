@@ -3,10 +3,12 @@ name: zero-grind
 title: Progress always comes from a decision the player made, never from time they waited.
 status: approved
 source: game-pillars
+updated: 2026-09-10T08:05Z
 ---
 
-Sits beside [[always-earned]], applies to [[combat]], and does *not* depend on
-[[no-such-record]].
+Sits beside [[pillar:always-earned]], applies to [[mechanic:combat]], and is
+what [[comp-analysis]] measures the competitors against. A literal `[[slug]]`
+inside a code span is prose about the syntax, not a reference.
 
 ## The test
 
@@ -21,3 +23,8 @@ different alloys. **Kept** — the gate is a decision.
 ## Worked cut
 
 A daily login chest. **Cut** — the gate is the calendar.
+
+## Open Questions
+
+Whether a cosmetic reward may be time-gated without failing this pillar is
+undecided.

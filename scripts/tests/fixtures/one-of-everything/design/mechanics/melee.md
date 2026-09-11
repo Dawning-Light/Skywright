@@ -3,11 +3,20 @@ name: melee
 title: Melee
 parent: combat
 children: []
+updated: 2026-09-10T12:04Z
 ---
 
 ## Description
 
-Close-range swings that trade reach for damage.
+Close-range swings that trade reach for damage. Serves [[pillar:zero-grind]]:
+every swing is a decision, never a wait.
+
+A fenced block is never scanned for references, so the broken one below is
+inert text rather than a render failure:
+
+```
+[[no-such-type:no-such-id]]
+```
 
 ## Strong example
 

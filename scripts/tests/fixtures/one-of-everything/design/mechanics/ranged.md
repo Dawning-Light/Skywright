@@ -3,11 +3,13 @@ name: ranged
 title: Ranged
 parent: combat
 children: []
+updated: 2026-09-10T12:07Z
 ---
 
 ## Description
 
-Distance attacks that trade damage for safety.
+Distance attacks that trade damage for safety. Whether two players see the same
+shot land is what [[tech:netcode]] decides.
 
 ## Strong example
 

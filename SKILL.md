@@ -136,6 +136,9 @@ Three properties the render is built to guarantee, because `game-critique`
 - **Linked.** A typed wikilink in any record body resolves to the anchor of
   the section it names, so a citation in the data is a working link in
   `gdd.html`; `gdd.md` carries the same reference text through unchanged.
+  Only a rendered section can be cited: a candidate pillar or a superseded
+  technical decision record, which get a note rather than a section, is an
+  unresolved reference.
   Text inside a code span or a fenced code block is never read as a
   reference.
 

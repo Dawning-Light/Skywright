@@ -47,20 +47,23 @@
   <p class="gdd-note">Rendered by <code>game-gdd</code> from the structured records under <code>design/</code>. Edit those records and re-render; edits made here do not survive the next render.</p>
 </header>
 
-<section id="concept" class="gdd-section concept" data-source="design/concept.md">
+<section id="concept" class="gdd-section concept" data-source="design/concept.md" data-updated="2026-09-10T09:15Z">
   <h2>Concept</h2>
-  <p class="source"><code>design/concept.md</code></p>
+  <p class="source"><code>design/concept.md</code> <time class="updated" datetime="2026-09-10T09:15Z">2026-09-10T09:15Z</time></p>
   <div class="body">
-    <p>Forge &amp; Foray is a crafting-led action RPG in which the player mines ore, smelts it into ingots, and forges the weapons they then carry into short, hand-authored dungeon runs. Every run ends back at the forge, where the loot becomes the next weapon.</p>
+    <p>Forge &amp; Foray is a crafting-led action RPG in which the player mines ore, smelts it into ingots, and forges the weapons they then carry into short, hand-authored dungeon runs. Every run ends back at the forge, where the loot becomes the next weapon. What the genre's leaders do instead is recorded in <a href="#competitive-differentiation">comp-analysis</a>.</p>
+    <h3 class="open-questions">Open Questions</h3>
+    <p>Whether a run may end anywhere other than the forge is undecided.</p>
   </div>
 </section>
 
 <section id="design-pillars" class="gdd-section pillars" data-source="design/pillars/">
   <h2>Design Pillars</h2>
-  <article id="pillar-always-earned" class="record pillar" data-source="design/pillars/always-earned.md">
+  <article id="pillar-always-earned" class="record pillar" data-source="design/pillars/always-earned.md" data-updated="2026-09-09T18:20Z">
     <h3>Every capability is earned through investment, never granted by a slot.</h3>
-    <p class="source"><code>design/pillars/always-earned.md</code></p>
+    <p class="source"><code>design/pillars/always-earned.md</code> <time class="updated" datetime="2026-09-09T18:20Z">2026-09-09T18:20Z</time></p>
     <div class="body">
+      <p>The pillar <a href="#concept">concept</a> leans on hardest: the forge is open to anyone who invests in it.</p>
       <h4>The test</h4>
       <p>A capability reachable only by picking a class at creation fails this pillar. One reachable by anyone who invests in it passes.</p>
       <h4>Worked keep</h4>
@@ -69,17 +72,19 @@
       <p>A &quot;Smith&quot; class that alone may use the forge. <strong>Cut.</strong></p>
     </div>
   </article>
-  <article id="pillar-zero-grind" class="record pillar" data-source="design/pillars/zero-grind.md">
+  <article id="pillar-zero-grind" class="record pillar" data-source="design/pillars/zero-grind.md" data-updated="2026-09-10T08:05Z">
     <h3>Progress always comes from a decision the player made, never from time they waited.</h3>
-    <p class="source"><code>design/pillars/zero-grind.md</code></p>
+    <p class="source"><code>design/pillars/zero-grind.md</code> <time class="updated" datetime="2026-09-10T08:05Z">2026-09-10T08:05Z</time></p>
     <div class="body">
-      <p>Sits beside <a href="#pillar-always-earned">always-earned</a>, applies to <a href="#mechanic-combat">combat</a>, and does <em>not</em> depend on <code>no-such-record</code>.</p>
+      <p>Sits beside <a href="#pillar-always-earned">always-earned</a>, applies to <a href="#mechanic-combat">combat</a>, and is what <a href="#competitive-differentiation">comp-analysis</a> measures the competitors against. A literal <code>[[slug]]</code> inside a code span is prose about the syntax, not a reference.</p>
       <h4>The test</h4>
       <p>Given a proposed feature, ask whether its reward is gated by a choice the player made or by elapsed time. Gated by time alone, it is cut.</p>
       <h4>Worked keep</h4>
       <p>A forge recipe that unlocks once the player has <em>chosen</em> to smelt three different alloys. <strong>Kept</strong> — the gate is a decision.</p>
       <h4>Worked cut</h4>
       <p>A daily login chest. <strong>Cut</strong> — the gate is the calendar.</p>
+      <h4 class="open-questions">Open Questions</h4>
+      <p>Whether a cosmetic reward may be time-gated without failing this pillar is undecided.</p>
     </div>
   </article>
   <p class="candidate-note">1 candidate pillar proposed by <code>game-comp-analysis</code> awaits review — approve or discard it with <code>game-pillars</code>.</p>
@@ -87,9 +92,9 @@
 
 <section id="mechanics" class="gdd-section mechanics" data-source="design/mechanics/">
   <h2>Mechanics</h2>
-  <article id="mechanic-combat" class="record mechanic" data-source="design/mechanics/combat.md">
+  <article id="mechanic-combat" class="record mechanic" data-source="design/mechanics/combat.md" data-updated="2026-09-10T12:00Z">
     <h3>Combat</h3>
-    <p class="source"><code>design/mechanics/combat.md</code></p>
+    <p class="source"><code>design/mechanics/combat.md</code> <time class="updated" datetime="2026-09-10T12:00Z">2026-09-10T12:00Z</time></p>
     <dl class="fields">
       <dt>Parent</dt>
       <dd class="unrecorded">none</dd>
@@ -98,17 +103,19 @@
     </dl>
     <div class="body">
       <h4>Description</h4>
-      <p>Real-time combat resolved per swing. A hit lands when <code>atk &gt; def</code>, and a critical multiplies damage by 1.5 &amp; applies the weapon's &quot;on-crit&quot; rider.</p>
+      <p>Real-time combat resolved per swing. A hit lands when <code>atk &gt; def</code>, and a critical multiplies damage by 1.5 &amp; applies the weapon's &quot;on-crit&quot; rider. The weapons it is fought with are paid for out of <a href="#node-ingot-pool">ingot-pool</a>, and the skills it advances are <a href="#family-skill-xp">skill-xp</a>.</p>
       <h4>Strong example</h4>
       <p>A player who forged a high-<code>atk</code> blade cuts through a low-<code>def</code> pack in two swings.</p>
       <h4>Weak example</h4>
       <p>A player brings a blade whose <code>atk</code> is below every enemy's <code>def</code> and cannot damage anything at all, with no in-run way to recover.</p>
+      <h4 class="open-questions">Open Questions</h4>
+      <p>Whether a swing may be cancelled mid-animation is undecided.</p>
     </div>
   </article>
   <div class="mechanic-children">
-    <article id="mechanic-melee" class="record mechanic" data-source="design/mechanics/melee.md">
+    <article id="mechanic-melee" class="record mechanic" data-source="design/mechanics/melee.md" data-updated="2026-09-10T12:04Z">
       <h3>Melee</h3>
-      <p class="source"><code>design/mechanics/melee.md</code></p>
+      <p class="source"><code>design/mechanics/melee.md</code> <time class="updated" datetime="2026-09-10T12:04Z">2026-09-10T12:04Z</time></p>
       <dl class="fields">
         <dt>Parent</dt>
         <dd><a href="#mechanic-combat"><code>combat</code></a></dd>
@@ -117,16 +124,18 @@
       </dl>
       <div class="body">
         <h4>Description</h4>
-        <p>Close-range swings that trade reach for damage.</p>
+        <p>Close-range swings that trade reach for damage. Serves <a href="#pillar-zero-grind">zero-grind</a>: every swing is a decision, never a wait.</p>
+        <p>A fenced block is never scanned for references, so the broken one below is inert text rather than a render failure:</p>
+        <pre><code>[[no-such-type:no-such-id]]</code></pre>
         <h4>Strong example</h4>
         <p>A player closes distance during an enemy's wind-up and lands a free swing.</p>
         <h4>Weak example</h4>
         <p>A player swings into a shielded enemy forever because nothing signals that melee is the wrong tool here.</p>
       </div>
     </article>
-    <article id="mechanic-ranged" class="record mechanic" data-source="design/mechanics/ranged.md">
+    <article id="mechanic-ranged" class="record mechanic" data-source="design/mechanics/ranged.md" data-updated="2026-09-10T12:07Z">
       <h3>Ranged</h3>
-      <p class="source"><code>design/mechanics/ranged.md</code></p>
+      <p class="source"><code>design/mechanics/ranged.md</code> <time class="updated" datetime="2026-09-10T12:07Z">2026-09-10T12:07Z</time></p>
       <dl class="fields">
         <dt>Parent</dt>
         <dd><a href="#mechanic-combat"><code>combat</code></a></dd>
@@ -135,7 +144,7 @@
       </dl>
       <div class="body">
         <h4>Description</h4>
-        <p>Distance attacks that trade damage for safety.</p>
+        <p>Distance attacks that trade damage for safety. Whether two players see the same shot land is what <a href="#tech-netcode">netcode</a> decides.</p>
         <h4>Strong example</h4>
         <p>A player kites a slow enemy around a pillar and wins without taking a hit.</p>
         <h4>Weak example</h4>
@@ -145,9 +154,9 @@
   </div>
 </section>
 
-<section id="economy" class="gdd-section economy" data-source="design/economy.md">
+<section id="economy" class="gdd-section economy" data-source="design/economy.md" data-updated="2026-09-10T16:44Z">
   <h2>Economy</h2>
-  <p class="source"><code>design/economy.md</code></p>
+  <p class="source"><code>design/economy.md</code> <time class="updated" datetime="2026-09-10T16:44Z">2026-09-10T16:44Z</time></p>
   <h3 id="economy-nodes">Nodes</h3>
   <article id="node-ore-vein" class="record economy-node" data-source="design/economy.md#ore-vein">
     <h4>ore-vein</h4>
@@ -169,7 +178,7 @@
       <dd>model power; coefficients 1.8, 1.42; domain 1-20; fit 0.987</dd>
     </dl>
     <div class="body">
-      <p>The one pool every forged weapon is paid for out of. Its cost-by-tier curve is fitted rather than chosen — see <code>scripts/curve-fit.sh</code>.</p>
+      <p>The one pool every forged weapon is paid for out of. Its cost-by-tier curve is fitted rather than chosen — see <code>scripts/curve-fit.sh</code>. What the player spends it on is <a href="#mechanic-combat">combat</a>.</p>
       <h6>Open question</h6>
       <p>Whether ingots stack per alloy or share one pool is undecided.</p>
     </div>
@@ -225,7 +234,7 @@
       <dd><a href="#node-mining-xp"><code>mining-xp</code></a>, <a href="#node-smith-xp"><code>smith-xp</code></a></dd>
     </dl>
     <div class="body">
-      <p>Two named skills, <code>mining-xp</code> and <code>smith-xp</code>, each its own node with its own progression — never a shared &quot;crafting&quot; track. Only the member matching the action actually applies, which is what <code>#skill-rate</code>'s <code>applies: one-of-family</code> records.</p>
+      <p>Two named skills, <code>mining-xp</code> and <code>smith-xp</code>, each its own node with its own progression — never a shared &quot;crafting&quot; track. Only the member matching the action actually applies, which is what <a href="#connection-skill-rate">skill-rate</a> records.</p>
     </div>
     <p class="declarations-title">Declarations over this family</p>
     <ul class="declarations">
@@ -308,11 +317,11 @@
   </article>
 </section>
 
-<section id="competitive-differentiation" class="gdd-section comp-analysis" data-source="design/comp-analysis.md">
+<section id="competitive-differentiation" class="gdd-section comp-analysis" data-source="design/comp-analysis.md" data-updated="2026-09-10T14:02Z">
   <h2>Competitive Differentiation</h2>
-  <p class="source"><code>design/comp-analysis.md</code></p>
+  <p class="source"><code>design/comp-analysis.md</code> <time class="updated" datetime="2026-09-10T14:02Z">2026-09-10T14:02Z</time></p>
   <div class="body">
-    <p>Forge &amp; Foray differentiates on loop length: its competitors all separate crafting from combat across sessions, where this concept closes both inside one fifteen-minute run. Where it currently looks like more of the same is its rarity-tier itemization, which every competitor below also ships.</p>
+    <p>Forge &amp; Foray differentiates on loop length: its competitors all separate crafting from combat across sessions, where <a href="#concept">concept</a> closes both inside one fifteen-minute run. Where it currently looks like more of the same is its rarity-tier itemization, which every competitor below also ships.</p>
     <div class="table-wrap">
       <table>
         <thead>
@@ -345,14 +354,16 @@
       <li>Makes the forge the run's <em>destination</em>, not its lobby.</li>
       <li>Prices every weapon out of one visible pool.</li>
     </ul>
+    <h3 class="open-questions">Open Questions</h3>
+    <p>Whether the co-op runs <a href="#tech-netcode">netcode</a> is deciding are a differentiator at all is unsettled — one competitor above may ship them first.</p>
   </div>
 </section>
 
 <section id="technical-design" class="gdd-section tech" data-source="design/tech/">
   <h2>Technical Design</h2>
-  <article id="tech-netcode" class="record tech-record status-open scope-cross-cutting" data-source="design/tech/netcode.md">
+  <article id="tech-netcode" class="record tech-record status-open scope-cross-cutting" data-source="design/tech/netcode.md" data-updated="2026-09-11T11:00Z">
     <h3>How do two players share one dungeon run?</h3>
-    <p class="source"><code>design/tech/netcode.md</code></p>
+    <p class="source"><code>design/tech/netcode.md</code> <time class="updated" datetime="2026-09-11T11:00Z">2026-09-11T11:00Z</time></p>
     <p class="open-note">Open — not yet decided.</p>
     <dl class="fields">
       <dt>Status</dt>
@@ -375,9 +386,9 @@
       </ul>
     </div>
   </article>
-  <article id="tech-save-format" class="record tech-record status-accepted scope-contained" data-source="design/tech/save-format.md">
+  <article id="tech-save-format" class="record tech-record status-accepted scope-contained" data-source="design/tech/save-format.md" data-updated="2026-09-04T07:45Z">
     <h3>Saves are a single append-only JSON document per guild.</h3>
-    <p class="source"><code>design/tech/save-format.md</code></p>
+    <p class="source"><code>design/tech/save-format.md</code> <time class="updated" datetime="2026-09-04T07:45Z">2026-09-04T07:45Z</time></p>
     <dl class="fields">
       <dt>Status</dt>
       <dd>accepted</dd>
@@ -488,6 +499,29 @@
   window.addEventListener("resize", schedule);
   window.addEventListener("hashchange", schedule);
   update();
+})();
+(function () {
+  "use strict";
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  var stamps = document.querySelectorAll("time.updated[datetime]");
+  for (var i = 0; i < stamps.length; i++) {
+    var raw = stamps[i].getAttribute("datetime");
+    var when = new Date(raw);
+    if (isNaN(when.getTime())) { continue; }
+    var local = when.getFullYear() + "-" + pad(when.getMonth() + 1) + "-" +
+      pad(when.getDate()) + " " + pad(when.getHours()) + ":" + pad(when.getMinutes());
+    var zone = "";
+    try {
+      var parts = new Intl.DateTimeFormat(undefined, {
+        timeZoneName: "short"
+      }).formatToParts(when);
+      for (var j = 0; j < parts.length; j++) {
+        if (parts[j].type === "timeZoneName") { zone = parts[j].value; }
+      }
+    } catch (err) { zone = ""; }
+    stamps[i].textContent = zone ? local + " " + zone : local;
+    stamps[i].title = raw;
+  }
 })();
 </script>
 </body>
