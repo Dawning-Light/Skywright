@@ -1,0 +1,318 @@
+# Forge & Foray — Game Design Document
+
+## Concept
+
+*Source: `design/concept.md`*
+
+Forge & Foray is a crafting-led action RPG in which the player mines ore, smelts
+it into ingots, and forges the weapons they then carry into short, hand-authored
+dungeon runs. Every run ends back at the forge, where the loot becomes the next
+weapon.
+
+## Design Pillars
+
+### Every capability is earned through investment, never granted by a slot.
+
+*Source: `design/pillars/always-earned.md`*
+
+#### The test
+
+A capability reachable only by picking a class at creation fails this pillar.
+One reachable by anyone who invests in it passes.
+
+#### Worked keep
+
+Heavy-armour proficiency trained by wearing heavy armour. **Kept.**
+
+#### Worked cut
+
+A "Smith" class that alone may use the forge. **Cut.**
+
+### Progress always comes from a decision the player made, never from time they waited.
+
+*Source: `design/pillars/zero-grind.md`*
+
+Sits beside [[always-earned]], applies to [[combat]], and does *not* depend on
+[[no-such-record]].
+
+#### The test
+
+Given a proposed feature, ask whether its reward is gated by a choice the player
+made or by elapsed time. Gated by time alone, it is cut.
+
+#### Worked keep
+
+A forge recipe that unlocks once the player has *chosen* to smelt three
+different alloys. **Kept** — the gate is a decision.
+
+#### Worked cut
+
+A daily login chest. **Cut** — the gate is the calendar.
+
+*1 candidate pillar proposed by `game-comp-analysis` awaits review — approve or discard it with `game-pillars`.*
+
+## Mechanics
+
+### Combat
+
+*Source: `design/mechanics/combat.md`*
+
+- Parent: none
+- Children: `melee`, `ranged`
+
+#### Description
+
+Real-time combat resolved per swing. A hit lands when `atk > def`, and a
+critical multiplies damage by 1.5 & applies the weapon's "on-crit" rider.
+
+#### Strong example
+
+A player who forged a high-`atk` blade cuts through a low-`def` pack in two
+swings.
+
+#### Weak example
+
+A player brings a blade whose `atk` is below every enemy's `def` and cannot
+damage anything at all, with no in-run way to recover.
+
+### Melee
+
+*Source: `design/mechanics/melee.md`*
+
+- Parent: `combat`
+- Children: none
+
+#### Description
+
+Close-range swings that trade reach for damage.
+
+#### Strong example
+
+A player closes distance during an enemy's wind-up and lands a free swing.
+
+#### Weak example
+
+A player swings into a shielded enemy forever because nothing signals that
+melee is the wrong tool here.
+
+### Ranged
+
+*Source: `design/mechanics/ranged.md`*
+
+- Parent: `combat`
+- Children: none
+
+#### Description
+
+Distance attacks that trade damage for safety.
+
+#### Strong example
+
+A player kites a slow enemy around a pillar and wins without taking a hit.
+
+#### Weak example
+
+Every encounter is won by backing away and firing, which makes melee pointless.
+
+## Economy
+
+*Source: `design/economy.md`*
+
+### Nodes
+
+#### ore-vein
+
+*Source: `design/economy.md`, node `ore-vein`*
+
+- Type: source
+- Value progression: none recorded
+
+#### ingot-pool
+
+*Source: `design/economy.md`, node `ingot-pool`*
+
+- Type: pool
+- Value progression: model power; coefficients 1.8, 1.42; domain 1-20; fit 0.987
+
+The one pool every forged weapon is paid for out of. Its cost-by-tier curve is
+fitted rather than chosen — see `scripts/curve-fit.sh`.
+
+###### Open question
+
+Whether ingots stack per alloy or share one pool is undecided.
+
+#### forge
+
+*Source: `design/economy.md`, node `forge`*
+
+- Type: converter
+- Value progression: none recorded
+
+#### gold
+
+*Source: `design/economy.md`, node `gold`*
+
+- Type: pool
+- Value progression: none recorded
+
+#### mining-xp
+
+*Source: `design/economy.md`, node `mining-xp`*
+
+- Type: pool
+- Value progression: none recorded
+
+#### smith-xp
+
+*Source: `design/economy.md`, node `smith-xp`*
+
+- Type: pool
+- Value progression: none recorded
+
+### Families
+
+#### @skill-xp
+
+*Source: `design/economy.md`, family `@skill-xp`*
+
+- Type: pool
+- Members: `mining-xp`, `smith-xp`
+
+Two named skills, `mining-xp` and `smith-xp`, each its own node with its own
+progression — never a shared "crafting" track. Only the member matching the
+action actually applies, which is what `#skill-rate`'s `applies: one-of-family`
+records.
+
+Declarations over this family:
+
+- **xp-gain** — `ore-vein` → `@skill-xp`, kind: resource, resource: xp; expands to 2 connections, all live simultaneously (expanded ids follow `game-mechanics`' derived-id rule)
+- **skill-rate** — `@skill-xp` → `#mine`, kind: state, subtype: label-modifier; expands to 2 connections, one-of-family: exactly one live at a time (expanded ids follow `game-mechanics`' derived-id rule)
+
+### Connections
+
+#### mine
+
+*Source: `design/economy.md`, connection `mine`*
+
+- From: `ore-vein`
+- To: `ingot-pool`
+- Kind: resource
+- Rate: 3
+
+#### smelt
+
+*Source: `design/economy.md`, connection `smelt`*
+
+- From: `ingot-pool`
+- To: `forge`
+- Kind: resource
+- Rate: none recorded
+- Resource: ore
+
+#### sale
+
+*Source: `design/economy.md`, connection `sale`*
+
+- From: `forge`
+- To: `gold`
+- Kind: resource
+- Rate: 5
+- Resource: gold
+
+#### forge-gate
+
+*Source: `design/economy.md`, connection `forge-gate`*
+
+- From: `gold`
+- To: `forge`
+- Kind: state
+- Subtype: none recorded
+- Rate: none recorded
+
+## Competitive Differentiation
+
+*Source: `design/comp-analysis.md`*
+
+Forge & Foray differentiates on loop length: its competitors all separate
+crafting from combat across sessions, where this concept closes both inside one
+fifteen-minute run. Where it currently looks like more of the same is its
+rarity-tier itemization, which every competitor below also ships.
+
+| Competitor | Loop length | Crafting is | Source |
+| --- | --- | --- | --- |
+| Anvilfall | ~2 hours | a separate mode | `docs/research/anvilfall-2026-09-01.md` |
+| Deepdelve | ~45 minutes | a vendor menu | `docs/research/deepdelve-2026-09-01.md` |
+
+What the concept does that they don't:
+
+- Closes crafting and combat inside a single run.
+- Makes the forge the run's *destination*, not its lobby.
+- Prices every weapon out of one visible pool.
+
+## Technical Design
+
+### How do two players share one dungeon run?
+
+*Source: `design/tech/netcode.md`*
+
+**Open — not yet decided.**
+
+- Status: open
+- Category: networking-topology
+- Scope: cross-cutting
+- Drivers: `design/concept.md`, `design/mechanics/combat.md`, `economy:#mine`
+
+#### Context
+
+The concept commits to short co-op runs, and combat resolves per swing, so
+a hit that lands on one client and not the other is visible immediately.
+
+#### Options considered
+
+- Lockstep: cheap bandwidth, brittle under packet loss.
+- Dedicated authoritative server: predictable, costs hosting.
+- Host-migrating listen server: no hosting bill, ugly migrations.
+
+### Saves are a single append-only JSON document per guild.
+
+*Source: `design/tech/save-format.md`*
+
+- Status: accepted
+- Category: persistence
+- Scope: contained
+- Drivers: none
+
+#### Context
+
+There is no team and no budget for a database, and the only constraint is that
+a save must survive a crash mid-run.
+
+#### Decision
+
+One append-only JSON document per guild, fsynced at each run boundary.
+
+#### Consequences
+
+Commits to a bounded save size. Forecloses partial loads, so a very large
+roster will pay the whole parse cost at launch.
+
+#### Assumptions to verify
+
+- A 10 MB save parses in under 100 ms on the target hardware.
+
+*`old-netcode` superseded by `netcode`.*
+
+## Supporting Documents Not Rendered
+
+A GDD practice commonly names nine supporting-document types. This file renders the core GDD — the ninth — as a document of its own, and folds one more into it. The remaining seven are named here, with the reason each is absent, so a reader can tell a deliberate omission from a forgotten one.
+
+- **Technical Design Document** — not absent, and not a separate document: at solo and small-team scale technical design folds into the GDD, so it renders above as `## Technical Design`, from the technical decision records `game-tech` writes, rather than as a standalone `design/tdd.md`.
+- **Concept Document** — out of scope for this skillset, not merely undone: the concept statement `game-pillars` writes already serves this role, and it renders above as `## Concept`.
+- **Marketing & Business Plan** — out of scope for this skillset: a business concern outside this skillset's design-quality scope.
+- **Art Bible** — absent for a grounding reason: the schema this skillset builds — pillars, mechanic entries, the economy graph, technical decision records — carries no visual data to render one from.
+- **Story/Narrative Bible** — absent for a grounding reason: the same schema carries no narrative data to render one from.
+- **Level Design Document** — absent for a grounding reason: the same schema carries no level or spatial data to render one from.
+- **Sound Design Document** — absent for a grounding reason: the same schema carries no audio data to render one from.
+- **Test Plan** — absent for a grounding reason: the same schema carries no QA data to render one from.
+
+Each of the five grounding-reason documents above is a documented future extension, not a silent omission — rendering one without the data it needs would mean inventing content rather than deriving it.
