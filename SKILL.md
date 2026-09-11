@@ -35,10 +35,11 @@ never inside this skill's own repository:
   Overwritten in full on every render.
 - **`design/gdd.html`** — the human-readable form: the same render,
   section for section, as an HTML document with a table of contents that
-  tracks the reader's position (the one piece of script in the file, inline
-  and self-contained; the document reads fine without it). Overwritten in
-  full on every render. It links to `gdd.css` beside it rather than
-  inlining any style.
+  tracks the reader's position and each record's `updated` time shown in
+  the reader's local time (the one piece of script in the file, inline and
+  self-contained; the document reads fine without it, with the raw UTC
+  `updated` value showing instead). Overwritten in full on every render.
+  It links to `gdd.css` beside it rather than inlining any style.
 - **`design/gdd.css`** — the stylesheet `gdd.html` uses. Seeded once, on the
   first render, by copying this skill's `templates/default.css`; after that
   it belongs to the owner. A re-render never touches an existing `gdd.css`,
@@ -81,6 +82,13 @@ not redefine, rename, or add a field to any of them:
   `category`, `drivers`, and `superseded_by` fields, and which body headings
   its status and scope require.
 
+Two things cut across all six, both defined once by `game-authoring` and
+read here at its definition: the `updated` frontmatter field every shape
+carries (`YYYY-MM-DDTHH:MMZ`, UTC), and the eight typed wikilink forms a
+body may use to cite another record — `[[pillar:<slug>]]`,
+`[[mechanic:<slug>]]`, `[[node:<id>]]`, `[[family:<name>]]`,
+`[[connection:<id>]]`, `[[tech:<slug>]]`, `[[concept]]`, `[[comp-analysis]]`.
+
 ## Rendering is total, local, and addressable
 
 Three properties the render is built to guarantee, because `game-critique`
@@ -120,6 +128,16 @@ Three properties the render is built to guarantee, because `game-critique`
   in `gdd.html` it is the same caption, visible, plus a `data-source`
   attribute on the section. A reader, or a `game-critique` note, can always
   get from a section back to the exact record that must change to affect it.
+  The record's `updated` value sits beside the same caption when the record
+  carries one — raw UTC in `gdd.md`; in `gdd.html` a `<time>` element the
+  inline script converts to local time, plus a `data-updated` attribute on
+  the same element that carries `data-source`. The economy graph's one
+  file-level `updated` is shown once, on its section caption.
+- **Linked.** A typed wikilink in any record body resolves to the anchor of
+  the section it names, so a citation in the data is a working link in
+  `gdd.html`; `gdd.md` carries the same reference text through unchanged.
+  Text inside a code span or a fenced code block is never read as a
+  reference.
 
 ## Rendering is scripted
 
@@ -161,7 +179,12 @@ invalid: an economy connection with no `id`, block-style edges, slash-joined
 headings, or a reference that resolves to nothing in `design/economy.md`
 (fixed with `game-mechanics`); a technical decision record whose `status` or
 `scope` lies outside its closed set, or that is missing a body heading its
-status and scope require (fixed with `game-tech`). This skill writes nothing
+status and scope require (fixed with `game-tech`); a typed wikilink in any
+record body that is malformed — an unknown type, a missing identifier, or
+an untyped `[[slug]]` — or that resolves to no record, and an `updated`
+value outside the `YYYY-MM-DDTHH:MMZ` form (both defined by
+`game-authoring`, fixed with whichever skill writes the failing file).
+This skill writes nothing
 into any of the six inputs, so it proposes no repair of its own, and it does
 not render an invalid file on a best-effort basis — a partial render of an
 invalid file is indistinguishable from a render of a valid one to the reader
@@ -177,9 +200,11 @@ filesystem iteration order. Two renders that differ mean the inputs differ.
 choice lives in `design/gdd.css`, which the owner edits directly. Each
 section and record in the HTML carries a class for its kind (`.pillar`,
 `.mechanic`, `.economy-node`, `.economy-family`, `.economy-connection`,
-`.tech-record`) and each non-record state a render can show has one too
-(`.absent`, `.open-note`, `.candidate-note`, `.superseded-note`), so a theme
-has real hooks for every category. `templates/default.css` documents the
+`.tech-record`), each non-record state a render can show has one too
+(`.absent`, `.open-note`, `.candidate-note`, `.superseded-note`), and so do
+the `updated` time (`.updated`) and an `## Open Questions` heading inside a
+record body (`.open-questions`), so a theme has real hooks for every
+category. `templates/default.css` documents the
 full structure at the top of the file. Changing the look of the rendered
 GDD means editing `design/gdd.css`; nothing about the script changes for a
 style change, and no re-render is needed to see one.
