@@ -6,12 +6,12 @@ description: Use when a game project's design data or rendered GDD needs adversa
 # Game Critique
 
 Reviews a game's design by dispatching independent critic personas against it.
-This is the fifth of five independent Orrery skills for game design
-(`game-pillars`, `game-comp-analysis`, `game-mechanics`, `game-gdd`,
-`game-critique`). It defines no design-data shape of its own — every record it
-reads is defined once, by the skill that writes it, and this file names that
-skill rather than restating the fields. It defines exactly one shape: the
-critique note.
+This is the sixth of six independent Orrery skills for game design
+(`game-pillars`, `game-comp-analysis`, `game-mechanics`, `game-tech`,
+`game-gdd`, `game-critique`). It defines no design-data shape of its own —
+every record it reads is defined once, by the skill that writes it, and this
+file names that skill rather than restating the fields. It defines exactly
+one shape: the critique note.
 
 A **unit** is the thing a critic is pointed at: one pillar record, one mechanic
 entry, or one GDD section. Everything below is measured in units — what a
@@ -29,9 +29,10 @@ this skill back into the failure it was built against.
 Run this skill against any game project, regardless of how much or how little
 design data currently exists. Nothing here waits on another skill's output and
 nothing here refuses to run for lack of one. The suggested order across the
-five skills — `game-pillars` → `game-comp-analysis` → `game-mechanics` →
-`game-gdd` → `game-critique`, looping back to `game-mechanics` after a
-critique pass — is a recommendation, not a requirement this skill enforces.
+six skills — `game-pillars` → `game-comp-analysis` → `game-mechanics` →
+`game-tech` → `game-gdd` → `game-critique`, looping back to `game-mechanics`
+after a critique pass — is a recommendation, not a requirement this skill
+enforces.
 
 A project with no `design/gdd.md` still gets a critique: its records are
 critiqued directly, and the owner is told once that GDD sections were not
@@ -138,6 +139,18 @@ connection that cannot be cited back to a record is not a finding the owner
 can resolve — naming which of these behaviours the file fails, and pointing
 to `game-mechanics`, where the upgrade is proposed and confirmed with the
 owner.
+
+**Technical decision records reach critique only through their GDD
+section.** A record `game-tech` writes at `design/tech/<slug>.md` is not a
+unit type of its own: it is critiqued as the `## Technical Design`
+subsection `game-gdd` renders from it, under the GDD-section row above,
+which already carries the section, the record it addresses, and the
+approved pillars. `pillar-fit` can check a technical decision against the
+pillars on that payload; the other personas report inapplicable checks as
+they already do. A technical persona — traceability, cross-decision
+conflict, certification — is a documented future extension, not a row in
+the persona table, and until one is designed no persona is dispatched
+against a technical decision record directly.
 
 **Approved pillar records travel in full**, unlike related mechanic entries,
 because a pillar-fit check run against a trimmed pillar cannot read the
