@@ -34,9 +34,11 @@ never inside this skill's own repository:
   markdown, the form other skills and agents (`game-critique`) parse.
   Overwritten in full on every render.
 - **`design/gdd.html`** — the human-readable form: the same render,
-  section for section, as a static HTML document (no JavaScript) with a
-  table of contents. Overwritten in full on every render. It links to
-  `gdd.css` beside it rather than inlining any style.
+  section for section, as an HTML document with a table of contents that
+  tracks the reader's position (the one piece of script in the file, inline
+  and self-contained; the document reads fine without it). Overwritten in
+  full on every render. It links to `gdd.css` beside it rather than
+  inlining any style.
 - **`design/gdd.css`** — the stylesheet `gdd.html` uses. Seeded once, on the
   first render, by copying this skill's `templates/default.css`; after that
   it belongs to the owner. A re-render never touches an existing `gdd.css`,
