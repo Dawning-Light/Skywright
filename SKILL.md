@@ -57,12 +57,22 @@ one on the owner's behalf.
 
 ## The differentiation statement — the one and only definition
 
-`design/comp-analysis.md` holds two things:
+`design/comp-analysis.md` opens with a YAML frontmatter block carrying
+`source: game-comp-analysis` and `updated` — the UTC time of the last write
+to the file, in the `YYYY-MM-DDTHH:MMZ` form `game-authoring` defines,
+refreshed on every write. The body holds three things:
 
 - The gap between the project's own concept (from `design/concept.md`, or the
   spoken stand-in above) and the gathered competitors — what the concept does
-  that they don't, and where it currently looks like more of the same.
+  that they don't, and where it currently looks like more of the same. Where
+  this refers to the concept or to a pillar, it cites the record with one of
+  the typed wikilinks `game-authoring` defines (`[[concept]]`,
+  `[[pillar:<slug>]]`) rather than restating what that record says.
 - One per-competitor record, each covering the seven fields below.
+- Optionally, one file-level `## Open Questions` heading, covering the
+  analysis as a whole rather than any one competitor: what about the
+  differentiation is unsettled, stated plainly per `game-authoring`. Omit the
+  heading when nothing is open.
 
 **Every claim in this file cites the `research` write-up it came from, by
 path.** This is a requirement this skill enforces, not a recommendation: a
@@ -123,6 +133,9 @@ and what `research` is asked to return — all seven, including the
 meta-systems layer field, reach the dispatch, every run.
 
 ## Mapping `research`'s findings
+
+Before writing or revising any file this skill produces, invoke
+`game-authoring` if it has not already run earlier in this conversation.
 
 Once `research` has written its doc (or docs, if it split by subtopic) to
 `docs/research/<slug>-<date>.md`, map its findings into the two files this
