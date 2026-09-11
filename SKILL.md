@@ -1,6 +1,6 @@
 ---
 name: game-critique
-description: Use when a game project's design data or rendered GDD needs adversarial review rather than more authoring — dispatches independent critic personas, each grounded in one named framework and each given exactly one design unit, and writes every persona's findings as its own critique note in the project. Not for eliciting or editing the design data itself (see `game-pillars`, `game-mechanics`) and not for rendering the GDD a critique cites (see `game-gdd`).
+description: Use when a game project's design data or rendered GDD needs adversarial review, not more authoring — dispatches independent critic personas, each grounded in one framework and given exactly one design unit, and writes each persona's findings as its own critique note. Not for eliciting or editing design data (see `game-pillars`, `game-mechanics`) or rendering the GDD it cites (see `game-gdd`).
 ---
 
 # Game Critique
