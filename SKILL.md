@@ -21,9 +21,14 @@ try to capture.
 This skill runs against a project with **no pillars and no comp-analysis
 present**. It does not read `design/pillars/*.md`, `design/concept.md`, or
 `design/comp-analysis.md`, and does not wait for any of them to exist before
-eliciting mechanics. A suggested order exists across the wider skillset —
-`game-pillars` before this skill, this skill before `game-gdd` — but it is
+eliciting mechanics. A suggested order exists across the wider six-skill
+set — `game-pillars` → `game-comp-analysis` → `game-mechanics` →
+`game-tech` → `game-gdd` → `game-critique`, so `game-pillars` before this
+skill, and this skill before `game-tech` and `game-gdd` — but it is
 suggested, not enforced: nothing here refuses to run for their absence.
+`game-tech` reads the mechanic entries and economy graph this skill writes
+as trigger data for technical decisions; nothing in either shape changes
+for that.
 
 ## Process
 
