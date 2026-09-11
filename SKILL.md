@@ -1,6 +1,6 @@
 ---
 name: game-pillars
-description: Use when a game project has no design pillars yet, or the owner wants to state or revise the concept for a game — conversationally elicits a concept statement and 2-4 design pillars and writes each as its own file in the project. Not for evaluating whether an existing pillar still holds under scrutiny (that is a `game-critique` persona's job) and not for proposing pillars from competitor research (see `game-comp-analysis`, which writes the same record shape with `status: candidate`).
+description: Use when a game project has no design pillars yet, or the owner wants to state or revise its concept — elicits a concept statement and 2-4 design pillars, writing each as its own file. Not for critiquing an existing pillar (see `game-critique`) or proposing pillars from competitor research (see `game-comp-analysis`).
 ---
 
 # Game Pillars
