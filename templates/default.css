@@ -6,11 +6,15 @@
    here is touched again unless you pass --reset-css.
 
    Structure of the document this styles (see render_gdd.py):
-     .gdd-layout            two-column grid: sticky <nav class="toc"> + <main class="gdd">
+     .gdd-layout            two-column grid: sticky <nav class="toc"> + <main class="gdd">,
+                            capped at --toc-width + --doc-width and centred in
+                            the viewport so wide monitors don't strand it left
      .gdd-section           one per top-level GDD section; .absent when no data exists
      .record                one per rendered record, with a type class:
                             .pillar .mechanic .economy-node .economy-family
                             .economy-connection .tech-record
+     .mechanic-children     wraps the child mechanics that follow their
+                            parent's card; nests as deep as the parent tree
      .source                the addressing caption under every heading
      .fields                <dl> of a record's frontmatter fields
      .body                  the record's own prose
@@ -62,12 +66,13 @@
     "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono",
     monospace;
-  --measure: 70ch;          /* max line length for prose */
   --fs-base: 1.0625rem;     /* 17px */
   --lh-base: 1.65;
 
   /* Layout */
   --toc-width: 19rem;
+  --doc-width: 100ch;       /* content width of the document column; prose,
+                               cards, field lists and tables all fill it */
   --gutter: clamp(1.25rem, 4vw, 3.5rem);
   --radius: 10px;
 }
@@ -162,13 +167,24 @@ hr {
    Layout: sticky table of contents on the left, document on the right
    -------------------------------------------------------------------------- */
 
+/* Three tracks: a flexible margin that is never narrower than the TOC, the
+   document column, and a matching flexible margin on the right. With room to
+   spare the two margins are equal, so the document sits dead centre with the
+   TOC hanging off its left edge. As the viewport narrows the right margin
+   gives way first, then the document column; the TOC keeps its width. */
 .gdd-layout {
   display: grid;
-  grid-template-columns: var(--toc-width) minmax(0, 1fr);
+  grid-template-columns:
+    minmax(var(--toc-width), 1fr)
+    minmax(0, calc(var(--doc-width) + 2 * var(--gutter)))
+    minmax(0, 1fr);
   min-height: 100vh;
 }
 
 .toc {
+  grid-column: 1;
+  justify-self: end;
+  width: var(--toc-width);
   position: sticky;
   top: 0;
   align-self: start;
@@ -177,6 +193,7 @@ hr {
   overscroll-behavior: contain;
   padding: 1.75rem 1.25rem 3rem 1.5rem;
   background: var(--bg-elevated);
+  border-left: 1px solid var(--border);
   border-right: 1px solid var(--border);
   font-size: 0.86rem;
   line-height: 1.4;
@@ -236,14 +253,20 @@ hr {
   text-decoration: none;
 }
 
-/* Nested entries: the individual records under a section. */
-.toc-list > li > ol {
+/* Nested entries: the individual records under a section. Mechanics nest a
+   level deeper for every parent/child step, each level with its own guide. */
+.toc-list ol {
   margin: 0.15rem 0 0.6rem 1.05rem;
   padding-left: 0.85rem;
   border-left: 1px solid var(--border);
 }
 
-.toc-list > li > ol > li > a {
+.toc-list ol ol {
+  margin: 0.1rem 0 0.3rem 0.5rem;
+  padding-left: 0.75rem;
+}
+
+.toc-list ol a {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -255,8 +278,8 @@ hr {
   font-size: 0.82rem;
 }
 
-.toc-list > li > ol > li > a:hover,
-.toc-list > li > ol > li > a:focus-visible {
+.toc-list ol a:hover,
+.toc-list ol a:focus-visible {
   color: var(--text);
   background: var(--accent-soft);
   text-decoration: none;
@@ -279,7 +302,7 @@ hr {
   background: var(--accent-soft);
 }
 
-.toc-list > li > ol > li > a.is-active {
+.toc-list ol a.is-active {
   color: var(--text);
   background: var(--accent-soft);
   box-shadow: inset 3px 0 0 var(--accent);
@@ -287,7 +310,8 @@ hr {
 
 /* Document column */
 .gdd {
-  max-width: calc(var(--measure) + 2 * var(--gutter));
+  grid-column: 2;
+  min-width: 0;
   padding: 2.5rem var(--gutter) 6rem;
   counter-reset: gdd-section;
 }
@@ -298,14 +322,22 @@ hr {
   }
 
   .toc {
+    grid-column: auto;
+    justify-self: stretch;
+    width: auto;
     position: static;
     height: auto;
     max-height: none;
+    border-left: 0;
     border-right: 0;
     border-bottom: 1px solid var(--border);
   }
 
-  .toc-list > li > ol > li > a {
+  .gdd {
+    grid-column: auto;
+  }
+
+  .toc-list ol a {
     -webkit-line-clamp: 1;
   }
 }
@@ -341,7 +373,6 @@ hr {
   margin: 0;
   color: var(--text-muted);
   font-size: 0.92rem;
-  max-width: var(--measure);
 }
 
 /* --------------------------------------------------------------------------
@@ -448,27 +479,48 @@ hr {
 .economy-connection { --record-accent: var(--c-connection); }
 .tech-record        { --record-accent: var(--c-tech); }
 
-/* Small type label in the top-right corner of every record card. */
-.record::after {
+/* Small type label above the title of every record card. It sits in normal
+   flow (not pinned to a corner) so a long title can use the card's full
+   width without running underneath it. */
+.record::before {
   content: "";
-  position: absolute;
-  top: 0.9rem;
-  right: 1rem;
+  display: block;
+  margin: 0 0 0.35rem;
   font-size: 0.66rem;
   font-weight: 600;
   letter-spacing: 0.12em;
+  line-height: 1.2;
   text-transform: uppercase;
   color: var(--record-accent);
   opacity: 0.85;
 }
 
-.record.pillar::after             { content: "pillar"; }
-.record.mechanic::after           { content: "mechanic"; }
-.record.economy-node::after       { content: "node"; }
-.record.economy-family::after     { content: "family"; }
-.record.economy-connection::after { content: "connection"; }
-.record.tech-record::after        { content: "decision"; }
-.record.tech-record.status-open::after { content: "open decision"; color: var(--c-open); }
+.record.pillar::before             { content: "pillar"; }
+.record.mechanic::before           { content: "mechanic"; }
+.record.economy-node::before       { content: "node"; }
+.record.economy-family::before     { content: "family"; }
+.record.economy-connection::before { content: "connection"; }
+.record.tech-record::before        { content: "decision"; }
+.record.tech-record.status-open::before { content: "open decision"; color: var(--c-open); }
+
+/* Child mechanics sit indented under their parent's card, with a quiet guide
+   line down the side of the group the way an editor draws indentation
+   guides. The line is flush with the parent card's left edge and uses the
+   same colour as card outlines, so it is there when looked for and
+   otherwise recedes; grandchildren nest inside again, adding a second line. */
+.mechanic-children {
+  margin: 0 0 1.5rem;
+  padding-left: 1.5rem;
+  border-left: 2px solid var(--border);
+}
+
+.mechanic-children > .record:first-child {
+  margin-top: 0;
+}
+
+.mechanic-children > :last-child {
+  margin-bottom: 0;
+}
 
 /* Economy records are numerous and short: keep them compact. */
 .record.economy-node,
@@ -482,18 +534,51 @@ hr {
    "Where am I": the section or record you just navigated to
    -------------------------------------------------------------------------- */
 
-.record:target {
-  border-color: var(--accent);
-  border-left-color: var(--record-accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
+/* Jumping to a record, section or declaration from the table of contents
+   gives it a soft glow that holds for a moment and then fades away, rather
+   than a permanent outline. The animation restarts whenever the target
+   changes; with reduced motion preferred there is no glow at all. */
+@keyframes target-glow {
+  0%,
+  35% {
+    box-shadow:
+      0 0 0 3px var(--accent-soft),
+      0 0 28px 2px color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+  100% {
+    box-shadow:
+      0 0 0 0 transparent,
+      0 0 0 0 transparent;
+  }
+}
+
+@keyframes target-heading-glow {
+  0%,
+  35% {
+    border-top-color: var(--accent);
+    text-shadow: 0 0 18px color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+  100% {
+    border-top-color: var(--border-strong);
+    text-shadow: 0 0 0 transparent;
+  }
+}
+
+.record:target,
+.declarations > li:target {
+  animation: target-glow 2.2s ease-out both;
 }
 
 .gdd-section:target > h2 {
-  border-top-color: var(--accent);
+  animation: target-heading-glow 2.2s ease-out both;
 }
 
-.gdd-section:target > h2::before {
-  color: var(--accent);
+@media (prefers-reduced-motion: reduce) {
+  .record:target,
+  .declarations > li:target,
+  .gdd-section:target > h2 {
+    animation: none;
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -541,10 +626,6 @@ hr {
 /* --------------------------------------------------------------------------
    Body prose — the record's own text, kept easy to read
    -------------------------------------------------------------------------- */
-
-.body {
-  max-width: var(--measure);
-}
 
 .body > :first-child {
   margin-top: 0;
@@ -667,7 +748,6 @@ p.absent {
   border: 1px dashed var(--border-strong);
   border-radius: var(--radius);
   background: transparent;
-  max-width: var(--measure);
 }
 
 .gdd-section.absent > h2 {
@@ -702,7 +782,6 @@ p.absent {
   border-radius: 0 var(--radius) var(--radius) 0;
   color: var(--text);
   font-size: 0.95rem;
-  max-width: var(--measure);
 }
 
 /* Superseded technical decisions — kept as a record, shown as a footnote. */
@@ -754,12 +833,6 @@ p.absent {
   scroll-margin-top: 1.5rem;
 }
 
-.declarations > li:target {
-  border-color: var(--accent);
-  border-left-color: var(--c-connection);
-  box-shadow: 0 0 0 3px var(--accent-soft);
-}
-
 .declarations .conn-id {
   grid-row: 1 / span 3;
   align-self: start;
@@ -793,7 +866,6 @@ p.absent {
 .supporting-list {
   margin: 0;
   padding-left: 1.3rem;
-  max-width: var(--measure);
 }
 
 .supporting-list li {

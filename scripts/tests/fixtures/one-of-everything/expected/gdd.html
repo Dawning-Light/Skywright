@@ -19,9 +19,11 @@
       </ol></li>
     <li><a href="#mechanics">Mechanics</a>
       <ol>
-        <li><a href="#mechanic-combat">Combat</a></li>
-        <li><a href="#mechanic-melee">Melee</a></li>
-        <li><a href="#mechanic-ranged">Ranged</a></li>
+        <li><a href="#mechanic-combat">Combat</a>
+          <ol>
+            <li><a href="#mechanic-melee">Melee</a></li>
+            <li><a href="#mechanic-ranged">Ranged</a></li>
+          </ol></li>
       </ol></li>
     <li><a href="#economy">Economy</a>
       <ol>
@@ -103,42 +105,44 @@
       <p>A player brings a blade whose <code>atk</code> is below every enemy's <code>def</code> and cannot damage anything at all, with no in-run way to recover.</p>
     </div>
   </article>
-  <article id="mechanic-melee" class="record mechanic" data-source="design/mechanics/melee.md">
-    <h3>Melee</h3>
-    <p class="source"><code>design/mechanics/melee.md</code></p>
-    <dl class="fields">
-      <dt>Parent</dt>
-      <dd><a href="#mechanic-combat"><code>combat</code></a></dd>
-      <dt>Children</dt>
-      <dd class="unrecorded">none</dd>
-    </dl>
-    <div class="body">
-      <h4>Description</h4>
-      <p>Close-range swings that trade reach for damage.</p>
-      <h4>Strong example</h4>
-      <p>A player closes distance during an enemy's wind-up and lands a free swing.</p>
-      <h4>Weak example</h4>
-      <p>A player swings into a shielded enemy forever because nothing signals that melee is the wrong tool here.</p>
-    </div>
-  </article>
-  <article id="mechanic-ranged" class="record mechanic" data-source="design/mechanics/ranged.md">
-    <h3>Ranged</h3>
-    <p class="source"><code>design/mechanics/ranged.md</code></p>
-    <dl class="fields">
-      <dt>Parent</dt>
-      <dd><a href="#mechanic-combat"><code>combat</code></a></dd>
-      <dt>Children</dt>
-      <dd class="unrecorded">none</dd>
-    </dl>
-    <div class="body">
-      <h4>Description</h4>
-      <p>Distance attacks that trade damage for safety.</p>
-      <h4>Strong example</h4>
-      <p>A player kites a slow enemy around a pillar and wins without taking a hit.</p>
-      <h4>Weak example</h4>
-      <p>Every encounter is won by backing away and firing, which makes melee pointless.</p>
-    </div>
-  </article>
+  <div class="mechanic-children">
+    <article id="mechanic-melee" class="record mechanic" data-source="design/mechanics/melee.md">
+      <h3>Melee</h3>
+      <p class="source"><code>design/mechanics/melee.md</code></p>
+      <dl class="fields">
+        <dt>Parent</dt>
+        <dd><a href="#mechanic-combat"><code>combat</code></a></dd>
+        <dt>Children</dt>
+        <dd class="unrecorded">none</dd>
+      </dl>
+      <div class="body">
+        <h4>Description</h4>
+        <p>Close-range swings that trade reach for damage.</p>
+        <h4>Strong example</h4>
+        <p>A player closes distance during an enemy's wind-up and lands a free swing.</p>
+        <h4>Weak example</h4>
+        <p>A player swings into a shielded enemy forever because nothing signals that melee is the wrong tool here.</p>
+      </div>
+    </article>
+    <article id="mechanic-ranged" class="record mechanic" data-source="design/mechanics/ranged.md">
+      <h3>Ranged</h3>
+      <p class="source"><code>design/mechanics/ranged.md</code></p>
+      <dl class="fields">
+        <dt>Parent</dt>
+        <dd><a href="#mechanic-combat"><code>combat</code></a></dd>
+        <dt>Children</dt>
+        <dd class="unrecorded">none</dd>
+      </dl>
+      <div class="body">
+        <h4>Description</h4>
+        <p>Distance attacks that trade damage for safety.</p>
+        <h4>Strong example</h4>
+        <p>A player kites a slow enemy around a pillar and wins without taking a hit.</p>
+        <h4>Weak example</h4>
+        <p>Every encounter is won by backing away and firing, which makes melee pointless.</p>
+      </div>
+    </article>
+  </div>
 </section>
 
 <section id="economy" class="gdd-section economy" data-source="design/economy.md">
