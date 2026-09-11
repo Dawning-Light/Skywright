@@ -43,12 +43,17 @@ between `---` lines, then a markdown body.
 ### The concept statement shape
 
 At `design/concept.md`. Frontmatter carries whatever fields the elicitation
-below settles — at minimum a `title` for the game and a `status` (this skill
-only ever writes `approved`, the same convention the pillar record uses).
+below settles — at minimum a `title` for the game, a `status` (this skill
+only ever writes `approved`, the same convention the pillar record uses),
+and `updated`, the UTC time of the last write in the `YYYY-MM-DDTHH:MMZ`
+form `game-authoring` defines, refreshed on every write.
 Body: 2-4 sentences of prose stating what the game is and what a player does
 in it — concrete enough that a reader unfamiliar with the project could
 describe it back in one sentence. Not a pitch, not a feature list — a
-statement a design pillar can be checked against.
+statement a design pillar can be checked against. After those sentences,
+the body's one optional internal section: `## Open Questions`, holding
+whatever about the concept is unsettled, stated plainly per
+`game-authoring`. Omit the heading when nothing is open.
 
 ### The pillar record shape — the one and only definition
 
@@ -69,6 +74,9 @@ Frontmatter:
   are one record shape, distinguished by this field, never two record types.
 - `source` — the skill that wrote the file. This skill always writes
   `game-pillars` here.
+- `updated` — the UTC time of the last write to this file, in the
+  `YYYY-MM-DDTHH:MMZ` form `game-authoring` defines. Refreshed on every
+  write, not only when `status` changes.
 
 A pillar record this skill writes therefore always opens:
 
@@ -78,6 +86,7 @@ name: <slug>
 title: <the pillar, as one sentence>
 status: approved
 source: game-pillars
+updated: 2026-09-11T20:42Z
 ---
 ```
 
@@ -88,6 +97,15 @@ the pillar produces and the one sentence of reasoning that connects the
 pillar's wording to that verdict. A pillar record with no worked example is
 not usable: nothing in it lets a later reader check whether the pillar
 actually arbitrates anything, as opposed to merely sounding decisive.
+The body may end with one optional heading, `## Open Questions`, holding
+whatever about the pillar is unsettled — stated plainly, per
+`game-authoring`, never folded into the keep/cut prose as a hedge. Omit the
+heading when nothing is open.
+
+Where the body refers to a fact another record owns — a mechanic it applies
+to, a tech decision it forces — it cites that record with one of the typed
+wikilinks `game-authoring` defines (`[[mechanic:<slug>]]`, `[[tech:<slug>]]`,
+and the rest) rather than restating the fact.
 
 ## The arbitration test
 
@@ -128,6 +146,10 @@ own wording rather than to outside judgement, has passed the test and is
 ready to write down.
 
 ## Eliciting the concept and pillars
+
+Before writing or revising any file this skill produces, invoke
+`game-authoring` if it has not already run earlier in this conversation. Its
+rules govern every body written below.
 
 1. Ask the owner for a short description of the game: what it is, what a
    player does. Write this back in 2-4 sentences and confirm it with the
