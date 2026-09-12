@@ -3,12 +3,9 @@ import os
 import sys
 
 from render_gdd import (
-    _ATX_RE,
-    _CODE_SPAN_RE,
-    _FENCE_RE,
-    _WIKILINK_RE,
     BadReference,
     InvalidInput,
+    iter_wikilink_hits,
     load_design,
     parse_reference,
     read_text,
@@ -51,34 +48,23 @@ def _target_from_path(path):
 
 
 def find_hits_in_text(text, kind, ident):
-    """``(lineno, heading)`` for each line where ``[[kind:ident]]`` appears."""
-    hits = []
-    heading = ""
-    in_fence = False
-    for lineno, line in enumerate(text.split("\n"), start=1):
-        if _FENCE_RE.match(line):
-            in_fence = not in_fence
-            continue
-        if in_fence:
-            continue
-        atx = _ATX_RE.match(line)
-        if atx:
-            heading = line.strip()
-            continue
-        for match in _WIKILINK_RE.finditer(_CODE_SPAN_RE.sub(" ", line)):
-            try:
-                found_kind, found_ident = parse_reference(match.group(1))
-            except BadReference:
-                continue
-            if found_kind == kind and found_ident == ident:
-                hits.append((lineno, heading))
-    return hits
+    """``(lineno, heading)`` for each line where ``[[kind:ident]]`` appears.
+
+    A thin filter over ``render_gdd.iter_wikilink_hits`` -- the render's own
+    citation lists share the same scan, so there is exactly one
+    implementation of "find every wikilink hit in a text" rather than two.
+    """
+    return [
+        (lineno, heading)
+        for found_kind, found_ident, _literal, heading, lineno in iter_wikilink_hits(text)
+        if found_kind == kind and found_ident == ident
+    ]
 
 
 def find_hits(data, design_root, kind, ident):
     project_root = os.path.dirname(design_root)
     seen = []
-    for rel, _skill, _body in record_bodies(data):
+    for rel, _skill, _anchor, _identifier, _body in record_bodies(data):
         if rel not in seen:
             seen.append(rel)
     hits = []

@@ -21,6 +21,10 @@
                             rewritten to local time by the inline script
      .fields                <dl> of a record's frontmatter fields
      .body                  the record's own prose
+     .citations             the "Citations" disclosure a record ends with,
+                            one comma-joined line of every citing record;
+                            absent entirely when nothing cites the record
+     .citations-count       the quiet count badge inside the <summary>
      .open-questions        a body heading whose text is exactly "Open
                             Questions" — the shape's home for unsettled content
      .absent / .open-note / .candidate-note / .superseded-note
@@ -846,6 +850,107 @@ hr {
 }
 
 /* --------------------------------------------------------------------------
+   Citations — the reverse of a body's own [[...]] links: who cites this
+   record. A hard rule above plus real top margin gives it its own ground,
+   rather than reading as a continuation of the body above it, and the
+   padding-top holds the summary label off that rule so it never crowds it.
+   The disclosure marker is a drawn chevron rather than a glyph, and the
+   summary text keeps the document's own accent colour, brightening on
+   hover or focus so the row still reads as clickable without a hover fill
+   behind it (`user-select: none` keeps a double click from selecting the
+   label instead of toggling it). Collapsed by default (a
+   plain <details>, no script involved) so a heavily-cited entry doesn't
+   dominate its own card; absent entirely, per render_gdd.py, when nothing
+   cites the record at all. The list itself is one comma-joined line, same
+   shape as a "Children" field's <dd> above — a citing record can show up
+   more than once in the badge's count without needing more than one line
+   to itself.
+   -------------------------------------------------------------------------- */
+
+.citations {
+  margin: 2rem 0 0;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border);
+}
+
+.citations summary {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  list-style: none;
+  padding: 0.75rem 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  user-select: none;
+  transition: color 0.12s ease;
+}
+
+.citations summary::-webkit-details-marker {
+  display: none;
+}
+
+/* A right angle rotated to a chevron, not a text glyph -- crisp at any size
+   and it inherits the summary's own colour, accent when closed and idle. */
+.citations summary::before {
+  content: "";
+  flex: none;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 0.15s ease;
+}
+
+.citations[open] > summary::before {
+  transform: rotate(45deg);
+}
+
+.citations summary:hover,
+.citations summary:focus-visible {
+  color: color-mix(in srgb, var(--accent) 70%, white);
+}
+
+.citations summary:active {
+  color: color-mix(in srgb, var(--accent) 55%, black);
+}
+
+/* Deliberately quiet: a count is not a section title, and it would otherwise
+   inherit the summary's accent colour and letter-spacing. */
+.citations-count {
+  min-width: 1.5rem;
+  padding: 0 0.4rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  text-transform: none;
+  text-align: center;
+  color: var(--text-faint);
+}
+
+/* One flowing, comma-joined line -- same shape as a "Children" field's <dd>
+   above, wrapping to a new line on its own rather than stacking one citer
+   per row. */
+.citations p {
+  margin: 0.5rem 0 0.5rem;
+  font-size: 0.86rem;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.citations p code {
+  font-size: 0.92em;
+}
+
+/* --------------------------------------------------------------------------
    Non-record states: absent sections, open decisions, candidates, superseded
    -------------------------------------------------------------------------- */
 
@@ -970,6 +1075,15 @@ p.absent {
 /* Connection fields: make the edge endpoints read as a path. */
 .economy-connection .fields dd a {
   font-weight: 500;
+}
+
+/* A declaration's citations sit inside the same two-column grid as its
+   id/edge/meta/expansion; without this they'd auto-place into the narrow
+   id column instead of spanning the row. Lighter than a record card's own
+   citations block, to match the declaration's own compact padding. */
+.declarations .citations {
+  grid-column: 1 / -1;
+  margin: 1rem 0 0;
 }
 
 /* --------------------------------------------------------------------------
