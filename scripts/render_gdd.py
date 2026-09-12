@@ -963,38 +963,150 @@ def body_references(body):
     return found
 
 
-def record_bodies(data):
-    """``(path, writing skill, body)`` for every record body this render reads.
+def iter_wikilink_hits(text):
+    """Yield ``(kind, ident, literal, heading, lineno)`` for every
+    well-formed ``[[...]]`` wikilink in ``text``, outside a fenced code block
+    or code span, alongside the nearest ATX heading above it (``""`` if
+    none) and the 1-based line it appears on.
 
-    Includes the two shapes no anchor points at -- a candidate pillar and a
+    A malformed reference is skipped here rather than reported -- that is
+    ``body_references``' and ``validate_references``' job, on the render's
+    own bodies. This is the reverse lookup instead: every well-formed hit,
+    wherever it lives, so a citation can be found from either end. The one
+    implementation this render's own citation lists and
+    ``find_references.py``'s reverse lookup both share, rather than each
+    keeping its own copy.
+    """
+    heading = ""
+    in_fence = False
+    for lineno, line in enumerate(text.split("\n"), start=1):
+        if _FENCE_RE.match(line):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        atx = _ATX_RE.match(line)
+        if atx:
+            heading = line.strip()
+            continue
+        for match in _WIKILINK_RE.finditer(_CODE_SPAN_RE.sub(" ", line)):
+            try:
+                kind, ident = parse_reference(match.group(1))
+            except BadReference:
+                continue
+            yield kind, ident, match.group(0), heading, lineno
+
+
+def record_bodies(data):
+    """``(path, writing skill, anchor, identifier, body)`` for every record
+    body this render reads.
+
+    ``anchor`` is where the body's own record renders to (``#pillar-<slug>``,
+    ``#mechanic-<slug>``, and so on), or ``None`` for the two shapes that get
+    a note rather than a section of their own -- a candidate pillar and a
     superseded technical decision -- because a citation in one is still a
-    citation, and a broken one is still worth surfacing.
+    citation, and a broken or unlinkable one is still worth surfacing.
+    ``identifier`` is the same short name a typed ``[[...]]`` reference to
+    this record would carry after its colon (a slug, an economy id, or a
+    bare keyword for concept/comp-analysis) -- what a reader needs to find
+    the record inside the rendered HTML, as opposed to ``path``, which is
+    where its data lives on disk and is only ever used to report an invalid
+    reference back to the record that carries it.
     """
     out = []
     if data["concept"] is not None:
-        out.append(("design/concept.md", "game-pillars", data["concept"]["body"]))
-    for pillar in data["pillars"] + data["candidates"]:
-        out.append((pillar["rel"], "game-pillars", pillar["body"]))
+        out.append(
+            ("design/concept.md", "game-pillars", "#concept", "concept", data["concept"]["body"])
+        )
+    for pillar in data["pillars"]:
+        out.append(
+            (
+                pillar["rel"],
+                "game-pillars",
+                "#pillar-%s" % pillar["slug"],
+                pillar["slug"],
+                pillar["body"],
+            )
+        )
+    for pillar in data["candidates"]:
+        out.append((pillar["rel"], "game-pillars", None, pillar["slug"], pillar["body"]))
     for mech in data["mechanics"]:
-        out.append((mech["rel"], "game-mechanics", mech["body"]))
+        out.append(
+            (
+                mech["rel"],
+                "game-mechanics",
+                "#mechanic-%s" % mech["slug"],
+                mech["slug"],
+                mech["body"],
+            )
+        )
     economy = data["economy"]
     if economy is not None:
         for heading in economy["section_order"]:
+            anchor = (
+                "#family-%s" % heading[1:]
+                if heading.startswith("@")
+                else "#node-%s" % heading
+            )
             out.append(
-                ("design/economy.md", "game-mechanics", economy["sections"][heading])
+                (
+                    "design/economy.md",
+                    "game-mechanics",
+                    anchor,
+                    heading,
+                    economy["sections"][heading],
+                )
             )
     if data["comp"] is not None:
         out.append(
-            ("design/comp-analysis.md", "game-comp-analysis", data["comp"]["body"])
+            (
+                "design/comp-analysis.md",
+                "game-comp-analysis",
+                "#competitive-differentiation",
+                "comp-analysis",
+                data["comp"]["body"],
+            )
         )
-    for record in data["tech_live"] + data["tech_superseded"]:
-        out.append((record["rel"], "game-tech", record["body"]))
+    for record in data["tech_live"]:
+        out.append(
+            (
+                record["rel"],
+                "game-tech",
+                "#tech-%s" % record["slug"],
+                record["slug"],
+                record["body"],
+            )
+        )
+    for record in data["tech_superseded"]:
+        out.append((record["rel"], "game-tech", None, record["slug"], record["body"]))
     return out
+
+
+def build_backlinks(data, ctx):
+    """Every rendered anchor's inbound citations, keyed by that anchor.
+
+    Reads the same bodies ``validate_references`` already proved carry only
+    well-formed, resolving ``[[...]]`` references, so every hit collected
+    here is guaranteed to resolve too -- this only ever runs once that check
+    has passed. Each hit is ``(citing identifier, citing anchor or None)``.
+    A target with no hits gets no entry at all, which is what tells
+    ``citations_html`` to render nothing for it.
+    """
+    backlinks = {}
+    for _rel, _skill, citer_anchor, citer_identifier, body in record_bodies(data):
+        if not body:
+            continue
+        for kind, ident, _literal, _heading, _lineno in iter_wikilink_hits(body):
+            target = anchor_for_typed(kind, ident, ctx)
+            if target is None:
+                continue  # unreachable post-validation
+            backlinks.setdefault(target, []).append((citer_identifier, citer_anchor))
+    return backlinks
 
 
 def validate_references(data, ctx):
     """Every `[[...]]` in every body resolves, or the render stops."""
-    for rel, skill, body in record_bodies(data):
+    for rel, skill, _anchor, _identifier, body in record_bodies(data):
         if not body:
             continue
         for literal in body_references(body):
@@ -1712,6 +1824,38 @@ def linked_code(ref, anchor):
     return code
 
 
+def citations_html(target_anchor, ctx):
+    """The ``<details class="citations">`` block a record's card ends with,
+    or nothing when no rendered body cites it. Each entry is the citing
+    record's own identifier -- the same short name a typed reference to it
+    would carry, not the file it's written in, since the HTML has no use for
+    the latter -- linked to its section when it has one; a candidate pillar
+    or superseded technical decision, neither of which gets a section of its
+    own, shows unlinked, same as ``linked_code`` elsewhere. The badge counts
+    every citing occurrence, but a body that cites the same target twice only
+    needs to be listed once, so the list itself is deduplicated -- laid out
+    as one comma-joined line, same shape as the "Children" field a mechanic's
+    own field list shows above.
+    """
+    hits = ctx["backlinks"].get(target_anchor, [])
+    if not hits:
+        return []
+    seen = set()
+    items = []
+    for hit in hits:
+        if hit in seen:
+            continue
+        seen.add(hit)
+        items.append(linked_code(*hit))
+    return [
+        '<details class="citations">',
+        '  <summary>Citations <span class="citations-count">%d</span></summary>'
+        % len(hits),
+        "  <p>%s</p>" % ", ".join(items),
+        "</details>",
+    ]
+
+
 def build_html(data, ctx):
     out = Html()
     concept = data["concept"]
@@ -2001,6 +2145,7 @@ def html_concept(out, data, ctx):
         )
         if concept["body"]:
             html_body(out, 2, concept["body"], 1, ctx)
+        out.extend(2, citations_html("#concept", ctx))
     out.add(0, "</section>")
 
 
@@ -2023,6 +2168,7 @@ def html_pillars(out, data, ctx):
         )
         if pillar["body"]:
             html_body(out, 4, pillar["body"], 2, ctx)
+        out.extend(4, citations_html("#pillar-%s" % pillar["slug"], ctx))
         out.add(2, "</article>")
     if data["candidates"]:
         out.add(
@@ -2087,6 +2233,7 @@ def _html_mechanic(out, pad, mech, ctx):
     dl_close(out, pad + 2)
     if mech["body"]:
         html_body(out, pad + 2, mech["body"], 2, ctx)
+    out.extend(pad + 2, citations_html("#mechanic-%s" % mech["slug"], ctx))
     out.add(pad, "</article>")
 
 
@@ -2141,6 +2288,7 @@ def html_economy(out, data, ctx):
         notes = economy["sections"].get(node_id)
         if notes:
             html_body(out, 4, notes, 3, ctx)
+        out.extend(4, citations_html("#node-%s" % node_id, ctx))
         out.add(2, "</article>")
 
     out.add(2, '<h3 id="economy-families">Families</h3>')
@@ -2190,6 +2338,7 @@ def html_economy(out, data, ctx):
             for conn in declarations:
                 html_declaration(out, 6, conn, len(members), ctx)
             out.add(4, "</ul>")
+        out.extend(4, citations_html("#family-%s" % fname, ctx))
         out.add(2, "</article>")
 
     out.add(2, '<h3 id="economy-connections">Connections</h3>')
@@ -2240,6 +2389,7 @@ def html_declaration(out, pad, conn, member_count, ctx):
     )
     out.add(pad + 2, '<span class="meta">%s</span>' % h(" · ".join(meta)))
     out.add(pad + 2, '<span class="expansion">%s</span>' % h(expansion))
+    out.extend(pad + 2, citations_html("#connection-%s" % conn_id, ctx))
     out.add(pad, "</li>")
 
 
@@ -2275,6 +2425,7 @@ def html_connection(out, conn, ctx):
     if resource:
         dl_field(out, 4, "Resource", h(resource))
     dl_close(out, 4)
+    out.extend(4, citations_html("#connection-%s" % conn_id, ctx))
     out.add(2, "</article>")
 
 
@@ -2298,6 +2449,7 @@ def html_comp(out, data, ctx):
         )
         if comp["body"]:
             html_body(out, 2, comp["body"], 1, ctx)
+        out.extend(2, citations_html("#competitive-differentiation", ctx))
     out.add(0, "</section>")
 
 
@@ -2345,6 +2497,7 @@ def html_tech(out, data, ctx):
         dl_close(out, 4)
         if record["body"]:
             html_body(out, 4, record["body"], 2, ctx)
+        out.extend(4, citations_html("#tech-%s" % record["slug"], ctx))
         out.add(2, "</article>")
     for record in data["tech_superseded"]:
         out.add(
@@ -2410,6 +2563,7 @@ def main(argv=None):
         data = load_design(root)
         ctx = build_context(data)
         validate_references(data, ctx)
+        ctx["backlinks"] = build_backlinks(data, ctx)
         markdown = build_markdown(data)
         html = build_html(data, ctx)
     except InvalidInput as exc:

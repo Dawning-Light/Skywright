@@ -154,6 +154,21 @@ Three properties the render is built to guarantee, because `game-critique`
   unresolved reference.
   Text inside a code span or a fenced code block is never read as a
   reference.
+- **Linked both ways.** Every section `gdd.html` renders ends with the
+  reverse of the bullet above: a collapsed `Citations` disclosure,
+  badge-counted, naming every rendered body that cites it as one
+  comma-joined line. Each name is the citing record's own identifier —
+  never its `.md` path, which the HTML has no use for — linked to the
+  citing record's own section (a candidate pillar or superseded technical
+  decision cites like any other body but has no section of its own to link
+  to, so it shows unlinked). A section nothing cites gets no disclosure at
+  all — it is never shown reading "Citations 0". The badge counts
+  occurrences, not distinct citing records, so a body that cites the same
+  target twice still counts twice even though the line itself only names
+  that citer once. Built from the same reference resolution as the bullet
+  above, so it needs its own render
+  pass only after every reference in the document is already known to
+  resolve.
 
 ## Rendering is scripted
 
@@ -218,10 +233,12 @@ section and record in the HTML carries a class for its kind (`.pillar`,
 `.mechanic`, `.economy-node`, `.economy-family`, `.economy-connection`,
 `.tech-record`), each non-record state a render can show has one too
 (`.absent`, `.open-note`, `.candidate-note`, `.superseded-note`), and so do
-the `updated` time (`.updated`) and an `## Open Questions` heading inside a
-record body (`.open-questions`), so a theme has real hooks for every
-category. `templates/default.css` documents the
-full structure at the top of the file. Changing the look of the rendered
+the `updated` time (`.updated`), an `## Open Questions` heading inside a
+record body (`.open-questions`), and the reverse-citations disclosure a
+cited section ends with (`.citations`, a plain `<details>` — no script
+involved), so a theme has real hooks for every category.
+`templates/default.css` documents the full structure at the top of the
+file. Changing the look of the rendered
 GDD means editing `design/gdd.css`; nothing about the script changes for a
 style change, and no re-render is needed to see one.
 
@@ -235,8 +252,11 @@ render is intended.
 
 Before renaming or removing a pillar, mechanic, tech decision, or economy
 node/family/connection, `scripts/find_references.py` lists every place that
-currently cites it — the reverse of `render_gdd.py`'s own reference check,
-and built from the same parsing.
+currently cites it — the same reverse lookup `gdd.html`'s own per-section
+`Citations` disclosure shows inline, as a CLI query against one target
+instead of every target at once. Both sit on top of `render_gdd.py`'s
+`iter_wikilink_hits`, the one implementation of "find every wikilink hit in
+a text"; `find_references.py` defines no scanning of its own.
 
 **Invocation.** Same working-directory rule as `render_gdd.py`:
 

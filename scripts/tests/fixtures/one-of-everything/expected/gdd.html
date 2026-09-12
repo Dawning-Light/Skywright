@@ -55,6 +55,10 @@
     <h3 class="open-questions">Open Questions</h3>
     <p>Whether a run may end anywhere other than the forge is undecided.</p>
   </div>
+  <details class="citations">
+    <summary>Citations <span class="citations-count">2</span></summary>
+    <p><a href="#pillar-always-earned"><code>always-earned</code></a>, <a href="#competitive-differentiation"><code>comp-analysis</code></a></p>
+  </details>
 </section>
 
 <section id="design-pillars" class="gdd-section pillars" data-source="design/pillars/">
@@ -71,6 +75,10 @@
       <h4>Worked cut</h4>
       <p>A &quot;Smith&quot; class that alone may use the forge. <strong>Cut.</strong></p>
     </div>
+    <details class="citations">
+      <summary>Citations <span class="citations-count">2</span></summary>
+      <p><a href="#pillar-zero-grind"><code>zero-grind</code></a>, <code>tight-loop</code></p>
+    </details>
   </article>
   <article id="pillar-zero-grind" class="record pillar" data-source="design/pillars/zero-grind.md" data-updated="2026-09-10T08:05Z">
     <h3>Progress always comes from a decision the player made, never from time they waited.</h3>
@@ -86,6 +94,10 @@
       <h4 class="open-questions">Open Questions</h4>
       <p>Whether a cosmetic reward may be time-gated without failing this pillar is undecided.</p>
     </div>
+    <details class="citations">
+      <summary>Citations <span class="citations-count">2</span></summary>
+      <p><code>tight-loop</code>, <a href="#mechanic-melee"><code>melee</code></a></p>
+    </details>
   </article>
   <p class="candidate-note">1 candidate pillar proposed by <code>game-comp-analysis</code> awaits review — approve or discard it with <code>game-pillars</code>.</p>
 </section>
@@ -111,6 +123,10 @@
       <h4 class="open-questions">Open Questions</h4>
       <p>Whether a swing may be cancelled mid-animation is undecided.</p>
     </div>
+    <details class="citations">
+      <summary>Citations <span class="citations-count">2</span></summary>
+      <p><a href="#pillar-zero-grind"><code>zero-grind</code></a>, <a href="#node-ingot-pool"><code>ingot-pool</code></a></p>
+    </details>
   </article>
   <div class="mechanic-children">
     <article id="mechanic-melee" class="record mechanic" data-source="design/mechanics/melee.md" data-updated="2026-09-10T12:04Z">
@@ -182,6 +198,10 @@
       <h6>Open question</h6>
       <p>Whether ingots stack per alloy or share one pool is undecided.</p>
     </div>
+    <details class="citations">
+      <summary>Citations <span class="citations-count">1</span></summary>
+      <p><a href="#mechanic-combat"><code>combat</code></a></p>
+    </details>
   </article>
   <article id="node-forge" class="record economy-node" data-source="design/economy.md#forge">
     <h4>forge</h4>
@@ -249,8 +269,16 @@
         <span class="edge"><a href="#family-skill-xp">@skill-xp</a> → <a href="#connection-mine">#mine</a></span>
         <span class="meta">kind: state · subtype: label-modifier</span>
         <span class="expansion">expands to 2 connections · one-of-family: exactly one live at a time</span>
+        <details class="citations">
+          <summary>Citations <span class="citations-count">1</span></summary>
+          <p><a href="#family-skill-xp"><code>@skill-xp</code></a></p>
+        </details>
       </li>
     </ul>
+    <details class="citations">
+      <summary>Citations <span class="citations-count">1</span></summary>
+      <p><a href="#mechanic-combat"><code>combat</code></a></p>
+    </details>
   </article>
   <h3 id="economy-connections">Connections</h3>
   <article id="connection-mine" class="record economy-connection kind-resource" data-source="design/economy.md#mine">
@@ -357,6 +385,10 @@
     <h3 class="open-questions">Open Questions</h3>
     <p>Whether the co-op runs <a href="#tech-netcode">netcode</a> is deciding are a differentiator at all is unsettled — one competitor above may ship them first.</p>
   </div>
+  <details class="citations">
+    <summary>Citations <span class="citations-count">2</span></summary>
+    <p><a href="#concept"><code>concept</code></a>, <a href="#pillar-zero-grind"><code>zero-grind</code></a></p>
+  </details>
 </section>
 
 <section id="technical-design" class="gdd-section tech" data-source="design/tech/">
@@ -385,6 +417,10 @@
         <li>Host-migrating listen server: no hosting bill, ugly migrations.</li>
       </ul>
     </div>
+    <details class="citations">
+      <summary>Citations <span class="citations-count">2</span></summary>
+      <p><a href="#mechanic-ranged"><code>ranged</code></a>, <a href="#competitive-differentiation"><code>comp-analysis</code></a></p>
+    </details>
   </article>
   <article id="tech-save-format" class="record tech-record status-accepted scope-contained" data-source="design/tech/save-format.md" data-updated="2026-09-04T07:45Z">
     <h3>Saves are a single append-only JSON document per guild.</h3>
