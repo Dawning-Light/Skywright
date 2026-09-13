@@ -229,6 +229,11 @@ def as_list(value):
     return [value]
 
 
+def friendly_name(slug):
+    """A slug rendered for a reader: ``"emergent-roles"`` -> ``"Emergent Roles"``."""
+    return " ".join(word.capitalize() for word in slug.split("-"))
+
+
 def as_text(value):
     if isinstance(value, list):
         return ", ".join(str(v) for v in value)
@@ -387,7 +392,8 @@ def load_design(root):
         record = {
             "slug": slug,
             "rel": rel,
-            "title": as_text(fields.get("title", "")) or slug,
+            "name": friendly_name(slug),
+            "title": as_text(fields.get("title", "")),
             "status": as_text(fields.get("status", "")),
             "updated": read_updated(fields, rel, "game-pillars"),
             "body": body,
@@ -441,7 +447,8 @@ def load_design(root):
         record = {
             "slug": slug,
             "rel": rel,
-            "title": as_text(fields.get("title", "")) or slug,
+            "name": friendly_name(slug),
+            "title": as_text(fields.get("title", "")),
             "status": as_text(fields.get("status", "")).strip(),
             "category": as_text(fields.get("category", "")).strip(),
             "scope": as_text(fields.get("scope", "")).strip(),
@@ -1339,8 +1346,10 @@ def md_pillars(data):
     if not pillars:
         out.append(ABSENT_PILLARS)
     for pillar in pillars:
-        out.append("### %s" % pillar["title"])
+        out.append("### %s" % pillar["name"])
         out.append(md_caption("`%s`" % pillar["rel"], pillar["updated"]))
+        if pillar["title"]:
+            out.append(pillar["title"])
         if pillar["body"]:
             out.append(demote_headings(pillar["body"], 2))
     if data["candidates"]:
@@ -1493,8 +1502,10 @@ def md_tech(data):
     if not live:
         out.append(ABSENT_TECH)
     for record in live:
-        out.append("### %s" % record["title"])
+        out.append("### %s" % record["name"])
         out.append(md_caption("`%s`" % record["rel"], record["updated"]))
+        if record["title"]:
+            out.append(record["title"])
         if record["status"] == "open":
             out.append("**Open — not yet decided.**")
         drivers = record["drivers"]
@@ -2023,7 +2034,7 @@ def html_toc(out, data):
         out,
         "#design-pillars",
         "Design Pillars",
-        [("#pillar-%s" % p["slug"], p["title"]) for p in data["pillars"]],
+        [("#pillar-%s" % p["slug"], p["name"]) for p in data["pillars"]],
     )
     _toc_entry(out, "#mechanics", "Mechanics", _mechanic_toc(data["mechanics_tree"]))
     _toc_entry(
@@ -2047,7 +2058,7 @@ def html_toc(out, data):
         out,
         "#technical-design",
         "Technical Design",
-        [("#tech-%s" % t["slug"], t["title"]) for t in data["tech_live"]],
+        [("#tech-%s" % t["slug"], t["name"]) for t in data["tech_live"]],
     )
     out.add(
         4,
@@ -2161,11 +2172,13 @@ def html_pillars(out, data, ctx):
             '<article id="pillar-%s" class="record pillar"%s>'
             % (h(pillar["slug"]), source_attrs(pillar["rel"], pillar["updated"])),
         )
-        out.add(4, "<h3>%s</h3>" % h(pillar["title"]))
+        out.add(4, "<h3>%s</h3>" % h(pillar["name"]))
         out.add(
             4,
             source_caption("<code>%s</code>" % h(pillar["rel"]), pillar["updated"]),
         )
+        if pillar["title"]:
+            out.add(4, '<p class="record-title">%s</p>' % h(pillar["title"]))
         if pillar["body"]:
             html_body(out, 4, pillar["body"], 2, ctx)
         out.extend(4, citations_html("#pillar-%s" % pillar["slug"], ctx))
@@ -2473,11 +2486,13 @@ def html_tech(out, data, ctx):
                 source_attrs(record["rel"], record["updated"]),
             ),
         )
-        out.add(4, "<h3>%s</h3>" % h(record["title"]))
+        out.add(4, "<h3>%s</h3>" % h(record["name"]))
         out.add(
             4,
             source_caption("<code>%s</code>" % h(record["rel"]), record["updated"]),
         )
+        if record["title"]:
+            out.add(4, '<p class="record-title">%s</p>' % h(record["title"]))
         if record["status"] == "open":
             out.add(4, '<p class="open-note">Open — not yet decided.</p>')
         dl_open(out, 4)

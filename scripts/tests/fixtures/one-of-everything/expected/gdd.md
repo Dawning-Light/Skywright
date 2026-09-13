@@ -15,9 +15,11 @@ Whether a run may end anywhere other than the forge is undecided.
 
 ## Design Pillars
 
-### Every capability is earned through investment, never granted by a slot.
+### Always Earned
 
 *Source: `design/pillars/always-earned.md` · Updated: 2026-09-09T18:20Z*
+
+Every capability is earned through investment, never granted by a slot.
 
 The pillar [[concept]] leans on hardest: the forge is open to anyone who
 invests in it.
@@ -35,9 +37,11 @@ Heavy-armour proficiency trained by wearing heavy armour. **Kept.**
 
 A "Smith" class that alone may use the forge. **Cut.**
 
-### Progress always comes from a decision the player made, never from time they waited.
+### Zero Grind
 
 *Source: `design/pillars/zero-grind.md` · Updated: 2026-09-10T08:05Z*
+
+Progress always comes from a decision the player made, never from time they waited.
 
 Sits beside [[pillar:always-earned]], applies to [[mechanic:combat]], and is
 what [[comp-analysis]] measures the competitors against. A literal `[[slug]]`
@@ -284,9 +288,11 @@ is unsettled — one competitor above may ship them first.
 
 ## Technical Design
 
-### How do two players share one dungeon run?
+### Netcode
 
 *Source: `design/tech/netcode.md` · Updated: 2026-09-11T11:00Z*
+
+How do two players share one dungeon run?
 
 **Open — not yet decided.**
 
@@ -306,9 +312,11 @@ a hit that lands on one client and not the other is visible immediately.
 - Dedicated authoritative server: predictable, costs hosting.
 - Host-migrating listen server: no hosting bill, ugly migrations.
 
-### Saves are a single append-only JSON document per guild.
+### Save Format
 
 *Source: `design/tech/save-format.md` · Updated: 2026-09-04T07:45Z*
+
+Saves are a single append-only JSON document per guild.
 
 - Status: accepted
 - Category: persistence
