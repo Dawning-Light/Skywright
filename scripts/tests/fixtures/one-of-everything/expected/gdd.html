@@ -14,8 +14,8 @@
     <li><a href="#concept">Concept</a></li>
     <li><a href="#design-pillars">Design Pillars</a>
       <ol>
-        <li><a href="#pillar-always-earned">Every capability is earned through investment, never granted by a slot.</a></li>
-        <li><a href="#pillar-zero-grind">Progress always comes from a decision the player made, never from time they waited.</a></li>
+        <li><a href="#pillar-always-earned">Always Earned</a></li>
+        <li><a href="#pillar-zero-grind">Zero Grind</a></li>
       </ol></li>
     <li><a href="#mechanics">Mechanics</a>
       <ol>
@@ -34,8 +34,8 @@
     <li><a href="#competitive-differentiation">Competitive Differentiation</a></li>
     <li><a href="#technical-design">Technical Design</a>
       <ol>
-        <li><a href="#tech-netcode">How do two players share one dungeon run?</a></li>
-        <li><a href="#tech-save-format">Saves are a single append-only JSON document per guild.</a></li>
+        <li><a href="#tech-netcode">Netcode</a></li>
+        <li><a href="#tech-save-format">Save Format</a></li>
       </ol></li>
     <li><a href="#supporting-documents">Supporting Documents Not Rendered</a></li>
   </ol>
@@ -64,8 +64,9 @@
 <section id="design-pillars" class="gdd-section pillars" data-source="design/pillars/">
   <h2>Design Pillars</h2>
   <article id="pillar-always-earned" class="record pillar" data-source="design/pillars/always-earned.md" data-updated="2026-09-09T18:20Z">
-    <h3>Every capability is earned through investment, never granted by a slot.</h3>
+    <h3>Always Earned</h3>
     <p class="source"><code>design/pillars/always-earned.md</code> <time class="updated" datetime="2026-09-09T18:20Z">2026-09-09T18:20Z</time></p>
+    <p class="record-title">Every capability is earned through investment, never granted by a slot.</p>
     <div class="body">
       <p>The pillar <a href="#concept">concept</a> leans on hardest: the forge is open to anyone who invests in it.</p>
       <h4>The test</h4>
@@ -81,8 +82,9 @@
     </details>
   </article>
   <article id="pillar-zero-grind" class="record pillar" data-source="design/pillars/zero-grind.md" data-updated="2026-09-10T08:05Z">
-    <h3>Progress always comes from a decision the player made, never from time they waited.</h3>
+    <h3>Zero Grind</h3>
     <p class="source"><code>design/pillars/zero-grind.md</code> <time class="updated" datetime="2026-09-10T08:05Z">2026-09-10T08:05Z</time></p>
+    <p class="record-title">Progress always comes from a decision the player made, never from time they waited.</p>
     <div class="body">
       <p>Sits beside <a href="#pillar-always-earned">always-earned</a>, applies to <a href="#mechanic-combat">combat</a>, and is what <a href="#competitive-differentiation">comp-analysis</a> measures the competitors against. A literal <code>[[slug]]</code> inside a code span is prose about the syntax, not a reference.</p>
       <h4>The test</h4>
@@ -394,8 +396,9 @@
 <section id="technical-design" class="gdd-section tech" data-source="design/tech/">
   <h2>Technical Design</h2>
   <article id="tech-netcode" class="record tech-record status-open scope-cross-cutting" data-source="design/tech/netcode.md" data-updated="2026-09-11T11:00Z">
-    <h3>How do two players share one dungeon run?</h3>
+    <h3>Netcode</h3>
     <p class="source"><code>design/tech/netcode.md</code> <time class="updated" datetime="2026-09-11T11:00Z">2026-09-11T11:00Z</time></p>
+    <p class="record-title">How do two players share one dungeon run?</p>
     <p class="open-note">Open — not yet decided.</p>
     <dl class="fields">
       <dt>Status</dt>
@@ -423,8 +426,9 @@
     </details>
   </article>
   <article id="tech-save-format" class="record tech-record status-accepted scope-contained" data-source="design/tech/save-format.md" data-updated="2026-09-04T07:45Z">
-    <h3>Saves are a single append-only JSON document per guild.</h3>
+    <h3>Save Format</h3>
     <p class="source"><code>design/tech/save-format.md</code> <time class="updated" datetime="2026-09-04T07:45Z">2026-09-04T07:45Z</time></p>
+    <p class="record-title">Saves are a single append-only JSON document per guild.</p>
     <dl class="fields">
       <dt>Status</dt>
       <dd>accepted</dd>

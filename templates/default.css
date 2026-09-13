@@ -16,6 +16,8 @@
      .mechanic-children     wraps the child mechanics that follow their
                             parent's card; nests as deep as the parent tree
      .source                the addressing caption under every heading
+     .record-title          a pillar/tech record's full-sentence `title`,
+                            shown just below its `.source` caption
      .updated               the <time> in that caption holding the record's
                             `updated` stamp; the raw UTC string in the markup,
                             rewritten to local time by the inline script
@@ -545,6 +547,15 @@ hr {
   font-size: 1.05rem;
   font-family: var(--font-mono);
   font-weight: 600;
+}
+
+.record > .record-title {
+  margin: 0 0 1rem;
+  color: var(--text-strong);
+  font-size: 1.05rem;
+  font-weight: 550;
+  font-style: italic;
+  line-height: 1.45;
 }
 
 .record > .source {
