@@ -1,6 +1,6 @@
 ---
 name: game-authoring
-description: Use before writing or revising any game design record — a concept statement, pillar record, mechanic entry, economy graph, differentiation statement, or technical decision record — so the prose states the current design, cites rather than restates other records, and puts unsettled content under `## Open Questions`. Invoked by `game-pillars`, `game-comp-analysis`, `game-mechanics`, and `game-tech`; not a skill that writes anything itself.
+description: Use when about to write or revise a game design record — a concept statement, pillar, mechanic entry, economy graph, differentiation statement, or technical decision record.
 ---
 
 # Game Authoring
