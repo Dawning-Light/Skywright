@@ -1,6 +1,6 @@
 ---
 name: research
-description: Use when asked to research a topic using the internet and produce a written findings doc — e.g. "research X", "look into X and write it up", "find out about X". Not for a narrow single-fact lookup the user clearly wants answered inline rather than saved to a file, and not for automatic folder-drop pickup of research tasks or checking API rate limits before starting — neither is implemented.
+description: Use when asked to research a topic online and write up the findings — e.g. "research X", "look into X and write it up". Not for a single-fact lookup the user wants answered inline.
 ---
 
 # research
