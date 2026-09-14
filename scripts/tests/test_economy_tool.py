@@ -317,6 +317,18 @@ class NodeAndConnectionRefusalTests(RefusalCase):
             "only on a `state` connection",
         )
 
+    def test_unrepresentable_free_form_value(self):
+        # A newline in a free-form option (here --resource) would make
+        # `change()` raise a bare ValueError from deep inside
+        # `format_flow_mapping`, before `mutate`'s later ValueError guard
+        # around `serialize_economy_frontmatter` -- it must still come out
+        # as a clean, ToolError-shaped refusal, not an uncaught traceback.
+        self.assert_refused(
+            ["add-connection", "dump", "--from", "forge", "--to", "slag-heap",
+             "--kind", "resource", "--resource", "slag }\nnodes:\n  - id: evil\n    type: pool"],
+            "cannot span lines",
+        )
+
 
 class InvalidFileRefusalTests(ToolCase):
     """A mutation that would leave an invalid file is refused: the tool

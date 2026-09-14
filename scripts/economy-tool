@@ -390,7 +390,10 @@ def mutate(path, change, now):
                 "content this command was not asked to touch; fix the "
                 "formatting with `game-mechanics`." % problem
             )
-        summary = change(doc.fields)
+        try:
+            summary = change(doc.fields)
+        except ValueError as exc:
+            raise ToolError("design/economy.md: %s." % exc)
         doc.fields["updated"] = now
         try:
             fm_text = serialize_economy_frontmatter(doc.fields)
