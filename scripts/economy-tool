@@ -281,6 +281,314 @@ def cmd_show_family(args, now):
 
 
 # ---------------------------------------------------------------------------
+# Writing the file
+# ---------------------------------------------------------------------------
+
+
+def edit_records(fields, key):
+    """The list under ``key`` itself, so editing it edits the document --
+    created empty, in its canonical place among the record lists, if absent."""
+    value = fields.get(key)
+    if isinstance(value, list):
+        return value
+    if key in fields:
+        fields[key] = []
+        return fields[key]
+    items = list(fields.items())
+    rank = RECORD_KEYS.index(key)
+    earlier = [i for i, (k, _) in enumerate(items) if k in RECORD_KEYS[:rank]]
+    later = [i for i, (k, _) in enumerate(items) if k in RECORD_KEYS[rank + 1:]]
+    if earlier:
+        position = earlier[-1] + 1
+    elif later:
+        position = later[0]
+    else:
+        position = len(items)
+    items.insert(position, (key, []))
+    fields.clear()
+    fields.update(items)
+    return fields[key]
+
+
+def type_of(fields, ref):
+    """The node ``type`` a bare or ``@family`` reference names, or ``""``."""
+    if ref.startswith("@"):
+        for family in records(fields, "families"):
+            if family_name(family) == ref[1:]:
+                return as_text(family.get("type", "")).strip()
+        return ""
+    for node in records(fields, "nodes"):
+        if rid(node) == ref:
+            return as_text(node.get("type", "")).strip()
+    return ""
+
+
+def canonical_problem(doc):
+    """Why ``doc``'s frontmatter is not in the canonical form the serializer
+    writes, or None when writing it back unchanged reproduces it exactly."""
+    try:
+        canonical = serialize_economy_frontmatter(doc.fields)
+    except ValueError as exc:
+        return "the frontmatter holds a value this tool cannot write back unchanged (%s)" % exc
+    if canonical == doc.fm_text:
+        return None
+    found_lines = doc.fm_text.split("\n")
+    wanted_lines = canonical.split("\n")
+    for index in range(max(len(found_lines), len(wanted_lines))):
+        found = found_lines[index] if index < len(found_lines) else "<end of block>"
+        wanted = wanted_lines[index] if index < len(wanted_lines) else "<end of block>"
+        if found != wanted:
+            # +2: the block starts on the line after the opening `---`.
+            return (
+                "line %d of the file, `%s`, is not in the canonical form this "
+                "tool writes (`%s`)" % (index + 2, found, wanted)
+            )
+
+
+def prose_mentions(doc, ident):
+    """``(line number, snippet)`` for each body line naming ``ident`` as a
+    whole id -- never as part of a longer id, a ``#connection``, or an
+    ``@family``."""
+    pattern = re.compile(
+        r"(?<![A-Za-z0-9_#@-])%s(?![A-Za-z0-9_-])" % re.escape(ident)
+    )
+    first = doc.text.count("\n", 0, doc.body_start) + 1
+    hits = []
+    for lineno, line in enumerate(doc.text[doc.body_start:].split("\n"), start=first):
+        match = pattern.search(line)
+        if match:
+            hits.append((lineno, snippet(line, match)))
+    return hits
+
+
+def snippet(line, match, width=40):
+    """The part of ``line`` around ``match``, elided at either end if long."""
+    start = max(0, match.start() - width)
+    end = min(len(line), match.end() + width)
+    return "%s%s%s" % (
+        "…" if start else "",
+        line[start:end].strip(),
+        "…" if end < len(line) else "",
+    )
+
+
+def mutate(path, change, now):
+    """Apply ``change`` to the file at ``path`` and write it -- only if valid.
+
+    ``change(fields)`` edits the parsed frontmatter in place and returns a
+    one-line summary, or raises ToolError to refuse. Returns ``(summary,
+    doc)``, ``doc`` being the file as read; its body is also the body now on
+    disk, untouched. Any refusal leaves the file exactly as it was.
+    """
+    try:
+        doc = EconomyFile(path)
+        check_flow_style(doc.fm_text)
+        problem = canonical_problem(doc)
+        if problem:
+            raise ToolError(
+                "design/economy.md: %s, so rewriting the block would reformat "
+                "content this command was not asked to touch; fix the "
+                "formatting with `game-mechanics`." % problem
+            )
+        summary = change(doc.fields)
+        doc.fields["updated"] = now
+        try:
+            fm_text = serialize_economy_frontmatter(doc.fields)
+        except ValueError as exc:
+            raise ToolError("design/economy.md: %s." % exc)
+        text = doc.text[:doc.start] + fm_text + doc.text[doc.end:]
+        parse_economy(text, headings=False)
+    except (ToolError, InvalidInput) as exc:
+        raise ToolError("%s Nothing was written." % exc)
+    write_atomically(path, text)
+    return summary, doc
+
+
+def write_atomically(path, text):
+    """Replace ``path`` with ``text`` in one rename, so a reader never sees a
+    half-written file."""
+    directory = os.path.dirname(os.path.abspath(path))
+    handle, tmp = tempfile.mkstemp(prefix=".economy-", suffix=".tmp", dir=directory)
+    try:
+        with os.fdopen(handle, "w", encoding="utf-8", newline="") as out:
+            out.write(text)
+        shutil.copymode(path, tmp)
+        os.replace(tmp, path)
+    except BaseException:
+        if os.path.exists(tmp):
+            os.unlink(tmp)
+        raise
+
+
+def run_mutation(args, now, change):
+    summary, doc = mutate(args.file, change, now)
+    print("%s; `updated` is now %s." % (summary, now))
+    return doc
+
+
+def print_prose_followup(doc, ident):
+    hits = prose_mentions(doc, ident)
+    if not hits:
+        return
+    print(
+        "Prose still naming `%s` — rewrite each by hand; this tool never writes "
+        "prose:" % ident
+    )
+    for lineno, text in hits:
+        print("  line %d: %s" % (lineno, text))
+
+
+def check_id(value, what):
+    if not _ID_RE.match(value):
+        raise ToolError(
+            "`%s` is not a usable %s id: an id is letters, digits, `-`, `_`, "
+            "and `.`, starting with a letter or digit." % (value, what)
+        )
+
+
+def code_list(items):
+    return ", ".join("`%s`" % item for item in items)
+
+
+# ---------------------------------------------------------------------------
+# Mutating commands (frontmatter only)
+# ---------------------------------------------------------------------------
+
+
+def cmd_add_node(args, now):
+    def change(fields):
+        check_id(args.id, "node")
+        if any(rid(n) == args.id for n in records(fields, "nodes")):
+            raise ToolError("design/economy.md: node `%s` already exists." % args.id)
+        edit_records(fields, "nodes").append({"id": args.id, "type": args.type})
+        return "added node `%s` (%s)" % (args.id, args.type)
+
+    run_mutation(args, now, change)
+    return 0
+
+
+def cmd_remove_node(args, now):
+    def change(fields):
+        node = find_node(fields, args.id)
+        refs = ["connection `%s`" % rid(c) for c in touching(fields, args.id)]
+        refs += ["family `@%s`" % f for f in families_of(fields, args.id)]
+        if refs:
+            raise ToolError(
+                "design/economy.md: node `%s` is still referenced by %s; "
+                "re-point or remove those first — `remove-node` never cascades."
+                % (args.id, ", ".join(refs))
+            )
+        nodes = edit_records(fields, "nodes")
+        nodes[:] = [n for n in nodes if n is not node]
+        return "removed node `%s`" % args.id
+
+    doc = run_mutation(args, now, change)
+    print_prose_followup(doc, args.id)
+    return 0
+
+
+def new_connection(fields, args):
+    """The connection ``args`` describe, refused where ``game-mechanics``'
+    connection rules forbid it."""
+    src, dst = args.from_ref, args.to_ref
+    if src.startswith("@") and dst.startswith("@"):
+        raise ToolError(
+            "connection `%s`: a family reference may appear on at most one end "
+            "of a connection, not both." % args.id
+        )
+    if args.kind == "resource":
+        for end, ref in (("from", src), ("to", dst)):
+            if ref.startswith("#"):
+                raise ToolError(
+                    "connection `%s`: `%s: %s` names a connection, but only a "
+                    "`state` connection may target one; a `resource` "
+                    "connection's ends are nodes or a family." % (args.id, end, ref)
+                )
+        if args.subtype:
+            raise ToolError(
+                "connection `%s`: `subtype` is meaningful only on a `state` "
+                "connection." % args.id
+            )
+        if not args.resource:
+            multi = [r for r in (src, dst) if type_of(fields, r) in MULTI_RESOURCE_TYPES]
+            if multi:
+                raise ToolError(
+                    "connection `%s`: a `resource` connection touching a trader "
+                    "or converter (`%s`) must name what moves, with "
+                    "`--resource`." % (args.id, multi[0])
+                )
+    else:
+        if args.resource:
+            raise ToolError(
+                "connection `%s`: `resource` is meaningful only on a `resource` "
+                "connection." % args.id
+            )
+        if args.rate and args.subtype != "label-modifier":
+            raise ToolError(
+                "connection `%s`: on a `state` connection `rate` expresses only "
+                "the `label-modifier` case, so it needs `--subtype "
+                "label-modifier`." % args.id
+            )
+    if args.applies and not (
+        args.kind == "state" and (src.startswith("@") or dst.startswith("@"))
+    ):
+        raise ToolError(
+            "connection `%s`: `applies: one-of-family` qualifies only a `state` "
+            "connection written over a family (`@<name>` on one end)." % args.id
+        )
+    conn = {"id": args.id, "from": src, "to": dst, "kind": args.kind}
+    for key, value in (
+        ("subtype", args.subtype),
+        ("resource", args.resource),
+        ("rate", args.rate),
+        ("applies", args.applies),
+    ):
+        if value:
+            conn[key] = value
+    return conn
+
+
+def cmd_add_connection(args, now):
+    def change(fields):
+        if ":" in args.id:
+            raise ToolError(
+                "`%s`: an authored connection id may not contain `:`, which is "
+                "reserved for the derived ids a family declaration produces."
+                % args.id
+            )
+        check_id(args.id, "connection")
+        if any(rid(c) == args.id for c in records(fields, "connections")):
+            raise ToolError(
+                "design/economy.md: connection `%s` already exists." % args.id
+            )
+        conn = new_connection(fields, args)
+        edit_records(fields, "connections").append(conn)
+        return "added `%s`" % format_flow_mapping(conn)
+
+    run_mutation(args, now, change)
+    return 0
+
+
+def cmd_remove_connection(args, now):
+    def change(fields):
+        conn = find_connection(fields, args.id)
+        users = targeting(fields, args.id)
+        if users:
+            raise ToolError(
+                "design/economy.md: connection `%s` is still targeted by %s; "
+                "re-point or remove those first — `remove-connection` never "
+                "cascades."
+                % (args.id, ", ".join("connection `%s`" % rid(c) for c in users))
+            )
+        conns = edit_records(fields, "connections")
+        conns[:] = [c for c in conns if c is not conn]
+        return "removed connection `%s`" % args.id
+
+    run_mutation(args, now, change)
+    return 0
+
+
+# ---------------------------------------------------------------------------
 # Command line
 # ---------------------------------------------------------------------------
 
@@ -340,6 +648,36 @@ def build_parser():
 
     p = command("show-family", cmd_show_family, "one family, and the declarations over it (read-only)")
     p.add_argument("name", help="the family name, with or without its `@`")
+
+    p = command("add-node", cmd_add_node, "add a node")
+    p.add_argument("id")
+    p.add_argument("--type", required=True, choices=NODE_TYPES)
+
+    p = command(
+        "remove-node",
+        cmd_remove_node,
+        "remove a node no connection or family references; never cascades",
+    )
+    p.add_argument("id")
+
+    p = command("add-connection", cmd_add_connection, "add a connection")
+    p.add_argument("id")
+    p.add_argument("--from", dest="from_ref", required=True, metavar="REF",
+                   help="a node id, `@family`, or (state only) `#connection`")
+    p.add_argument("--to", dest="to_ref", required=True, metavar="REF",
+                   help="a node id, `@family`, or (state only) `#connection`")
+    p.add_argument("--kind", required=True, choices=KINDS)
+    p.add_argument("--subtype", choices=SUBTYPES, help="state connections only; absent means unclassified")
+    p.add_argument("--resource", help="resource connections only; required where one end is a trader or converter")
+    p.add_argument("--rate")
+    p.add_argument("--applies", choices=APPLIES, help="a state declaration over a family only")
+
+    p = command(
+        "remove-connection",
+        cmd_remove_connection,
+        "remove a connection no state connection targets; never cascades",
+    )
+    p.add_argument("id")
 
     return parser
 
