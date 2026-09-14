@@ -655,6 +655,66 @@ def cmd_remove_family_member(args, now):
     return 0
 
 
+def cmd_rename_node(args, now):
+    def change(fields):
+        node = find_node(fields, args.old)
+        check_id(args.new, "node")
+        if any(rid(n) == args.new for n in records(fields, "nodes")):
+            raise ToolError("design/economy.md: node `%s` already exists." % args.new)
+        node["id"] = args.new
+        conns = []
+        for conn in touching(fields, args.old):
+            for end in ("from", "to"):
+                if end_ref(conn, end) == args.old:
+                    conn[end] = args.new
+            conns.append(rid(conn))
+        fams = []
+        for family in records(fields, "families"):
+            members = as_list(family.get("members"))
+            if args.old in members:
+                family["members"] = [args.new if m == args.old else m for m in members]
+                fams.append(family_name(family))
+        where = []
+        if conns:
+            where.append("connections %s" % code_list(conns))
+        if fams:
+            where.append("families %s" % code_list("@" + f for f in fams))
+        return "renamed node `%s` to `%s`%s" % (
+            args.old,
+            args.new,
+            " in %s" % " and ".join(where) if where else "",
+        )
+
+    doc = run_mutation(args, now, change)
+    print_prose_followup(doc, args.old)
+    print(
+        "Other records may cite it as `[[node:%s]]`; list them with "
+        "`game-gdd`'s `scripts/find_references.py node:%s`." % (args.old, args.old)
+    )
+    return 0
+
+
+def cmd_set_value_progression(args, now):
+    def change(fields):
+        node = find_node(fields, args.id)
+        verb = "replaced" if "value_progression" in node else "set"
+        node["value_progression"] = {
+            "model": args.model,
+            "coefficients": args.coefficients,
+            "domain": args.domain,
+            "fit": args.fit,
+        }
+        return "%s `value_progression` on node `%s` (model %s, fit %s)" % (
+            verb,
+            args.id,
+            args.model,
+            args.fit,
+        )
+
+    run_mutation(args, now, change)
+    return 0
+
+
 # ---------------------------------------------------------------------------
 # Command line
 # ---------------------------------------------------------------------------
@@ -758,6 +818,28 @@ def build_parser():
     p = command("remove-family-member", cmd_remove_family_member, "remove a node from a family")
     p.add_argument("name")
     p.add_argument("id")
+
+    p = command(
+        "rename-node",
+        cmd_rename_node,
+        "rename a node through its connections and family memberships; prints "
+        "the prose lines still naming the old id, never edits them",
+    )
+    p.add_argument("old")
+    p.add_argument("new")
+
+    p = command(
+        "set-value-progression",
+        cmd_set_value_progression,
+        "write the four fields `curve-fit.sh fit` prints into a node's "
+        "value_progression; a value starting with `-` is passed as "
+        "--coefficients=VALUE",
+    )
+    p.add_argument("id")
+    p.add_argument("--model", required=True)
+    p.add_argument("--coefficients", required=True)
+    p.add_argument("--domain", required=True)
+    p.add_argument("--fit", required=True)
 
     return parser
 

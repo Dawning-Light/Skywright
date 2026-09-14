@@ -428,5 +428,72 @@ class FamilyRefusalTests(RefusalCase):
         self.assert_refused(["remove-family-member", "skill-xp", "gold"], "does not list `gold`")
 
 
+class RenameNodeTests(RoundTripCase):
+    def test_rename_cascades_through_connections(self):
+        out = self.assert_wrote(
+            self.expect(
+                ("  - id: ingot-pool\n", "  - id: ingot-stock\n"),
+                ("to: ingot-pool,", "to: ingot-stock,"),
+                ("from: ingot-pool,", "from: ingot-stock,"),
+            ),
+            self.run_tool("rename-node", "ingot-pool", "ingot-stock"),
+        )
+        self.assertIn("renamed node `ingot-pool` to `ingot-stock` in connections `mine`, `smelt`", out)
+        # The body is untouched; the tool lists what the author must rewrite.
+        self.assertIn("  line 36: ## ingot-pool", out)
+        self.assertIn("  line 39: ingot-pool, and `smelt` drains it into the forge.", out)
+        self.assertIn("find_references.py node:ingot-pool", out)
+
+    def test_rename_cascades_through_family_membership(self):
+        out = self.assert_wrote(
+            self.expect(
+                ("  - id: mining-xp\n", "  - id: digging-xp\n"),
+                ("members: [mining-xp, smith-xp]", "members: [digging-xp, smith-xp]"),
+            ),
+            self.run_tool("rename-node", "mining-xp", "digging-xp"),
+        )
+        self.assertIn("in families `@skill-xp`", out)
+        self.assertIn("  line 43: Two named skills, `mining-xp`", out)
+
+
+class ValueProgressionTests(RoundTripCase):
+    def test_sets_a_new_value_progression(self):
+        self.assert_wrote(
+            self.expect((
+                "  - id: gold\n    type: pool\n",
+                "  - id: gold\n    type: pool\n    value_progression:\n      model: linear\n"
+                "      coefficients: 2 3\n      domain: 1 10\n      fit: 1\n",
+            )),
+            self.run_tool(
+                "set-value-progression", "gold", "--model", "linear",
+                "--coefficients", "2 3", "--domain", "1 10", "--fit", "1",
+            ),
+        )
+
+    def test_replaces_an_existing_value_progression(self):
+        self.assert_wrote(
+            self.expect((
+                "      model: power\n      coefficients: [1.8, 1.42]\n      domain: 1-20\n      fit: 0.987\n",
+                "      model: exponential\n      coefficients: -1.5 0.25\n      domain: 1 20\n      fit: 0.991\n",
+            )),
+            self.run_tool(
+                "set-value-progression", "ingot-pool", "--model", "exponential",
+                "--coefficients=-1.5 0.25", "--domain", "1 20", "--fit", "0.991",
+            ),
+        )
+
+
+class RenameAndValueProgressionRefusalTests(RefusalCase):
+    def test_rename_onto_an_existing_node(self):
+        self.assert_refused(["rename-node", "gold", "forge"], "node `forge` already exists")
+
+    def test_value_progression_on_an_unknown_node(self):
+        self.assert_refused(
+            ["set-value-progression", "nope", "--model", "linear", "--coefficients", "1 2",
+             "--domain", "1 5", "--fit", "1"],
+            "no node has `id: nope`",
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
