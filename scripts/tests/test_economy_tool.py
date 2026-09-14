@@ -384,5 +384,49 @@ class MutatingScriptTests(ToolCase):
         self.assertEqual(self.run_script("add-node", "silver").returncode, 2)
 
 
+class FamilyMutationTests(RoundTripCase):
+    def test_add_family(self):
+        self.assert_wrote(
+            self.expect((
+                "    members: [mining-xp, smith-xp]\n",
+                "    members: [mining-xp, smith-xp]\n"
+                "  - family: metals\n    type: pool\n    members: [ingot-pool, gold]\n",
+            )),
+            self.run_tool("add-family", "metals", "--type", "pool", "--members", "ingot-pool,gold"),
+        )
+
+    def test_add_family_member(self):
+        self.assert_wrote(
+            self.expect(("members: [mining-xp, smith-xp]", "members: [mining-xp, smith-xp, gold]")),
+            self.run_tool("add-family-member", "@skill-xp", "gold"),
+        )
+
+    def test_remove_family_member(self):
+        self.assert_wrote(
+            self.expect(("members: [mining-xp, smith-xp]", "members: [mining-xp]")),
+            self.run_tool("remove-family-member", "skill-xp", "smith-xp"),
+        )
+
+
+class FamilyRefusalTests(RefusalCase):
+    def test_family_member_of_the_wrong_type(self):
+        self.assert_refused(
+            ["add-family", "bad", "--type", "pool", "--members", "gold,ore-vein"],
+            "member `ore-vein` is a `source`",
+        )
+
+    def test_add_existing_family(self):
+        self.assert_refused(
+            ["add-family", "skill-xp", "--type", "pool", "--members", "gold"],
+            "family `@skill-xp` already exists",
+        )
+
+    def test_add_member_already_listed(self):
+        self.assert_refused(["add-family-member", "skill-xp", "mining-xp"], "already lists `mining-xp`")
+
+    def test_remove_member_not_listed(self):
+        self.assert_refused(["remove-family-member", "skill-xp", "gold"], "does not list `gold`")
+
+
 if __name__ == "__main__":
     unittest.main()
