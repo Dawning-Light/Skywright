@@ -157,6 +157,52 @@ class QueryTests(ToolCase):
         self.use_text(self.before)
 
 
+# A connection written as a block mapping (not the required single-line
+# `{ k: v }` flow style) whose own block nests a mapping under one of its
+# keys. `check_flow_style` would refuse this -- but that check runs only from
+# `mutate`, never from a read-only query command, which parses the record
+# fine and then crashes formatting it back out, in `format_flow_mapping`.
+NESTED_CONNECTION = """---
+nodes:
+  - id: ore-vein
+    type: source
+  - id: ingot-pool
+    type: pool
+connections:
+  - id: mine
+    from: ore-vein
+    to: ingot-pool
+    kind: resource
+    meta:
+      note: nested
+---
+
+## ore-vein
+
+Where ore comes from.
+"""
+
+
+class ReadPathErrorTests(ToolCase):
+    """A query command on a file whose record can be parsed but not
+    formatted back out refuses cleanly -- no raw Python traceback."""
+
+    def test_list_connections_refuses_cleanly_not_a_traceback(self):
+        self.use_text(NESTED_CONNECTION)
+        code, out, err = self.run_tool("list-connections")
+        self.assertEqual((code, out), (1, ""))
+        self.assertIn("cannot nest a mapping under", err)
+        self.assertIn(self.path, err)
+        self.assertNotIn("Traceback", err)
+
+    def test_show_node_refuses_cleanly_not_a_traceback(self):
+        self.use_text(NESTED_CONNECTION)
+        code, out, err = self.run_tool("show-node", "ore-vein")
+        self.assertEqual(code, 1)
+        self.assertIn("cannot nest a mapping under", err)
+        self.assertNotIn("Traceback", err)
+
+
 class ScriptTests(ToolCase):
     def test_finds_game_gdd_through_a_symlinked_skill_directory(self):
         # How a consuming project opts in: `<project>/.claude/skills/game-mechanics`
