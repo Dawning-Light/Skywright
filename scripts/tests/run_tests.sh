@@ -34,7 +34,7 @@ else
   # copy of the skill tree so the CSS-seeding behaviour is still covered, and
   # say so in the output. Nothing is written into the repo.
   mkdir -p "$WORK/skill/scripts" "$WORK/skill/templates"
-  cp "$SCRIPTS_DIR/render_gdd.py" "$WORK/skill/scripts/render_gdd.py"
+  cp "$SCRIPTS_DIR/render_gdd.py" "$SCRIPTS_DIR/economy_frontmatter.py" "$WORK/skill/scripts/"
   printf '/* placeholder stylesheet used only by run_tests.sh */\n' \
     > "$WORK/skill/templates/default.css"
   RENDER="$WORK/skill/scripts/render_gdd.py"
