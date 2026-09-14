@@ -53,19 +53,25 @@ Elicit conversationally, in whatever order the owner naturally gives it:
 Write each mechanic entry as it is settled, not in a final batch — a mechanic
 described early in the conversation and never revisited should already be a
 file by the time the conversation ends. Write `design/economy.md` once the
-graph stabilizes, and re-write it (not append to it) on any later invocation
-that adds or edits nodes or connections.
+graph stabilizes. Once it exists, change its frontmatter — nodes,
+connections, families, a fitted `value_progression` — through
+`scripts/economy-tool` (see **Editing the economy graph** below), one
+command per change, rather than re-writing the file; its prose sections
+stay yours to write.
 
 ### Detecting families
 
 **Families are never inferred.** Whenever this skill writes
 `design/economy.md`, it detects candidate families — sets of two or more
 same-type nodes whose connections are identical apart from their own ids —
-and puts each candidate, and its boundary, to the owner. **This runs on
-every write, not once**, so a family that emerges later, as nodes accrete
-matching connections across sessions the graph was never touched between,
-is caught the next time the graph is written rather than only at the
-moment it was first authored.
+and puts each candidate, and its boundary, to the owner. `economy-tool
+detect-families` computes both from the file as written — each
+candidate's members, and the connections every member has with its own id
+abstracted out — skipping nodes already in a family; it prints and never
+writes. **This runs on every write, not once**, so a family that emerges
+later, as nodes accrete matching connections across sessions the graph was
+never touched between, is caught the next time the graph is written rather
+than only at the moment it was first authored.
 
 **The boundary is the owner's call, and no signature can make it instead.**
 Two node sets with identical edge patterns may still be two families, and
@@ -84,9 +90,13 @@ lets an owner facing the merged case split it back into two; a proposal
 that showed the candidate without it would get this specific case wrong
 silently.
 
-A family is written **only where the owner confirms** it. An unconfirmed
-candidate is **written longhand** — left as the separate nodes and
-connections it already was, with no `families` entry naming them.
+A family is written **only where the owner confirms** it: `economy-tool
+add-family` for the entry, then one `add-connection` per declaration over
+`@<name>` and one `remove-connection` per longhand edge that declaration
+replaces, since the file stores a family's declarations, never their
+expansion (below). An unconfirmed candidate is **written longhand** — left
+as the separate nodes and connections it already was, with no `families`
+entry naming them.
 Detection puts the candidate and its boundary to the owner and stops
 there: propose and confirm, **never infer and write**.
 
@@ -148,9 +158,9 @@ resources move through the game.
 
 Frontmatter carries `nodes`, `connections`, the optional `families` block
 (below), and one file-level `updated` — the UTC time of the last write to
-the file, in the `YYYY-MM-DDTHH:MMZ` form `game-authoring` defines. The file
-is rewritten wholesale on every invocation, so the one field covers every
-node and connection in it, and moves on every rewrite.
+the file, in the `YYYY-MM-DDTHH:MMZ` form `game-authoring` defines. The one
+field covers every node and connection in the file and moves on every
+write; `economy-tool` sets it on every change it makes.
 
 Each **node** has:
 
@@ -316,10 +326,10 @@ a `connections:` entry whose `from` or `to` references a family via
 per member: a family of seven pools referenced by one declaration produces
 seven connections, one per member. **The expanded graph is derived; the file
 stores the family and the declarations that reference it, never the
-expansion.** This is load-bearing, not a style preference: this skill
-rewrites the economy file wholesale on every invocation, so anything that
-existed only as the expanded form — and not as the family plus the
-declaration over it — would not survive the next write. Expansion is
+expansion.** This is load-bearing, not a style preference: every write
+re-serializes the file's frontmatter from what it declares and nothing
+else, so an edge that existed only in the expanded form — and not as the
+family plus the declaration over it — would never reach the file. Expansion is
 deterministic substitution with no judgement in it, which is what makes
 storing only the source and deriving the rest safe.
 
@@ -360,6 +370,46 @@ exists**, and expansion is not delegated to one: an expander would
 necessarily know families, connections, and the sigils, making it a second
 parser of this format regardless of how the bytes reached it.
 
+## Editing the economy graph
+
+Once `design/economy.md` exists, `scripts/economy-tool` is how its
+frontmatter changes: it adds, removes, and renames nodes, connections, and
+families, sets a node's `value_progression`, answers queries about the graph,
+and runs family detection — one command per change, so a one-edge change
+never means re-typing the file. It writes the frontmatter only. Every prose
+section under the closing `---` stays yours to write and rewrite, per
+`game-authoring`; the tool leaves every byte of it as it found it.
+
+Run it from the consuming project's own working directory, with `<skill>`
+the directory this file sits in:
+
+```
+python3 <skill>/scripts/economy-tool <command> [options]
+```
+
+Its commands and options live in its own usage text — `--help`, or
+`<command> --help` — and are not restated here, for the same reason
+`curve-fit.sh`'s contract is not (below).
+
+Every change is checked before it lands. The tool applies it in memory,
+validates the whole graph against this file's rules, and writes only if the
+result is valid, setting `updated` to the current UTC minute. A refused
+change writes nothing and prints one message naming the record, the rule,
+and the fix; relay it to the owner rather than working around it. Two
+refusals protect what a command was not asked to touch: `remove-node` and
+`remove-connection` refuse while anything still references what they would
+remove, and every change refuses a file whose frontmatter is not already in
+the one canonical form the tool writes — block-style nodes and families, one
+flow-style line per connection — rather than silently reformatting it.
+
+The tool never rewrites prose. After `rename-node` or `remove-node` it
+prints each body line still naming the old id; rewrite each, per
+`game-authoring`, before the next render — a `## <old-id>` heading left
+behind resolves to nothing. `economy-tool validate` checks the whole file,
+body headings included, without writing, and notes each `state` connection
+still missing its `subtype`. Other records cite nodes, families, and
+connections too; `game-gdd`'s `scripts/find_references.py` lists them.
+
 ## Fitting a value progression
 
 A node whose value changes over levels or over time is elicited as a raw
@@ -380,10 +430,12 @@ The procedure, once per node that has a value series:
    itself the open question, pass `auto` and let the fit choose among the
    families the data admits.
 3. Write the fields the script prints into that node's `value_progression`
-   object, unchanged. They are named to match the four sub-fields declared
-   above, so the mapping is one to one and needs no translation — and the
-   reported fit travels with the coefficients, so a later reader can see how
-   well the curve actually described the series rather than trusting that it
+   object, unchanged, with `economy-tool set-value-progression <node>
+   --model … --coefficients … --domain … --fit …`, one flag per printed
+   field. They are named to match the four sub-fields declared above, so
+   the mapping is one to one and needs no translation — and the reported
+   fit travels with the coefficients, so a later reader can see how well
+   the curve actually described the series rather than trusting that it
    did.
 4. If the script refuses, do not fit the curve by hand and do not quietly
    substitute a shape it rejected. A refusal means the series does not
@@ -399,11 +451,12 @@ arithmetic lives in exactly one place, and this skill reaches it only by
 calling the script.
 
 The script reads and writes no files at all. It takes points as arguments and
-prints numbers; opening `design/economy.md`, finding the node, and editing
-its frontmatter are this procedure's work, not the script's. That split is
-deliberate — it keeps one parser for the economy file rather than two, and it
-keeps the script's own behaviour testable without a game project to point it
-at.
+prints numbers; finding the node in `design/economy.md` and editing its
+frontmatter are `economy-tool`'s work, not this script's. That split is
+deliberate — `economy-tool` edits the file through the one parser
+`game-gdd` renders it with, so there is still one parser for the economy
+file rather than two, and this script's own behaviour stays testable
+without a game project to point it at.
 
 The same script carries a second verb, `ev`, for the expected value of a
 probability table — a drop table, a randomised reward, a chance-gated `gate`.
