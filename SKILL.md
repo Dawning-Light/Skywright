@@ -1,6 +1,6 @@
 ---
 name: game-gdd
-description: Use when a game project's design data needs upkeep, not authoring — scripts here render a current GDD, check references, and cover whatever maintenance gets added next. Not for eliciting design data (see `game-pillars`, `game-mechanics`, `game-comp-analysis`, `game-tech`) or critiquing it (see `game-critique`).
+description: Use when a game project's design data needs upkeep rather than authoring — rendering the GDD, checking or looking up references, other maintenance. Not for eliciting design data (see `game-pillars`, `game-mechanics`) or critiquing it (see `game-critique`).
 ---
 
 # Game GDD
