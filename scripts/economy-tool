@@ -591,6 +591,70 @@ def cmd_remove_connection(args, now):
     return 0
 
 
+def check_member_type(fields, name, family_type, member):
+    node = find_node(fields, member)
+    node_type = as_text(node.get("type", "")).strip()
+    if node_type != family_type:
+        raise ToolError(
+            "family `@%s`: member `%s` is a `%s`, but every member of a family "
+            "is of the family's declared type, `%s`."
+            % (name, member, node_type or "none recorded", family_type)
+        )
+
+
+def cmd_add_family(args, now):
+    def change(fields):
+        name = strip_at(args.name)
+        check_id(name, "family")
+        if any(family_name(f) == name for f in records(fields, "families")):
+            raise ToolError("design/economy.md: family `@%s` already exists." % name)
+        members = [m.strip() for m in args.members.split(",") if m.strip()]
+        if not members:
+            raise ToolError("family `@%s`: `--members` names no node." % name)
+        for index, member in enumerate(members):
+            if member in members[:index]:
+                raise ToolError(
+                    "family `@%s`: `%s` is listed twice in `--members`." % (name, member)
+                )
+            check_member_type(fields, name, args.type, member)
+        edit_records(fields, "families").append(
+            {"family": name, "type": args.type, "members": members}
+        )
+        return "added family `@%s` (%s): %s" % (name, args.type, ", ".join(members))
+
+    run_mutation(args, now, change)
+    return 0
+
+
+def cmd_add_family_member(args, now):
+    def change(fields):
+        name = strip_at(args.name)
+        family = find_family(fields, name)
+        members = as_list(family.get("members"))
+        if args.id in members:
+            raise ToolError("family `@%s` already lists `%s`." % (name, args.id))
+        check_member_type(fields, name, as_text(family.get("type", "")).strip(), args.id)
+        family["members"] = members + [args.id]
+        return "added `%s` to family `@%s`" % (args.id, name)
+
+    run_mutation(args, now, change)
+    return 0
+
+
+def cmd_remove_family_member(args, now):
+    def change(fields):
+        name = strip_at(args.name)
+        family = find_family(fields, name)
+        members = as_list(family.get("members"))
+        if args.id not in members:
+            raise ToolError("family `@%s` does not list `%s`." % (name, args.id))
+        family["members"] = [m for m in members if m != args.id]
+        return "removed `%s` from family `@%s`" % (args.id, name)
+
+    run_mutation(args, now, change)
+    return 0
+
+
 # ---------------------------------------------------------------------------
 # Command line
 # ---------------------------------------------------------------------------
@@ -680,6 +744,19 @@ def build_parser():
         cmd_remove_connection,
         "remove a connection no state connection targets; never cascades",
     )
+    p.add_argument("id")
+
+    p = command("add-family", cmd_add_family, "declare a family over existing same-type nodes")
+    p.add_argument("name", help="the family name, with or without its `@`")
+    p.add_argument("--type", required=True, choices=NODE_TYPES)
+    p.add_argument("--members", required=True, metavar="A,B,C")
+
+    p = command("add-family-member", cmd_add_family_member, "add an existing node to a family")
+    p.add_argument("name")
+    p.add_argument("id")
+
+    p = command("remove-family-member", cmd_remove_family_member, "remove a node from a family")
+    p.add_argument("name")
     p.add_argument("id")
 
     return parser
