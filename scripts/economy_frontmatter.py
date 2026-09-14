@@ -568,3 +568,111 @@ def ref_resolves(ref, node_set, family_set, conn_set):
     if ref.startswith("#"):
         return ref[1:] in conn_set
     return ref in node_set
+
+
+# ---------------------------------------------------------------------------
+# Serializing
+#
+# The parser's inverse, for the economy graph's frontmatter: one canonical
+# form, the one ``game-mechanics`` specifies and hand-authored files already
+# use -- block-style nodes and families, a flow-style ``[a, b]`` for a list of
+# scalars, and every ``connections`` entry a one-line ``{ k: v }`` mapping.
+# Keys keep the order they were parsed in. A block this module parses and then
+# writes back byte-for-byte is in canonical form; ``economy-tool`` refuses to
+# rewrite one that is not, rather than silently reformatting it.
+# ---------------------------------------------------------------------------
+
+# Quoted wherever they appear: a leading sigil (`@` family, `#` connection) or
+# quote character, and edge whitespace the parser would strip.
+_QUOTE_ALWAYS_RE = re.compile(r"""^[@#'"]|^\s|\s$""")
+# Quoted inside a flow list or mapping, where they would split the value.
+_QUOTE_IN_FLOW_RE = re.compile(r"[,\[\]{}]")
+
+
+def format_scalar(value, flow):
+    """One scalar as written: bare, or quoted wherever the parser needs it."""
+    text = str(value)
+    if text == "":
+        return '""'
+    if "\n" in text:
+        raise ValueError("a frontmatter value cannot span lines: `%s`" % text)
+    quote = (
+        _QUOTE_ALWAYS_RE.search(text) is not None
+        or text.startswith("[")
+        or (flow and _QUOTE_IN_FLOW_RE.search(text) is not None)
+    )
+    if not quote:
+        return text
+    if '"' not in text:
+        return '"%s"' % text
+    if "'" not in text:
+        return "'%s'" % text
+    raise ValueError(
+        "a frontmatter value cannot hold both quote characters: `%s`" % text
+    )
+
+
+def format_flow_list(values):
+    return "[%s]" % ", ".join(format_scalar(v, True) for v in values)
+
+
+def format_flow_mapping(mapping):
+    """One ``{ k: v, ... }`` line -- the form every connection is written in."""
+    parts = []
+    for key, value in mapping.items():
+        if isinstance(value, dict):
+            raise ValueError("a flow mapping cannot nest a mapping under `%s`" % key)
+        if isinstance(value, list):
+            parts.append("%s: %s" % (key, format_flow_list(value)))
+        else:
+            parts.append("%s: %s" % (key, format_scalar(value, True)))
+    if not parts:
+        return "{}"
+    return "{ %s }" % ", ".join(parts)
+
+
+def serialize_economy_frontmatter(fields):
+    """``fields`` as a frontmatter block, in canonical form.
+
+    The text between the two ``---`` fences, without a trailing newline --
+    the same span ``frontmatter_span`` locates. Raises ValueError for a value
+    the parser could not read back unchanged.
+    """
+    lines = []
+    for key, value in fields.items():
+        _emit(lines, 0, key, value, flow_items=(key == "connections"))
+    return "\n".join(lines)
+
+
+def _emit(lines, indent, key, value, flow_items=False):
+    pad = " " * indent
+    if isinstance(value, dict):
+        if not value:
+            raise ValueError("mapping `%s` is empty and has no written form" % key)
+        lines.append("%s%s:" % (pad, key))
+        for sub_key, sub_value in value.items():
+            _emit(lines, indent + 2, sub_key, sub_value)
+    elif isinstance(value, list) and value and all(isinstance(v, dict) for v in value):
+        lines.append("%s%s:" % (pad, key))
+        for item in value:
+            if flow_items:
+                lines.append("%s  - %s" % (pad, format_flow_mapping(item)))
+            else:
+                _emit_block_item(lines, indent + 2, item)
+    elif isinstance(value, list):
+        if any(isinstance(v, (dict, list)) for v in value):
+            raise ValueError("list `%s` mixes mappings or lists with scalars" % key)
+        lines.append("%s%s: %s" % (pad, key, format_flow_list(value)))
+    else:
+        lines.append("%s%s: %s" % (pad, key, format_scalar(value, False)))
+
+
+def _emit_block_item(lines, indent, item):
+    """One ``- key: value`` list item, its other keys aligned under the first."""
+    if not item:
+        raise ValueError("an empty mapping in a list has no written form")
+    sub = []
+    for key, value in item.items():
+        _emit(sub, indent + 2, key, value)
+    lines.append("%s- %s" % (" " * indent, sub[0][indent + 2:]))
+    lines.extend(sub[1:])
