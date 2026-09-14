@@ -68,6 +68,12 @@ own working directory:
 - **`scripts/find_references.py`** — lists every reference to one record. See
   "Finding references" below.
 
+Both read design records through `scripts/economy_frontmatter.py`, a module
+rather than a script: the one frontmatter parser, plus `design/economy.md`'s
+validator and canonical serializer. `game-mechanics`' `economy-tool` imports
+it too, so the economy graph that tool writes is read back by the same code
+this skill renders it with.
+
 A future maintenance script gets named here, one line each, rather than in
 this skill's trigger description above.
 
@@ -206,9 +212,10 @@ name the three file paths.
 files, not even the CSS or font seed — and has printed one message to stderr naming
 which record fails which rule and which upstream skill fixes it. The
 conditions that produce this are the ones the upstream skills define as
-invalid: an economy connection with no `id`, block-style edges, slash-joined
-headings, or a reference that resolves to nothing in `design/economy.md`
-(fixed with `game-mechanics`); a technical decision record whose `status` or
+invalid: an economy connection with no `id`, a node id, connection id, or
+family name declared twice, block-style edges, slash-joined headings, or a
+reference that resolves to nothing in `design/economy.md` (fixed with
+`game-mechanics`); a technical decision record whose `status` or
 `scope` lies outside its closed set, or that is missing a body heading its
 status and scope require (fixed with `game-tech`); a typed wikilink in any
 record body that is malformed — an unknown type, a missing identifier, or
@@ -246,7 +253,10 @@ style change, and no re-render is needed to see one.
 `scripts/tests/fixtures/` and diffs the result against checked-in expected
 output. Run it after any change to the script or to the record shapes it
 reads; `UPDATE=1` regenerates the expected files once a change to the
-render is intended.
+render is intended. `scripts/tests/test_economy_frontmatter.py` tests the
+shared module directly — its frontmatter span, the economy validator, and
+the serializer's byte-for-byte round trip — run with
+`python3 -m unittest scripts/tests/test_economy_frontmatter.py`.
 
 ## Finding references
 
