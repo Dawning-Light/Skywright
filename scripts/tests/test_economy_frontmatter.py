@@ -129,7 +129,6 @@ class DuplicateIdTests(unittest.TestCase):
         self.assertIn("family `@f` is declared more than once", str(caught.exception))
 
 
-
 class SerializerTests(unittest.TestCase):
     def assert_round_trips(self, path):
         text = read(path)
