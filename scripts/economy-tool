@@ -1,0 +1,362 @@
+#!/usr/bin/env python3
+"""Structured edits to ``design/economy.md``'s frontmatter, for ``game-mechanics``.
+
+Queries, mutations, and analysis over the economy graph's ``nodes``,
+``connections``, ``families``, and ``updated`` -- one command per change, so a
+one-edge change never means re-typing the file. The prose body is never
+written: a mutation replaces only the frontmatter block, and every byte from
+the closing ``---`` onward is left exactly as it was.
+
+Every mutation parses the file, applies its one change in memory,
+re-serializes the frontmatter, validates the whole result, and writes only if
+it is valid, setting ``updated`` to the current UTC minute. A refused mutation
+writes nothing and prints one message on stderr naming the record, the rule,
+and the fix. A file whose frontmatter is not already in the canonical form the
+serializer writes is refused rather than silently reformatted.
+
+Parsing, validation, and serialization all come from ``game-gdd``'s
+``economy_frontmatter.py``: there is one parser of this format, not two.
+
+Run from the consuming project's working directory. Stdlib only.
+"""
+
+import argparse
+import datetime
+import os
+import re
+import shutil
+import sys
+import tempfile
+
+_SCRIPTS_DIR = os.path.dirname(os.path.realpath(__file__))
+sys.path.insert(
+    0,
+    os.path.normpath(
+        os.path.join(_SCRIPTS_DIR, os.pardir, os.pardir, "game-gdd", "scripts")
+    ),
+)
+
+from economy_frontmatter import (  # noqa: E402
+    ECONOMY_REL,
+    InvalidInput,
+    as_list,
+    as_text,
+    check_flow_style,
+    family_name,
+    format_flow_mapping,
+    frontmatter_span,
+    parse_economy,
+    parse_frontmatter,
+    serialize_economy_frontmatter,
+)
+
+NODE_TYPES = ("pool", "source", "drain", "gate", "trader", "converter")
+KINDS = ("resource", "state")
+SUBTYPES = ("label-modifier", "node-modifier", "trigger", "activator")
+APPLIES = ("one-of-family",)
+# The two node types that handle more than one resource type, so a resource
+# connection touching one must name what moves.
+MULTI_RESOURCE_TYPES = ("trader", "converter")
+# The three record lists in canonical order, for placing one the first time a
+# command adds to it.
+RECORD_KEYS = ("nodes", "families", "connections")
+_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
+
+
+class ToolError(Exception):
+    """A refused command. Carries the whole stderr message."""
+
+
+# ---------------------------------------------------------------------------
+# Reading the file
+# ---------------------------------------------------------------------------
+
+
+class EconomyFile(object):
+    """``design/economy.md`` as read: its exact text, where the frontmatter
+    block sits in it, and that block parsed into ordered fields."""
+
+    def __init__(self, path):
+        if not os.path.isfile(path):
+            raise ToolError(
+                "%s does not exist; write the economy graph with "
+                "`game-mechanics` first." % path
+            )
+        with open(path, "r", encoding="utf-8", newline="") as handle:
+            self.text = handle.read()
+        span = frontmatter_span(self.text, ECONOMY_REL, "game-mechanics")
+        if span is None:
+            raise ToolError(
+                "design/economy.md: the file has no `---` frontmatter block, so "
+                "it declares no `nodes` or `connections`; fix it with "
+                "`game-mechanics`."
+            )
+        self.path = path
+        self.start, self.end, self.body_start = span
+        self.fm_text = self.text[self.start:self.end]
+        self.fields = parse_frontmatter(self.fm_text, ECONOMY_REL, "game-mechanics")
+
+
+def records(fields, key):
+    """The mappings listed under ``key``, in file order; ``[]`` when absent."""
+    return [r for r in as_list(fields.get(key)) if isinstance(r, dict)]
+
+
+def rid(record):
+    """A node's or connection's ``id``, stripped."""
+    return as_text(record.get("id", "")).strip()
+
+
+def end_ref(conn, end):
+    """A connection's ``from`` or ``to`` reference, stripped."""
+    return as_text(conn.get(end, "")).strip()
+
+
+def strip_at(name):
+    return name[1:] if name.startswith("@") else name
+
+
+def find_node(fields, node_id):
+    for node in records(fields, "nodes"):
+        if rid(node) == node_id:
+            return node
+    raise ToolError("design/economy.md: no node has `id: %s`." % node_id)
+
+
+def find_connection(fields, conn_id):
+    for conn in records(fields, "connections"):
+        if rid(conn) == conn_id:
+            return conn
+    raise ToolError("design/economy.md: no connection has `id: %s`." % conn_id)
+
+
+def find_family(fields, name):
+    for family in records(fields, "families"):
+        if family_name(family) == name:
+            return family
+    raise ToolError("design/economy.md: no family is named `@%s`." % name)
+
+
+def touching(fields, node_id):
+    """Connections whose ``from`` or ``to`` is ``node_id`` itself."""
+    return [
+        c for c in records(fields, "connections")
+        if node_id in (end_ref(c, "from"), end_ref(c, "to"))
+    ]
+
+
+def targeting(fields, conn_id):
+    """Connections whose ``from`` or ``to`` is ``#conn_id``, or one of its
+    derived ids ``#conn_id:<member>``."""
+    out = []
+    for conn in records(fields, "connections"):
+        for end in ("from", "to"):
+            ref = end_ref(conn, end)
+            if ref == "#" + conn_id or ref.startswith("#%s:" % conn_id):
+                out.append(conn)
+                break
+    return out
+
+
+def families_of(fields, node_id):
+    return [
+        family_name(f) for f in records(fields, "families")
+        if node_id in as_list(f.get("members"))
+    ]
+
+
+def declarations_over(fields, name):
+    return [
+        c for c in records(fields, "connections")
+        if "@" + name in (end_ref(c, "from"), end_ref(c, "to"))
+    ]
+
+
+def block_lines(key, record):
+    """``record`` exactly as the file writes it under ``key``, one line each."""
+    return serialize_economy_frontmatter({key: [record]}).split("\n")[1:]
+
+
+# ---------------------------------------------------------------------------
+# Query commands (read-only)
+# ---------------------------------------------------------------------------
+
+
+def print_connections(label, conns):
+    if not conns:
+        print("%s: none" % label)
+        return
+    print("%s (%d):" % (label, len(conns)))
+    for conn in conns:
+        print("  - %s" % format_flow_mapping(conn))
+
+
+def cmd_list_nodes(args, now):
+    doc = EconomyFile(args.file)
+    nodes = [
+        n for n in records(doc.fields, "nodes")
+        if not args.type or as_text(n.get("type", "")).strip() == args.type
+    ]
+    if not nodes:
+        print("No nodes%s." % (" of type `%s`" % args.type if args.type else ""))
+        return 0
+    width = max(len(rid(n)) for n in nodes)
+    for node in nodes:
+        print("%-*s  %s" % (width, rid(node), as_text(node.get("type", "")).strip()))
+    return 0
+
+
+def cmd_show_node(args, now):
+    doc = EconomyFile(args.file)
+    node = find_node(doc.fields, args.id)
+    print("node `%s`:" % args.id)
+    for line in block_lines("nodes", node):
+        print(line)
+    fams = families_of(doc.fields, args.id)
+    print("families: %s" % (", ".join("@" + f for f in fams) if fams else "none"))
+    print_connections("connections touching it", touching(doc.fields, args.id))
+    for fam in fams:
+        print_connections("declarations over @%s" % fam, declarations_over(doc.fields, fam))
+    return 0
+
+
+def cmd_list_connections(args, now):
+    doc = EconomyFile(args.file)
+    wanted = (
+        ("from", args.from_ref),
+        ("to", args.to_ref),
+        ("kind", args.kind),
+        ("subtype", args.subtype),
+    )
+    conns = [
+        c for c in records(doc.fields, "connections")
+        if all(v is None or as_text(c.get(k, "")).strip() == v for k, v in wanted)
+    ]
+    if not conns:
+        print("No connections match.")
+        return 0
+    for conn in conns:
+        print(format_flow_mapping(conn))
+    return 0
+
+
+def cmd_show_connection(args, now):
+    doc = EconomyFile(args.file)
+    conn = find_connection(doc.fields, args.id)
+    print("connection `%s`:" % args.id)
+    print("  - %s" % format_flow_mapping(conn))
+    print_connections("state connections targeting it", targeting(doc.fields, args.id))
+    return 0
+
+
+def cmd_list_families(args, now):
+    doc = EconomyFile(args.file)
+    fams = records(doc.fields, "families")
+    if not fams:
+        print("No families.")
+        return 0
+    width = max(len(family_name(f)) + 1 for f in fams)
+    for fam in fams:
+        print(
+            "%-*s  %s  %s"
+            % (
+                width,
+                "@" + family_name(fam),
+                as_text(fam.get("type", "")).strip(),
+                ", ".join(as_list(fam.get("members"))),
+            )
+        )
+    return 0
+
+
+def cmd_show_family(args, now):
+    doc = EconomyFile(args.file)
+    name = strip_at(args.name)
+    family = find_family(doc.fields, name)
+    print("family `@%s`:" % name)
+    for line in block_lines("families", family):
+        print(line)
+    print_connections("declarations over it", declarations_over(doc.fields, name))
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# Command line
+# ---------------------------------------------------------------------------
+
+
+def build_parser():
+    parser = argparse.ArgumentParser(
+        prog="economy-tool",
+        description=(
+            "Query and edit design/economy.md's frontmatter -- nodes, "
+            "connections, families, updated. Never writes the prose body. "
+            "Every mutation validates the whole result before writing it, and "
+            "sets `updated` to the current UTC minute."
+        ),
+    )
+    parser.add_argument(
+        "--file",
+        default=ECONOMY_REL,
+        help="the economy graph to read (default: %(default)s, relative to the working directory)",
+    )
+    sub = parser.add_subparsers(dest="command", metavar="<command>")
+    sub.required = True
+
+    def command(name, run, help_text):
+        p = sub.add_parser(name, help=help_text, description=help_text)
+        p.set_defaults(run=run)
+        return p
+
+    p = command("list-nodes", cmd_list_nodes, "list every node's id and type (read-only)")
+    p.add_argument("--type", choices=NODE_TYPES)
+
+    p = command(
+        "show-node",
+        cmd_show_node,
+        "one node's fields, its families, every connection touching it, and "
+        "the declarations over its families (read-only)",
+    )
+    p.add_argument("id")
+
+    p = command(
+        "list-connections",
+        cmd_list_connections,
+        "list connections as their one-line flow mappings, optionally filtered (read-only)",
+    )
+    p.add_argument("--from", dest="from_ref", metavar="REF", help="exact `from`, sigil included")
+    p.add_argument("--to", dest="to_ref", metavar="REF", help="exact `to`, sigil included")
+    p.add_argument("--kind", choices=KINDS)
+    p.add_argument("--subtype", choices=SUBTYPES)
+
+    p = command(
+        "show-connection",
+        cmd_show_connection,
+        "one connection, and every state connection targeting it (read-only)",
+    )
+    p.add_argument("id")
+
+    command("list-families", cmd_list_families, "list every family's name, type, and members (read-only)")
+
+    p = command("show-family", cmd_show_family, "one family, and the declarations over it (read-only)")
+    p.add_argument("name", help="the family name, with or without its `@`")
+
+    return parser
+
+
+def utc_now():
+    """The current UTC minute, in ``game-authoring``'s ``updated`` form."""
+    return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%MZ")
+
+
+def main(argv=None, now=None):
+    args = build_parser().parse_args(argv)
+    try:
+        return args.run(args, now or utc_now())
+    except (ToolError, InvalidInput) as exc:
+        sys.stderr.write("%s\n" % exc)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
