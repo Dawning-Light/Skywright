@@ -172,5 +172,205 @@ class ScriptTests(ToolCase):
         self.assertIn("ore-vein", result.stdout)
 
 
+class RoundTripCase(ToolCase):
+    """A mutation's frontmatter changes exactly as expected, `updated` moves
+    to NOW, and the body is byte-for-byte untouched."""
+
+    def expect(self, *replacements):
+        text = self.before
+        for old, new in replacements:
+            self.assertEqual(text.count(old), 1, "fixture must hold %r exactly once" % old)
+            text = text.replace(old, new)
+        return text.replace(BASE_UPDATED, "updated: %s" % NOW)
+
+    def assert_wrote(self, expected, result):
+        code, out, err = result
+        self.assertEqual((code, err), (0, ""))
+        self.assertIn("`updated` is now %s." % NOW, out)
+        after = read(self.path)
+        self.assertEqual(after, expected)
+        self.assertEqual(body_of(after), body_of(self.before))
+        return out
+
+
+class RefusalCase(ToolCase):
+    """A refused command exits 1, says why, and leaves the file untouched."""
+
+    def assert_refused(self, argv, *phrases):
+        code, out, err = self.run_tool(*argv)
+        self.assertEqual((code, out), (1, ""))
+        for phrase in phrases:
+            self.assertIn(phrase, err)
+        self.assertIn("Nothing was written.", err)
+        self.assertEqual(read(self.path), self.before)
+
+
+class NodeAndConnectionMutationTests(RoundTripCase):
+    def test_add_node(self):
+        out = self.assert_wrote(
+            self.expect((
+                "  - id: slag-heap\n    type: drain\n",
+                "  - id: slag-heap\n    type: drain\n  - id: silver\n    type: pool\n",
+            )),
+            self.run_tool("add-node", "silver", "--type", "pool"),
+        )
+        self.assertIn("added node `silver` (pool)", out)
+
+    def test_remove_node(self):
+        self.assert_wrote(
+            self.expect(("  - id: slag-heap\n    type: drain\n", "")),
+            self.run_tool("remove-node", "slag-heap"),
+        )
+
+    def test_add_connection(self):
+        last = (
+            '  - { id: skill-rate, from: "@skill-xp", to: "#mine", kind: state, '
+            "subtype: label-modifier, applies: one-of-family }\n"
+        )
+        self.assert_wrote(
+            self.expect((
+                last,
+                last + "  - { id: dump, from: forge, to: slag-heap, kind: resource, resource: slag }\n",
+            )),
+            self.run_tool(
+                "add-connection", "dump", "--from", "forge", "--to", "slag-heap",
+                "--kind", "resource", "--resource", "slag",
+            ),
+        )
+
+    def test_add_unclassified_state_connection(self):
+        # An absent `subtype` means "not yet classified" -- valid, per
+        # game-mechanics -- so the tool writes it.
+        last = "applies: one-of-family }\n"
+        self.assert_wrote(
+            self.expect((
+                last,
+                last + '  - { id: slag-gate, from: slag-heap, to: "#smelt", kind: state }\n',
+            )),
+            self.run_tool(
+                "add-connection", "slag-gate", "--from", "slag-heap", "--to", "#smelt",
+                "--kind", "state",
+            ),
+        )
+
+    def test_remove_connection(self):
+        self.assert_wrote(
+            self.expect((
+                "  - { id: sale, from: forge, to: gold, kind: resource, resource: gold, rate: 5 }\n",
+                "",
+            )),
+            self.run_tool("remove-connection", "sale"),
+        )
+
+    def test_a_change_and_its_inverse_leave_only_updated_moved(self):
+        self.assertEqual(self.run_tool("add-node", "silver", "--type", "pool")[0], 0)
+        self.assertEqual(self.run_tool("remove-node", "silver")[0], 0)
+        self.assertEqual(read(self.path), self.expect())
+
+
+class NodeAndConnectionRefusalTests(RefusalCase):
+    def test_remove_node_still_touched_by_connections(self):
+        self.assert_refused(
+            ["remove-node", "gold"], "connection `sale`", "connection `forge-gate`", "never cascades"
+        )
+
+    def test_remove_node_still_in_a_family(self):
+        self.assert_refused(["remove-node", "smith-xp"], "family `@skill-xp`")
+
+    def test_remove_unknown_node(self):
+        self.assert_refused(["remove-node", "nope"], "no node has `id: nope`")
+
+    def test_remove_connection_still_targeted(self):
+        self.assert_refused(["remove-connection", "mine"], "connection `skill-rate`", "never cascades")
+
+    def test_add_existing_node(self):
+        self.assert_refused(["add-node", "gold", "--type", "pool"], "node `gold` already exists")
+
+    def test_colon_in_a_connection_id(self):
+        self.assert_refused(
+            ["add-connection", "a:b", "--from", "gold", "--to", "slag-heap", "--kind", "resource"],
+            "reserved for the derived ids",
+        )
+
+    def test_family_on_both_ends(self):
+        self.assert_refused(
+            ["add-connection", "x", "--from", "@skill-xp", "--to", "@skill-xp", "--kind", "state"],
+            "at most one end",
+        )
+
+    def test_unresolved_reference(self):
+        self.assert_refused(
+            ["add-connection", "x", "--from", "gold", "--to", "nowhere", "--kind", "resource"],
+            "`to: nowhere`, which resolves to nothing",
+        )
+
+    def test_resource_connection_into_a_converter_names_its_resource(self):
+        self.assert_refused(
+            ["add-connection", "x", "--from", "gold", "--to", "forge", "--kind", "resource"],
+            "`--resource`",
+        )
+
+    def test_subtype_on_a_resource_connection(self):
+        self.assert_refused(
+            ["add-connection", "x", "--from", "gold", "--to", "slag-heap", "--kind", "resource",
+             "--subtype", "trigger"],
+            "only on a `state` connection",
+        )
+
+
+class InvalidFileRefusalTests(ToolCase):
+    """A mutation that would leave an invalid file is refused: the tool
+    validates the whole result, not only the part it changed."""
+
+    def assert_add_node_refused(self, *phrases):
+        code, out, err = self.run_tool("add-node", "silver", "--type", "pool")
+        self.assertEqual((code, out), (1, ""))
+        for phrase in phrases:
+            self.assertIn(phrase, err)
+        self.assertIn("Nothing was written.", err)
+        self.assertEqual(read(self.path), self.before)
+
+    def test_connection_without_an_id(self):
+        self.use_text(read(os.path.join(GDD_FIXTURES, "invalid-economy", "design", "economy.md")))
+        self.assert_add_node_refused("has no `id`", "game-mechanics")
+
+    def test_duplicate_node_id(self):
+        self.use_text(SMALL.replace("  - id: ingot-pool\n", "  - id: ore-vein\n"))
+        self.assert_add_node_refused("node id `ore-vein` is declared more than once")
+
+    def test_unresolved_sigil(self):
+        self.use_text(SMALL.replace("to: ingot-pool", 'to: "#nope"'))
+        self.assert_add_node_refused("`to: #nope`, which resolves to nothing")
+
+    def test_block_style_connection(self):
+        self.use_text(SMALL.replace(
+            "  - { id: mine, from: ore-vein, to: ingot-pool, kind: resource }\n",
+            "  - id: mine\n    from: ore-vein\n    to: ingot-pool\n    kind: resource\n",
+        ))
+        self.assert_add_node_refused("block mapping", "flow style")
+
+    def test_non_canonical_frontmatter(self):
+        self.use_text(SMALL.replace("nodes:\n", "nodes:\n  # sources first\n"))
+        self.assert_add_node_refused(
+            "line 3 of the file, `  # sources first`, is not in the canonical form"
+        )
+
+
+class CanonicalFixtureTests(unittest.TestCase):
+    def test_base_fixture_is_already_canonical(self):
+        doc = et.EconomyFile(os.path.join(FIXTURES, "base-economy.md"))
+        self.assertIsNone(et.canonical_problem(doc))
+
+
+class MutatingScriptTests(ToolCase):
+    def test_runs_as_a_script_and_stamps_the_real_clock(self):
+        result = self.run_script("add-node", "silver", "--type", "pool")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertRegex(read(self.path), r"(?m)^updated: \d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z$")
+
+    def test_usage_error_exits_2(self):
+        self.assertEqual(self.run_script("add-node", "silver").returncode, 2)
+
+
 if __name__ == "__main__":
     unittest.main()
