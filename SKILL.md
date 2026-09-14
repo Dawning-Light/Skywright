@@ -1,6 +1,6 @@
 ---
 name: game-comp-analysis
-description: Use when a game project needs to know how its concept differs from competitors in its genre — identifies competitors (or opens a discovery brief if none are named), researches each via `research`, and writes a differentiation statement plus candidate pillars. Not for approving a pillar (see `game-pillars`) or a one-off fact lookup with no comparison (use `research` directly).
+description: Use when a game project needs to know how its concept differs from competitors in its genre. Not for approving a pillar (see `game-pillars`) or a one-off fact lookup (see `research`).
 ---
 
 # Game Competitive Analysis
