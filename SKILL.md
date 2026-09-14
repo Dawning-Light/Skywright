@@ -1,6 +1,6 @@
 ---
 name: game-tech
-description: Use when a game project's design data (concept, pillars, mechanics, economy, comp-analysis) calls for a technical decision — networking, simulation, persistence, engine — and the owner wants those decisions proposed from that data and recorded, one file each, under the consuming project's `design/tech/`. Not for writing code or engine config, or rendering the GDD section those records feed (see `game-gdd`).
+description: Use when a game project's design needs a technical decision made and recorded — networking, simulation, persistence, engine. Not for writing code or engine config.
 ---
 
 # Game Tech
