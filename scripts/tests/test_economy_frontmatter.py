@@ -98,5 +98,36 @@ class ParseEconomyTests(unittest.TestCase):
         self.assertEqual(ef.load_economy(path), ef.parse_economy(ef.read_text(path)))
 
 
+class DuplicateIdTests(unittest.TestCase):
+    def test_duplicate_node_id(self):
+        text = ORPHAN.replace("connections: []", "  - id: a\n    type: pool\nconnections: []")
+        with self.assertRaises(ef.InvalidInput) as caught:
+            ef.parse_economy(text, headings=False)
+        self.assertIn("node id `a` is declared more than once", str(caught.exception))
+
+    def test_duplicate_connection_id(self):
+        text = ORPHAN.replace(
+            "connections: []",
+            "connections:\n"
+            "  - { id: c, from: a, to: a, kind: resource }\n"
+            "  - { id: c, from: a, to: a, kind: resource }",
+        )
+        with self.assertRaises(ef.InvalidInput) as caught:
+            ef.parse_economy(text, headings=False)
+        self.assertIn("connection id `c` is declared more than once", str(caught.exception))
+
+    def test_duplicate_family_name(self):
+        text = ORPHAN.replace(
+            "connections: []",
+            "families:\n"
+            "  - family: f\n    type: pool\n    members: [a]\n"
+            "  - family: f\n    type: pool\n    members: [a]\n"
+            "connections: []",
+        )
+        with self.assertRaises(ef.InvalidInput) as caught:
+            ef.parse_economy(text, headings=False)
+        self.assertIn("family `@f` is declared more than once", str(caught.exception))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -443,9 +443,9 @@ def validate_economy(economy):
 
 def validate_economy_records(economy):
     """The frontmatter's rules: every node, family, and connection has its
-    id, and every family member and connection end resolves. Records the
-    declared ids on ``economy`` as ``node_ids``, ``family_names``, and
-    ``conn_ids``."""
+    id, no id is declared twice, and every family member and connection end
+    resolves. Records the declared ids on ``economy`` as ``node_ids``,
+    ``family_names``, and ``conn_ids``."""
     node_ids = []
     for node in economy["nodes"]:
         node_id = as_text(node.get("id", "")).strip()
@@ -454,6 +454,12 @@ def validate_economy_records(economy):
                 "design/economy.md: node `%s` has no `id` — a node with no id "
                 "cannot be referenced; fix it with `game-mechanics`."
                 % conn_repr(node)
+            )
+        if node_id in node_ids:
+            raise InvalidInput(
+                "design/economy.md: node id `%s` is declared more than once; "
+                "every node id is unique within the file; fix it with "
+                "`game-mechanics`." % node_id
             )
         node_ids.append(node_id)
     node_set = set(node_ids)
@@ -466,6 +472,12 @@ def validate_economy_records(economy):
                 "design/economy.md: family `%s` has no `family` name — a family "
                 "with no name cannot be referenced; fix it with "
                 "`game-mechanics`." % conn_repr(family)
+            )
+        if fname in family_names:
+            raise InvalidInput(
+                "design/economy.md: family `@%s` is declared more than once; "
+                "every family name is unique within the file; fix it with "
+                "`game-mechanics`." % fname
             )
         family_names.append(fname)
     family_set = set(family_names)
@@ -489,6 +501,12 @@ def validate_economy_records(economy):
                 "design/economy.md: connection `%s` has no `id` — a connection "
                 "with no id is invalid; fix it with `game-mechanics`."
                 % conn_repr(conn)
+            )
+        if conn_id in conn_ids:
+            raise InvalidInput(
+                "design/economy.md: connection id `%s` is declared more than "
+                "once; every connection id is unique within the file; fix it "
+                "with `game-mechanics`." % conn_id
             )
         conn_ids.append(conn_id)
     conn_set = set(conn_ids)
