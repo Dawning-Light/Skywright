@@ -129,5 +129,92 @@ class DuplicateIdTests(unittest.TestCase):
         self.assertIn("family `@f` is declared more than once", str(caught.exception))
 
 
+
+class SerializerTests(unittest.TestCase):
+    def assert_round_trips(self, path):
+        text = read(path)
+        fm_text, _ = ef.split_frontmatter(text, path, "s")
+        fields = ef.parse_frontmatter(fm_text, path, "s")
+        self.assertEqual(ef.serialize_economy_frontmatter(fields), fm_text)
+
+    def test_one_of_everything_round_trips_byte_for_byte(self):
+        self.assert_round_trips(fixture_economy("one-of-everything"))
+
+    def test_invalid_economy_round_trips_byte_for_byte(self):
+        self.assert_round_trips(fixture_economy("invalid-economy"))
+
+    def test_duplicate_economy_id_round_trips_byte_for_byte(self):
+        self.assert_round_trips(fixture_economy("duplicate-economy-id"))
+
+    def test_connections_are_flow_and_other_lists_block(self):
+        fields = {
+            "nodes": [{"id": "a", "type": "pool"}],
+            "families": [{"family": "f", "type": "pool", "members": ["a"]}],
+            "connections": [{"id": "c", "from": "a", "to": "@f", "kind": "state"}],
+        }
+        self.assertEqual(
+            ef.serialize_economy_frontmatter(fields),
+            "nodes:\n"
+            "  - id: a\n"
+            "    type: pool\n"
+            "families:\n"
+            "  - family: f\n"
+            "    type: pool\n"
+            "    members: [a]\n"
+            "connections:\n"
+            '  - { id: c, from: a, to: "@f", kind: state }',
+        )
+
+    def test_nested_mapping_and_empty_list_round_trip(self):
+        fields = {
+            "updated": "2026-09-14T12:00Z",
+            "nodes": [
+                {
+                    "id": "a",
+                    "type": "pool",
+                    "value_progression": {
+                        "model": "linear",
+                        "coefficients": "-2 3",
+                        "domain": "1 10",
+                        "fit": "1",
+                    },
+                }
+            ],
+            "connections": [],
+        }
+        text = ef.serialize_economy_frontmatter(fields)
+        self.assertEqual(
+            text,
+            "updated: 2026-09-14T12:00Z\n"
+            "nodes:\n"
+            "  - id: a\n"
+            "    type: pool\n"
+            "    value_progression:\n"
+            "      model: linear\n"
+            "      coefficients: -2 3\n"
+            "      domain: 1 10\n"
+            "      fit: 1\n"
+            "connections: []",
+        )
+        self.assertEqual(ef.parse_frontmatter(text, "x.md", "s"), fields)
+
+    def test_quoting(self):
+        self.assertEqual(ef.format_scalar("@f", True), '"@f"')
+        self.assertEqual(ef.format_scalar("#c", False), '"#c"')
+        self.assertEqual(ef.format_scalar("a, b", True), '"a, b"')
+        self.assertEqual(ef.format_scalar("a, b", False), "a, b")
+        self.assertEqual(ef.format_scalar("", True), '""')
+        self.assertEqual(ef.format_scalar('"x', False), "'\"x'")
+        self.assertEqual(ef.format_scalar("2026-09-14T12:00Z", False), "2026-09-14T12:00Z")
+
+    def test_unrepresentable_values_raise(self):
+        with self.assertRaises(ValueError):
+            ef.format_scalar("two\nlines", False)
+        with self.assertRaises(ValueError):
+            ef.format_scalar("\"it's", False)
+        with self.assertRaises(ValueError):
+            ef.serialize_economy_frontmatter({"nodes": [{"id": "a", "value_progression": {}}]})
+
+
 if __name__ == "__main__":
     unittest.main()
