@@ -495,5 +495,32 @@ class RenameAndValueProgressionRefusalTests(RefusalCase):
         )
 
 
+class ValidateTests(ToolCase):
+    def test_valid_file_with_an_unclassified_state_connection(self):
+        code, out, _ = self.run_tool("validate")
+        self.assertEqual(code, 0)
+        self.assertIn("is valid (nodes: 7, connections: 6, families: 1).", out)
+        self.assertIn("note: connection `forge-gate` is a `state` connection with no `subtype`", out)
+        self.assertEqual(read(self.path), self.before)
+
+    def test_orphaned_heading_left_by_a_rename(self):
+        self.assertEqual(self.run_tool("rename-node", "ingot-pool", "ingot-stock")[0], 0)
+        code, _, err = self.run_tool("validate")
+        self.assertEqual(code, 1)
+        self.assertIn("body heading `## ingot-pool` resolves to no node", err)
+
+    def test_non_canonical_file_is_valid_but_noted(self):
+        self.use_text(SMALL.replace("nodes:\n", "nodes:\n  # sources first\n"))
+        code, out, _ = self.run_tool("validate")
+        self.assertEqual(code, 0)
+        self.assertIn("mutating commands refuse this file until it is", out)
+
+    def test_invalid_file(self):
+        self.use_text(read(os.path.join(GDD_FIXTURES, "invalid-economy", "design", "economy.md")))
+        code, _, err = self.run_tool("validate")
+        self.assertEqual(code, 1)
+        self.assertIn("has no `id`", err)
+
+
 if __name__ == "__main__":
     unittest.main()

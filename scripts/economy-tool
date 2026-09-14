@@ -716,6 +716,32 @@ def cmd_set_value_progression(args, now):
 
 
 # ---------------------------------------------------------------------------
+# Analysis commands (never write)
+# ---------------------------------------------------------------------------
+
+
+def cmd_validate(args, now):
+    doc = EconomyFile(args.file)
+    economy = parse_economy(doc.text, headings=True)
+    print(
+        "design/economy.md is valid (nodes: %d, connections: %d, families: %d)."
+        % (len(economy["nodes"]), len(economy["connections"]), len(economy["families"]))
+    )
+    for conn in economy["connections"]:
+        kind = as_text(conn.get("kind", "")).strip()
+        if kind == "state" and not as_text(conn.get("subtype", "")).strip():
+            print(
+                "note: connection `%s` is a `state` connection with no "
+                "`subtype` — valid, but not yet classified; classify it with "
+                "`game-mechanics`." % rid(conn)
+            )
+    problem = canonical_problem(doc)
+    if problem:
+        print("note: %s; mutating commands refuse this file until it is." % problem)
+    return 0
+
+
+# ---------------------------------------------------------------------------
 # Command line
 # ---------------------------------------------------------------------------
 
@@ -840,6 +866,13 @@ def build_parser():
     p.add_argument("--coefficients", required=True)
     p.add_argument("--domain", required=True)
     p.add_argument("--fit", required=True)
+
+    command(
+        "validate",
+        cmd_validate,
+        "check the whole file against game-mechanics' rules, body headings "
+        "included; never writes",
+    )
 
     return parser
 
