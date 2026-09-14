@@ -343,6 +343,11 @@ def canonical_problem(doc):
                 "line %d of the file, `%s`, is not in the canonical form this "
                 "tool writes (`%s`)" % (index + 2, found, wanted)
             )
+    # Unreachable in practice: `canonical != doc.fm_text` (checked above)
+    # guarantees the loop above finds a differing line first. Kept explicit
+    # rather than an implicit `None` fall-through, which would silently wave
+    # a non-canonical block through as if it were canonical.
+    return "the frontmatter is not in the canonical form this tool writes"
 
 
 def prose_mentions(doc, ident):
@@ -399,7 +404,15 @@ def mutate(path, change, now):
             fm_text = serialize_economy_frontmatter(doc.fields)
         except ValueError as exc:
             raise ToolError("design/economy.md: %s." % exc)
-        text = doc.text[:doc.start] + fm_text + doc.text[doc.end:]
+        text = (
+            doc.text[:doc.start]
+            + fm_text
+            # An empty original block has no newline sitting at `doc.end` to
+            # separate the new frontmatter from the closing `---`; add one so
+            # this is still the first case, not a spurious "unclosed block".
+            + ("\n" if fm_text and doc.start == doc.end else "")
+            + doc.text[doc.end:]
+        )
         parse_economy(text, headings=False)
     except (ToolError, InvalidInput) as exc:
         raise ToolError("%s Nothing was written." % exc)
@@ -410,6 +423,10 @@ def mutate(path, change, now):
 def write_atomically(path, text):
     """Replace ``path`` with ``text`` in one rename, so a reader never sees a
     half-written file."""
+    # Resolve any symlink first, so `os.replace` below replaces the real
+    # target file's content in place rather than detaching the symlink by
+    # replacing it with a plain file of the same name.
+    path = os.path.realpath(path)
     directory = os.path.dirname(os.path.abspath(path))
     handle, tmp = tempfile.mkstemp(prefix=".economy-", suffix=".tmp", dir=directory)
     try:
@@ -977,6 +994,13 @@ def main(argv=None, now=None):
         return args.run(args, now or utc_now())
     except (ToolError, InvalidInput) as exc:
         sys.stderr.write("%s\n" % exc)
+        return 1
+    except (ValueError, OSError) as exc:
+        # A read-only query command (unlike a mutation, which already guards
+        # its own ValueError/OSError paths in `mutate`) has no guard of its
+        # own around `format_flow_mapping`/`format_scalar`/`write_atomically`,
+        # so this is the last line of defense against a raw traceback.
+        sys.stderr.write("%s: %s\n" % (args.file, exc))
         return 1
 
 
