@@ -562,6 +562,32 @@ class DetectFamiliesTests(ToolCase):
         _, out, _ = self.run_tool("detect-families")
         self.assertIn("No candidate families", out)
 
+    def test_family_membership_excludes_even_with_real_shared_connections(self):
+        # `base-economy.md`'s family members (`mining-xp`/`smith-xp`) have no
+        # direct connections at all -- they're only ever referenced through
+        # their family alias `@skill-xp` -- so that fixture's "No candidate
+        # families" result could come from the no-connections exclusion alone
+        # and would not catch a regression that deleted the family-membership
+        # exclusion. Here `family-node` has a real, direct connection
+        # (`feed-family`) that gives it the same signature as `solo-node`, a
+        # family-free node of the same type -- without the family-membership
+        # exclusion, the two would group together as a two-member candidate.
+        fields = {
+            "nodes": [
+                {"id": "hub", "type": "source"},
+                {"id": "solo-node", "type": "pool"},
+                {"id": "family-node", "type": "pool"},
+            ],
+            "families": [
+                {"family": "fam", "type": "pool", "members": ["family-node"]},
+            ],
+            "connections": [
+                {"id": "feed-solo", "from": "hub", "to": "solo-node", "kind": "resource"},
+                {"id": "feed-family", "from": "hub", "to": "family-node", "kind": "resource"},
+            ],
+        }
+        self.assertEqual(et.family_candidates(fields), [])
+
     def test_fixture_is_valid_and_canonical(self):
         self.assertEqual(self.run_tool("validate")[0], 0)
         self.assertIsNone(et.canonical_problem(et.EconomyFile(self.path)))
