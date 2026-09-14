@@ -1387,7 +1387,7 @@ def md_economy(data):
         out.append("No nodes are declared.")
     for node in economy["nodes"]:
         node_id = as_text(node.get("id", "")).strip()
-        out.append("#### %s" % node_id)
+        out.append("#### %s" % friendly_name(node_id))
         out.append(md_caption("`design/economy.md`, node `%s`" % node_id))
         fields = ["- Type: %s" % (as_text(node.get("type", "")).strip() or "none recorded")]
         parts = value_progression_parts(node)
@@ -1408,7 +1408,7 @@ def md_economy(data):
         out.append("No families are declared.")
     for family in economy["families"]:
         fname = family_name(family)
-        out.append("#### @%s" % fname)
+        out.append("#### %s" % friendly_name(fname))
         out.append(md_caption("`design/economy.md`, family `@%s`" % fname))
         members = as_list(family.get("members"))
         fields = [
@@ -1439,7 +1439,7 @@ def md_economy(data):
     for conn in plain:
         conn_id = as_text(conn.get("id", "")).strip()
         kind, subtype, resource, rate = connection_meta(conn)
-        out.append("#### %s" % conn_id)
+        out.append("#### %s" % friendly_name(conn_id))
         out.append(md_caption("`design/economy.md`, connection `%s`" % conn_id))
         fields = [
             "- From: %s" % ref_code(as_text(conn.get("from", "")).strip()),
@@ -2041,13 +2041,7 @@ def html_toc(out, data):
         out,
         "#economy",
         "Economy",
-        [
-            ("#economy-nodes", "Nodes"),
-            ("#economy-families", "Families"),
-            ("#economy-connections", "Connections"),
-        ]
-        if data["economy"] is not None
-        else [],
+        _economy_toc(data["economy"]) if data["economy"] is not None else [],
     )
     out.add(
         4,
@@ -2079,6 +2073,44 @@ def _mechanic_toc(forest):
             _mechanic_toc(node["children"]),
         )
         for node in forest
+    ]
+
+
+def _economy_toc(economy):
+    """TOC entries for Nodes/Families/Connections, each nested with one
+    entry per node/family/plain connection — mirroring how ``_mechanic_toc``
+    nests individual mechanics under Mechanics."""
+    return [
+        (
+            "#economy-nodes",
+            "Nodes",
+            [
+                ("#node-%s" % node_id, friendly_name(node_id))
+                for node_id in (
+                    as_text(node.get("id", "")).strip() for node in economy["nodes"]
+                )
+            ],
+        ),
+        (
+            "#economy-families",
+            "Families",
+            [
+                ("#family-%s" % fname, friendly_name(fname))
+                for fname in (family_name(family) for family in economy["families"])
+            ],
+        ),
+        (
+            "#economy-connections",
+            "Connections",
+            [
+                ("#connection-%s" % conn_id, friendly_name(conn_id))
+                for conn_id in (
+                    as_text(conn.get("id", "")).strip()
+                    for conn in economy["connections"]
+                    if not is_declaration(conn)
+                )
+            ],
+        ),
     ]
 
 
@@ -2279,7 +2311,7 @@ def html_economy(out, data, ctx):
             '<article id="node-%s" class="record economy-node" '
             'data-source="design/economy.md#%s">' % (h(node_id), h(node_id)),
         )
-        out.add(4, "<h4>%s</h4>" % h(node_id))
+        out.add(4, "<h4>%s</h4>" % h(friendly_name(node_id)))
         out.add(4, source_caption("node <code>%s</code>" % h(node_id)))
         dl_open(out, 4)
         node_type = as_text(node.get("type", "")).strip()
@@ -2314,7 +2346,7 @@ def html_economy(out, data, ctx):
             '<article id="family-%s" class="record economy-family" '
             'data-source="design/economy.md#@%s">' % (h(fname), h(fname)),
         )
-        out.add(4, "<h4>@%s</h4>" % h(fname))
+        out.add(4, "<h4>%s</h4>" % h(friendly_name(fname)))
         out.add(4, source_caption("family <code>@%s</code>" % h(fname)))
         dl_open(out, 4)
         ftype = as_text(family.get("type", "")).strip()
@@ -2415,7 +2447,7 @@ def html_connection(out, conn, ctx):
         '<article id="connection-%s" class="record economy-connection%s" '
         'data-source="design/economy.md#%s">' % (h(conn_id), kind_class, h(conn_id)),
     )
-    out.add(4, "<h4>%s</h4>" % h(conn_id))
+    out.add(4, "<h4>%s</h4>" % h(friendly_name(conn_id)))
     out.add(4, source_caption("connection <code>%s</code>" % h(conn_id)))
     dl_open(out, 4)
     src = as_text(conn.get("from", "")).strip()
