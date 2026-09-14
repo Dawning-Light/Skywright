@@ -152,14 +152,14 @@ Every encounter is won by backing away and firing, which makes melee pointless.
 
 ### Nodes
 
-#### ore-vein
+#### Ore Vein
 
 *Source: `design/economy.md`, node `ore-vein`*
 
 - Type: source
 - Value progression: none recorded
 
-#### ingot-pool
+#### Ingot Pool
 
 *Source: `design/economy.md`, node `ingot-pool`*
 
@@ -174,28 +174,28 @@ it on is [[mechanic:combat]].
 
 Whether ingots stack per alloy or share one pool is undecided.
 
-#### forge
+#### Forge
 
 *Source: `design/economy.md`, node `forge`*
 
 - Type: converter
 - Value progression: none recorded
 
-#### gold
+#### Gold
 
 *Source: `design/economy.md`, node `gold`*
 
 - Type: pool
 - Value progression: none recorded
 
-#### mining-xp
+#### Mining Xp
 
 *Source: `design/economy.md`, node `mining-xp`*
 
 - Type: pool
 - Value progression: none recorded
 
-#### smith-xp
+#### Smith Xp
 
 *Source: `design/economy.md`, node `smith-xp`*
 
@@ -204,7 +204,7 @@ Whether ingots stack per alloy or share one pool is undecided.
 
 ### Families
 
-#### @skill-xp
+#### Skill Xp
 
 *Source: `design/economy.md`, family `@skill-xp`*
 
@@ -222,7 +222,7 @@ Declarations over this family:
 
 ### Connections
 
-#### mine
+#### Mine
 
 *Source: `design/economy.md`, connection `mine`*
 
@@ -231,7 +231,7 @@ Declarations over this family:
 - Kind: resource
 - Rate: 3
 
-#### smelt
+#### Smelt
 
 *Source: `design/economy.md`, connection `smelt`*
 
@@ -241,7 +241,7 @@ Declarations over this family:
 - Rate: none recorded
 - Resource: ore
 
-#### sale
+#### Sale
 
 *Source: `design/economy.md`, connection `sale`*
 
@@ -251,7 +251,7 @@ Declarations over this family:
 - Rate: 5
 - Resource: gold
 
-#### forge-gate
+#### Forge Gate
 
 *Source: `design/economy.md`, connection `forge-gate`*
 
