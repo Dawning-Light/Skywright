@@ -522,5 +522,63 @@ class ValidateTests(ToolCase):
         self.assertIn("has no `id`", err)
 
 
+class DetectFamiliesTests(ToolCase):
+    """The worked example in `game-mechanics`' "Detecting families": three
+    candidates, the weapon- and class-proficiency pools merged into one, and
+    `cooking-xp` -- annotated beside the gathering skills in prose -- left out
+    because its edges differ."""
+
+    fixture = os.path.join(FIXTURES, "detect-families-economy.md")
+
+    def test_three_candidates_no_false_positives_or_negatives(self):
+        fields = et.EconomyFile(self.path).fields
+        found = [(t, sorted(m)) for t, _sig, m in et.family_candidates(fields)]
+        weapons = ["%s-weapon-proficiency-xp" % w for w in
+                   ("sword", "shield", "staff", "wand", "bow", "crossbow", "dagger")]
+        classes = ["%s-class-proficiency-xp" % c for c in ("fighter", "mage", "rogue")]
+        self.assertEqual(
+            found,
+            [
+                ("pool", sorted(["mining-xp", "fishing-xp", "lumberjack-xp"])),
+                ("pool", sorted(weapons + classes)),
+                ("pool", sorted(["blacksmithing-xp", "tailoring-xp",
+                                 "leatherworking-xp", "woodworking-xp"])),
+            ],
+        )
+
+    def test_output_states_each_boundary_and_writes_nothing(self):
+        code, out, _ = self.run_tool("detect-families")
+        self.assertEqual(code, 0)
+        self.assertIn("3 candidate families. Nothing was written", out)
+        self.assertIn("candidate 1: 3 `pool` nodes\n  members: mining-xp, fishing-xp, lumberjack-xp\n", out)
+        self.assertIn("    in  from resource-node  (kind: resource, resource: xp)\n", out)
+        self.assertIn("    out to #gather  (kind: state, subtype: label-modifier)\n", out)
+        self.assertIn("add-family <name> --type pool --members mining-xp,fishing-xp,lumberjack-xp", out)
+        self.assertNotIn("cooking-xp", out)
+        self.assertEqual(read(self.path), self.before)
+
+    def test_family_members_and_unconnected_nodes_are_not_candidates(self):
+        self.use_text(read(os.path.join(FIXTURES, "base-economy.md")))
+        _, out, _ = self.run_tool("detect-families")
+        self.assertIn("No candidate families", out)
+
+    def test_fixture_is_valid_and_canonical(self):
+        self.assertEqual(self.run_tool("validate")[0], 0)
+        self.assertIsNone(et.canonical_problem(et.EconomyFile(self.path)))
+
+
+class HelpTests(ToolCase):
+    def test_help_names_every_command(self):
+        out = self.run_script("--help").stdout
+        for name in (
+            "list-nodes", "show-node", "list-connections", "show-connection",
+            "list-families", "show-family", "add-node", "remove-node",
+            "add-connection", "remove-connection", "add-family",
+            "add-family-member", "remove-family-member", "rename-node",
+            "set-value-progression", "validate", "detect-families",
+        ):
+            self.assertIn(name, out)
+
+
 if __name__ == "__main__":
     unittest.main()

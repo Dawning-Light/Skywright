@@ -741,6 +741,89 @@ def cmd_validate(args, now):
     return 0
 
 
+def family_candidates(fields):
+    """Candidate families, ``[(type, signature, member ids)]`` in node order.
+
+    A node's signature is the sorted multiset of connections touching it, each
+    recorded as ``(direction, other end, kind, subtype, resource, rate)`` with
+    the node's own id abstracted out. Same-type nodes with identical
+    signatures form one candidate. A node already in a family is addressed
+    through that family and is never a candidate, and a node no connection
+    touches has no signature to share.
+    """
+    members = set()
+    for family in records(fields, "families"):
+        members.update(as_list(family.get("members")))
+    conns = records(fields, "connections")
+    groups = {}
+    order = []
+    for node in records(fields, "nodes"):
+        node_id = rid(node)
+        if node_id in members:
+            continue
+        edges = []
+        for conn in conns:
+            meta = tuple(
+                as_text(conn.get(k, "")).strip()
+                for k in ("kind", "subtype", "resource", "rate")
+            )
+            src, dst = end_ref(conn, "from"), end_ref(conn, "to")
+            if src == node_id:
+                edges.append(("out", "<self>" if dst == node_id else dst) + meta)
+            if dst == node_id:
+                edges.append(("in", "<self>" if src == node_id else src) + meta)
+        if not edges:
+            continue
+        key = (as_text(node.get("type", "")).strip(), tuple(sorted(edges)))
+        if key not in groups:
+            groups[key] = []
+            order.append(key)
+        groups[key].append(node_id)
+    return [(key[0], key[1], groups[key]) for key in order if len(groups[key]) > 1]
+
+
+def edge_text(edge):
+    direction, other, kind, subtype, resource, rate = edge
+    meta = ["kind: %s" % (kind or "none recorded")]
+    for label, value in (("subtype", subtype), ("resource", resource), ("rate", rate)):
+        if value:
+            meta.append("%s: %s" % (label, value))
+    return "%-3s %s %s  (%s)" % (
+        direction,
+        "from" if direction == "in" else "to",
+        other,
+        ", ".join(meta),
+    )
+
+
+def cmd_detect_families(args, now):
+    doc = EconomyFile(args.file)
+    candidates = family_candidates(doc.fields)
+    if not candidates:
+        print(
+            "No candidate families: no two same-type nodes outside a family "
+            "have identical connections."
+        )
+        return 0
+    print(
+        "%d candidate famil%s. Nothing was written: put each candidate and its "
+        "boundary to the owner, and write one only on their confirmation, with "
+        "`add-family`." % (len(candidates), "y" if len(candidates) == 1 else "ies")
+    )
+    for number, (node_type, signature, members) in enumerate(candidates, start=1):
+        print("")
+        print("candidate %d: %d `%s` nodes" % (number, len(members), node_type))
+        print("  members: %s" % ", ".join(members))
+        print("  boundary — the connections every member has, its own id abstracted out:")
+        for edge in signature:
+            print("    %s" % edge_text(edge))
+        print(
+            "  to write it: economy-tool add-family <name> --type %s --members %s"
+            % (node_type, ",".join(members))
+        )
+    return 0
+
+
 # ---------------------------------------------------------------------------
 # Command line
 # ---------------------------------------------------------------------------
@@ -872,6 +955,12 @@ def build_parser():
         cmd_validate,
         "check the whole file against game-mechanics' rules, body headings "
         "included; never writes",
+    )
+
+    command(
+        "detect-families",
+        cmd_detect_families,
+        "print candidate families and each one's boundary; never writes",
     )
 
     return parser
