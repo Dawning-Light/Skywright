@@ -96,6 +96,22 @@ malformed `[[...]]` — is a hard render failure: nothing is written, and
 stderr names the file, the reference, and what it fails to resolve to. Text
 inside a code span or a fenced code block is never read as a reference.
 
+**A backtick mention is not a citation, and nothing catches it.** "see
+`fame`" and "the `quests` mechanic entry" read as citations to a human but
+are exactly the code-span text the line above excludes from parsing — so
+they neither resolve nor fail, the render reports success either way, and a
+passing render proves nothing about them. This is not hypothetical: this
+exact form — "(see `X`)", naming a mechanic, pillar, or node by its bare or
+backtick-wrapped name instead of a typed wikilink — spread through
+`economy.md` and most of `mechanics/*.md` under this rule's own watch, and
+was only found by two after-the-fact backfills (2026-09-11, 2026-09-14)
+rather than by anything in `game-gdd`'s render. Once rule 4 decides a
+sentence is citing another record's fact, the citation is spelled
+`[[type:slug]]` — never a bare name, never a backtick-wrapped one, however
+identifying it looks. If nothing among the eight forms fits what's being
+named, that is rule 3's case, not license to approximate with prose: stop
+and ask.
+
 ## `## Open Questions`
 
 The pillar record, concept statement, mechanic entry, and differentiation
@@ -135,6 +151,9 @@ rewrite of the file. `game-gdd` renders the value beside each section's
 - Does any sentence state a fact another record owns? Replace the statement
   with a typed wikilink (rule 4), and confirm the target says what the
   citation claims (rule 5).
+- Does a parenthetical or "see X" name a record by its bare or
+  backtick-wrapped name rather than `[[type:slug]]`? A backtick mention
+  reads like a citation but is never parsed as one (rule 4) — replace it.
 - Is anything uncertain? Say so under `## Open Questions`, and remove the
   certainty it replaces (rule 6).
 - Is `updated` the current UTC time?
