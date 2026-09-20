@@ -212,21 +212,38 @@ def load_design(root):
     return data
 
 
-def mechanic_tree(mechanics):
-    """Arrange mechanics (already in slug order) as a forest by ``parent``.
+def mechanic_container(m):
+    """The mechanic ``m`` nests under: its ``parent`` when that carries a
+    value, its ``part_of`` when ``parent`` is absent, empty, or ``none``.
 
-    Returns ``[{"mech": record, "children": [...]}, ...]``: roots in slug
-    order, each node's children in slug order beneath it. A mechanic whose
-    ``parent`` names no mechanic file (or names itself) is a root. One caught
-    in a parent cycle is unreachable from any root, so it is appended as a
-    root after the rest — every record renders exactly once either way.
+    ``parent`` is specialization and ``part_of`` is composition; both group a
+    card under another in the render, and ``parent`` wins when a record
+    carries both. A ``parent`` that names no mechanic file does **not** fall
+    back to ``part_of`` -- a typo must surface as a root rather than silently
+    reroute the card under a different container.
+    """
+    return m["parent"] or m["part_of"]
+
+
+def mechanic_tree(mechanics):
+    """Arrange mechanics (already in slug order) as a forest by container.
+
+    A record's container is ``mechanic_container``: its ``parent``, or its
+    ``part_of`` where ``parent`` is ``none``. Returns ``[{"mech": record,
+    "children": [...]}, ...]``: roots in slug order, each node's children in
+    slug order beneath it. A mechanic whose container names no mechanic file
+    (or names itself) is a root. One caught in a container cycle -- through
+    ``parent``, through ``part_of``, or through a mix of the two -- is
+    unreachable from any root, so it is appended as a root after the rest;
+    every record renders exactly once either way.
     """
     slugs = set(m["slug"] for m in mechanics)
     kids = {}
     roots = []
     for m in mechanics:
-        if m["parent"] in slugs and m["parent"] != m["slug"]:
-            kids.setdefault(m["parent"], []).append(m)
+        container = mechanic_container(m)
+        if container in slugs and container != m["slug"]:
+            kids.setdefault(container, []).append(m)
         else:
             roots.append(m)
 
