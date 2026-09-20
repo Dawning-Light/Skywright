@@ -134,12 +134,13 @@ Three properties the render is built to guarantee, because `game-critique`
   record or in the previous render, so the same guarantee holds. Section
   *order* follows a fixed rule — alphabetical by slug for pillars and
   technical decision records; frontmatter-list order for economy nodes,
-  families, and connections; for mechanics, the parent tree: root mechanics
-  alphabetical by slug, each one's children alphabetical beneath it, as deep
-  as the tree goes (in `gdd.html` a child's card is indented under its
-  parent and the table of contents nests the same way) — so the one field
-  whose value moves a section is a mechanic's `parent`, and nothing else
-  reorders as a side effect of editing a value.
+  families, and connections; for mechanics, the container tree: root
+  mechanics alphabetical by slug, each one's contained mechanics alphabetical
+  beneath it, as deep as the tree goes (in `gdd.html` a contained card is
+  indented under its container and the table of contents nests the same way).
+  A mechanic's container is its `parent`, or its `part_of` where `parent` is
+  `none` — so the fields whose values move a section are those two and
+  nothing else reorders as a side effect of editing a value.
 - **Addressable.** Every rendered section names the record it came from — a
   file path for a concept statement, pillar, mechanic entry, or technical
   decision record; a node, family, or connection identifier for the economy
