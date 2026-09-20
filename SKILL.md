@@ -115,17 +115,17 @@ What travels depends on the unit type:
 | Unit type | What travels with it |
 | --- | --- |
 | Pillar record, `design/pillars/<slug>.md` | that file's full text; `design/concept.md`'s body |
-| Mechanic entry, `design/mechanics/<slug>.md` | that file's full text; the taxonomy index (below); the `title` and `## Description` only of its `parent` and of each entry in its `children`; the nodes and connections of `design/economy.md` that the entry's own text names, connections each named by its `id`; for each family the entry's own text names, both the family declaration and its expanded members, each named by the derived id `game-mechanics` defines; every `design/pillars/<slug>.md` record whose `status` is `approved`, in full |
+| Mechanic entry, `design/mechanics/<slug>.md` | that file's full text; the taxonomy index (below); the `title` and `## Description` only of its `parent`, of each entry in its `children`, of its `part_of`, and of each entry in its `parts`; the nodes and connections of `design/economy.md` that the entry's own text names, connections each named by its `id`; for each family the entry's own text names, both the family declaration and its expanded members, each named by the derived id `game-mechanics` defines; every `design/pillars/<slug>.md` record whose `status` is `approved`, in full |
 | GDD section, a section of `design/gdd.md` | that section's text; the record it addresses, by the path or identifier the section names (`game-gdd` guarantees every rendered section names its record); every `design/pillars/<slug>.md` record whose `status` is `approved`, in full |
 
-**The taxonomy index** is every mechanic entry's `name` and `parent`, and
-nothing else — two fields per entry, no titles, no descriptions, no bodies. It
-travels with a mechanic entry because whether a `parent` edge resolves to an
-entry that exists, and whether `parent` and `children` agree in both
-directions, are properties of the taxonomy's *shape* that cannot be read off a
-single entry. It stays two fields wide for the same reason one unit per
-dispatch is the rule: a list of slugs is a bounded read, a directory of entries
-is not.
+**The taxonomy index** is every mechanic entry's `name`, `parent` and
+`part_of`, and nothing else — three fields per entry, no titles, no
+descriptions, no bodies. It travels with a mechanic entry because whether a
+`parent` or a `part_of` edge resolves to an entry that exists, and whether
+`parent`/`children` and `part_of`/`parts` agree in both directions, are
+properties of the taxonomy's *shape* that cannot be read off a single entry.
+It stays three fields wide for the same reason one unit per dispatch is the
+rule: a list of slugs is a bounded read, a directory of entries is not.
 
 Related entries travel as title-plus-description rather than in full, and the
 economy graph travels only as the nodes the unit names, for that same reason —
