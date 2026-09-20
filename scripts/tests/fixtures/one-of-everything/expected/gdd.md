@@ -152,6 +152,50 @@ A player kites a slow enemy around a pillar and wins without taking a hit.
 
 Every encounter is won by backing away and firing, which makes melee pointless.
 
+### Inventory
+
+*Source: `design/mechanics/inventory.md` · Updated: 2026-09-10T12:10Z*
+
+- Parent: none
+- Children: none
+- Part of: none
+- Parts: `stack-limits`
+
+#### Description
+
+Where carried items live between runs.
+
+#### Strong example
+
+A player drops a spare blade to make room for ore and finishes the run.
+
+#### Weak example
+
+Capacity is large enough that nothing is ever dropped, so the choice the
+mechanic exists to pose never comes up.
+
+### Stack Limits
+
+*Source: `design/mechanics/stack-limits.md` · Updated: 2026-09-10T12:12Z*
+
+- Parent: none
+- Children: none
+- Part of: `inventory`
+- Parts: none
+
+#### Description
+
+How many of one item share a slot. A part of the inventory, not a kind of it.
+
+#### Strong example
+
+Ore stacks to 99, so a long dig costs one slot instead of ninety-nine.
+
+#### Weak example
+
+Every item stacks to 1, which makes the limit a second, redundant capacity
+cap rather than a distinct decision.
+
 ## Economy
 
 *Source: `design/economy.md` · Updated: 2026-09-10T16:44Z*

@@ -24,6 +24,10 @@
             <li><a href="#mechanic-melee">Melee</a></li>
             <li><a href="#mechanic-ranged">Ranged</a></li>
           </ol></li>
+        <li><a href="#mechanic-inventory">Inventory</a>
+          <ol>
+            <li><a href="#mechanic-stack-limits">Stack Limits</a></li>
+          </ol></li>
       </ol></li>
     <li><a href="#economy">Economy</a>
       <ol>
@@ -196,6 +200,52 @@
         <p>A player kites a slow enemy around a pillar and wins without taking a hit.</p>
         <h4>Weak example</h4>
         <p>Every encounter is won by backing away and firing, which makes melee pointless.</p>
+      </div>
+    </article>
+  </div>
+  <article id="mechanic-inventory" class="record mechanic" data-source="design/mechanics/inventory.md" data-updated="2026-09-10T12:10Z">
+    <h3>Inventory</h3>
+    <p class="source"><code>design/mechanics/inventory.md</code> <time class="updated" datetime="2026-09-10T12:10Z">2026-09-10T12:10Z</time></p>
+    <dl class="fields">
+      <dt>Parent</dt>
+      <dd class="unrecorded">none</dd>
+      <dt>Children</dt>
+      <dd class="unrecorded">none</dd>
+      <dt>Part of</dt>
+      <dd class="unrecorded">none</dd>
+      <dt>Parts</dt>
+      <dd><a href="#mechanic-stack-limits"><code>stack-limits</code></a></dd>
+    </dl>
+    <div class="body">
+      <h4>Description</h4>
+      <p>Where carried items live between runs.</p>
+      <h4>Strong example</h4>
+      <p>A player drops a spare blade to make room for ore and finishes the run.</p>
+      <h4>Weak example</h4>
+      <p>Capacity is large enough that nothing is ever dropped, so the choice the mechanic exists to pose never comes up.</p>
+    </div>
+  </article>
+  <div class="mechanic-children">
+    <article id="mechanic-stack-limits" class="record mechanic" data-source="design/mechanics/stack-limits.md" data-updated="2026-09-10T12:12Z">
+      <h3>Stack Limits</h3>
+      <p class="source"><code>design/mechanics/stack-limits.md</code> <time class="updated" datetime="2026-09-10T12:12Z">2026-09-10T12:12Z</time></p>
+      <dl class="fields">
+        <dt>Parent</dt>
+        <dd class="unrecorded">none</dd>
+        <dt>Children</dt>
+        <dd class="unrecorded">none</dd>
+        <dt>Part of</dt>
+        <dd><a href="#mechanic-inventory"><code>inventory</code></a></dd>
+        <dt>Parts</dt>
+        <dd class="unrecorded">none</dd>
+      </dl>
+      <div class="body">
+        <h4>Description</h4>
+        <p>How many of one item share a slot. A part of the inventory, not a kind of it.</p>
+        <h4>Strong example</h4>
+        <p>Ore stacks to 99, so a long dig costs one slot instead of ninety-nine.</p>
+        <h4>Weak example</h4>
+        <p>Every item stacks to 1, which makes the limit a second, redundant capacity cap rather than a distinct decision.</p>
       </div>
     </article>
   </div>
