@@ -151,6 +151,7 @@ def load_design(root):
             os.path.join(mechanics_dir, name), rel, "game-mechanics"
         )
         parent = as_text(fields.get("parent", "")).strip()
+        part_of = as_text(fields.get("part_of", "")).strip()
         data["mechanics"].append(
             {
                 "slug": slug,
@@ -158,6 +159,8 @@ def load_design(root):
                 "title": as_text(fields.get("title", "")) or slug,
                 "parent": "" if parent in ("", "none") else parent,
                 "children": [c for c in as_list(fields.get("children")) if c != "none"],
+                "part_of": "" if part_of in ("", "none") else part_of,
+                "parts": [p for p in as_list(fields.get("parts")) if p != "none"],
                 "updated": read_updated(fields, rel, "game-mechanics"),
                 "body": body,
             }
@@ -910,7 +913,12 @@ def md_mechanics(data):
         out.append(md_caption("`%s`" % mech["rel"], mech["updated"]))
         parent = ref_code(mech["parent"]) if mech["parent"] else "none"
         children = code_list(mech["children"]) if mech["children"] else "none"
-        out.append("- Parent: %s\n- Children: %s" % (parent, children))
+        part_of = ref_code(mech["part_of"]) if mech["part_of"] else "none"
+        parts = code_list(mech["parts"]) if mech["parts"] else "none"
+        out.append(
+            "- Parent: %s\n- Children: %s\n- Part of: %s\n- Parts: %s"
+            % (parent, children, part_of, parts)
+        )
         if mech["body"]:
             out.append(demote_headings(mech["body"], 2))
     return out
@@ -1817,6 +1825,23 @@ def _html_mechanic(out, pad, mech, ctx):
         dl_field(out, pad + 2, "Children", ", ".join(items))
     else:
         dl_field(out, pad + 2, "Children", "none", unrecorded=True)
+    if mech["part_of"]:
+        anchor = (
+            "#mechanic-%s" % mech["part_of"]
+            if mech["part_of"] in ctx["mechanics"]
+            else None
+        )
+        dl_field(out, pad + 2, "Part of", linked_code(mech["part_of"], anchor))
+    else:
+        dl_field(out, pad + 2, "Part of", "none", unrecorded=True)
+    if mech["parts"]:
+        items = []
+        for part in mech["parts"]:
+            anchor = "#mechanic-%s" % part if part in ctx["mechanics"] else None
+            items.append(linked_code(part, anchor))
+        dl_field(out, pad + 2, "Parts", ", ".join(items))
+    else:
+        dl_field(out, pad + 2, "Parts", "none", unrecorded=True)
     dl_close(out, pad + 2)
     if mech["body"]:
         html_body(out, pad + 2, mech["body"], 2, ctx)

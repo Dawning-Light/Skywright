@@ -3,6 +3,8 @@ name: combat
 title: Combat
 parent: none
 children: [melee, ranged]
+part_of: none
+parts: []
 updated: 2026-09-10T12:00Z
 ---
 
