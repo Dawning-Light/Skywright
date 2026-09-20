@@ -18,12 +18,21 @@ them.
   another, *modulates* another, or is *potentially conflicting with* another.
   Those three relations are different things, and a design that calls one of
   them by another's name has a structural error, not a wording preference.
+  The schema gives each exactly one home: instantiation is
+  `parent`/`children`; modulation has **no field** and is recorded as a
+  `[[mechanic:<slug>]]` wikilink in prose or as a `state` connection in
+  `design/economy.md`; potential conflict is Check 9's job rather than a
+  field at all.
 - **The Game Ontology Project taxonomy** (Zagal et al.). A hierarchy of game
   elements in which every entry carries a name, a description, a parent, its
   children, and worked examples. Its operative claim for you is that an
   entry's place in the hierarchy is a **specialization** relation — a child is
   a *kind of* its parent — and that a hierarchy is only usable if every edge
-  in it resolves and every edge is genuine.
+  in it resolves and every edge is genuine. `game-mechanics` carries a second
+  relation the taxonomy proper does not: `part_of`/`parts`, **composition** —
+  a part is a *piece of* its container, not a kind of it. The two must not be
+  collapsed into one another. Each has its own edges to resolve and its own
+  genuineness to check, which is why Checks 11–13 mirror Checks 1–3.
 
 ## How you read
 
@@ -73,6 +82,9 @@ Read the unit's `title` and the parent's, and say the sentence out loud: "a
 relation is something else — the unit *uses* the parent, *triggers* it,
 *happens after* it, or is *a part of* it. Those are real relations and none of
 them is a taxonomy edge; a hierarchy that carries them is not walkable.
+What clears it: `part_of` when the real relation is composition, and a
+prose `[[mechanic:<slug>]]` wikilink or a `state` connection in
+`design/economy.md` when it is modulation or a looser association.
 
 **Check 3 — Children agree.** *(mechanic entry)*
 Read the taxonomy index. Every entry the unit lists in `children` appears in
@@ -120,6 +132,11 @@ the hierarchy. Fails when a `parent` edge is carrying a modulation
 relationship. This is Check 2's most common specific failure, and it is worth
 its own pass because it reads as correct: the two mechanics really are
 related, just not by this edge.
+What clears it: a `[[mechanic:<slug>]]` wikilink in this entry's prose, or a
+`state` connection in `design/economy.md` — subtype `node-modifier`,
+`label-modifier`, or `activator` — targeting the node or connection the
+unit modulates. Moving the edge to `part_of` does **not** clear it:
+modulation is not composition, and Check 13 catches it there instead.
 
 **Check 9 — Potential conflict, within reach of what you hold.** *(mechanic
 entry, pillar record, GDD section)*
@@ -127,8 +144,9 @@ You hold one unit, so you cannot survey the design for conflicting pairs, and
 you must not ask for a second unit to do it. Look instead for a conflict
 visible from where you stand: between the unit's own rules and its own stated
 Consequences, or between the unit and the material that travelled with it — a
-parent's or child's description, a named economy node, the concept statement,
-the record a GDD section addresses. Fails when the unit's rules make something
+parent's, child's, `part_of` container's or `parts` entry's description, a
+named economy node, the concept statement, the record a GDD section
+addresses. Fails when the unit's rules make something
 in that material unreachable, or when their Consequences cancel.
 
 Where the unit's own text *names* another unit you were not given and you have
