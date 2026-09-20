@@ -164,7 +164,9 @@ is no longer a view onto it.
 Mirror of Check 1, over the composition relation. The unit's `part_of` is
 either the literal `none` or a `name` that appears in the taxonomy index you
 were given. Fails when `part_of` names something absent from that index, or is
-prose describing a container rather than a slug naming one.
+prose describing a container rather than a slug naming one. An entry written
+before these fields existed carries neither; read an absent `part_of` the
+same as the literal `none` until the project's migration issue adds it.
 
 **Check 12 — Parts agree.** *(mechanic entry)*
 Mirror of Check 3, over the composition relation. Read the taxonomy index.
