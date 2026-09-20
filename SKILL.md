@@ -40,9 +40,10 @@ Elicit conversationally, in whatever order the owner naturally gives it:
 
 1. **Mechanics.** For each mechanic the owner describes, ask enough to fill
    out one mechanic entry (below): what it is, where it sits relative to
-   other mechanics already elicited (its parent, if any; its children, if
-   any), one strong example of it working as intended, one weak example of
-   it failing or being misused.
+   other mechanics already elicited (what it is a *kind of* and what it is a
+   *part of*, if either; its children and its parts, if any), one strong
+   example of it working as intended, one weak example of it failing or being
+   misused.
 2. **Systems and economy.** Ask what resources exist, where they enter play,
    where they leave, and what moves or gates them. Map each answer onto a
    node or a connection in the economy graph (below) as it's given, rather
@@ -118,14 +119,36 @@ Frontmatter:
 - `children` — a list of `name`s of other mechanic entries under
   `design/mechanics/`, possibly empty. Same rule: each entry in the list is a
   filename to resolve, not a description of the child mechanic.
+- `part_of` — the `name` of another mechanic entry under `design/mechanics/`,
+  or the literal `none`. Same rule as `parent`: this is a filename to
+  resolve by looking for `design/mechanics/<part_of>.md`, never prose
+  describing a container.
+- `parts` — a list of `name`s of other mechanic entries under
+  `design/mechanics/`, possibly empty. Same rule as `children`: each entry in
+  the list is a filename to resolve, not a description of the part.
 - `updated` — the UTC time of the last write to this file, in the
   `YYYY-MM-DDTHH:MMZ` form `game-authoring` defines. Refreshed on every
   write.
 
-Keeping `parent`/`children` as filenames rather than prose is what makes the
-taxonomy walkable: a later skill (or a human) can traverse the whole
+Keeping all four relation fields as filenames rather than prose is what makes
+the taxonomy walkable: a later skill (or a human) can traverse the whole
 mechanics tree by following slugs from file to file, without re-parsing
 prose to figure out what points at what.
+
+`parent`/`children` and `part_of`/`parts` are different relations and neither
+substitutes for the other. `parent` is **specialization**: a child is a *kind
+of* its parent. `part_of` is **composition**: a part is a *piece of* its
+container, not a kind of it. A mechanic may carry both — they answer
+different questions, and neither constrains the other.
+
+**Modulation gets no field.** A mechanic that changes another's rate, its
+cost, or its availability is neither a kind of it nor a part of it, and
+forcing that relation into either pair is exactly the error
+`game-critique`'s `mechanics-literalist` lens exists to catch. Record it the
+two ways the schema already provides: a `[[mechanic:<slug>]]` wikilink in
+this entry's prose, and a `state` connection in `design/economy.md` — subtype
+`node-modifier`, `label-modifier`, or `activator` — targeting the node or
+connection it modulates.
 
 Body, one heading per field so a reader and a renderer see the same
 structure:
@@ -147,8 +170,8 @@ it serves, a node or connection in the economy graph, a tech decision that
 constrains it — it cites that record with one of the typed wikilinks
 `game-authoring` defines (`[[pillar:<slug>]]`, `[[node:<id>]]`,
 `[[connection:<id>]]`, `[[tech:<slug>]]`, and the rest) rather than
-restating the fact. `parent` and `children` stay bare slugs in the
-frontmatter; the wikilink forms are for body prose.
+restating the fact. `parent`, `children`, `part_of`, and `parts` stay bare
+slugs in the frontmatter; the wikilink forms are for body prose.
 
 The same rule governs `economy.md`'s prose notes, below. A phrase like "see
 `fame`" or "the `quests` mechanic entry" is not that citation — it's a
