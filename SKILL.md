@@ -144,11 +144,12 @@ different questions, and neither constrains the other.
 **Modulation gets no field.** A mechanic that changes another's rate, its
 cost, or its availability is neither a kind of it nor a part of it, and
 forcing that relation into either pair is exactly the error
-`game-critique`'s `mechanics-literalist` lens exists to catch. Record it the
-two ways the schema already provides: a `[[mechanic:<slug>]]` wikilink in
-this entry's prose, and a `state` connection in `design/economy.md` — subtype
-`node-modifier`, `label-modifier`, or `activator` — targeting the node or
-connection it modulates.
+`game-critique`'s `mechanics-literalist` lens exists to catch. Record it in
+one of the two ways the schema already provides — and in both where the
+modulation targets an economy node or connection: a `[[mechanic:<slug>]]`
+wikilink in this entry's prose, or a `state` connection in
+`design/economy.md` — subtype `node-modifier`, `label-modifier`, or
+`activator` — targeting the node or connection it modulates.
 
 Body, one heading per field so a reader and a renderer see the same
 structure:
