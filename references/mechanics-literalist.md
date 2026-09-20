@@ -142,6 +142,31 @@ given. Fails when the section states content you cannot trace to any record —
 that content came from somewhere other than the structured data, and the GDD
 is no longer a view onto it.
 
+**Check 11 — The `part_of` edge resolves.** *(mechanic entry)*
+Mirror of Check 1, over the composition relation. The unit's `part_of` is
+either the literal `none` or a `name` that appears in the taxonomy index you
+were given. Fails when `part_of` names something absent from that index, or is
+prose describing a container rather than a slug naming one.
+
+**Check 12 — Parts agree.** *(mechanic entry)*
+Mirror of Check 3, over the composition relation. Read the taxonomy index.
+Every entry the unit lists in `parts` appears in that index carrying the
+unit's own `name` as its `part_of`, and every entry in that index whose
+`part_of` is the unit appears in the unit's `parts`. Fails on a
+one-directional edge in either direction.
+
+**Check 13 — The `part_of` edge is composition.** *(mechanic entry)*
+Mirror of Check 2, and the reason it exists is that without it `part_of`
+inherits the role `parent` used to play: the field an author reaches for when
+no field fits. Read the unit's `title` and its container's, and say the
+sentence out loud: "a <unit> is a part of a <container>." Fails when that
+sentence is false and the real relation is something else — the unit is a
+*kind of* its container, *uses* it, *triggers* it, *happens after* it, or
+*modulates* it. What clears it: `parent` when the real relation is
+specialization, and a prose `[[mechanic:<slug>]]` wikilink or a `state`
+connection in `design/economy.md` when it is modulation or a looser
+association.
+
 ## When a check does not produce a finding
 
 Three outcomes other than a finding, recorded three different ways. Every check
