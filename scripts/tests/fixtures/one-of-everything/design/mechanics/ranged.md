@@ -3,6 +3,8 @@ name: ranged
 title: Ranged
 parent: combat
 children: []
+part_of: none
+parts: []
 updated: 2026-09-10T12:07Z
 ---
 

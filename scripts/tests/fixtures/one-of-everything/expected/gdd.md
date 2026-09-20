@@ -76,6 +76,8 @@ undecided.
 
 - Parent: none
 - Children: `melee`, `ranged`
+- Part of: none
+- Parts: none
 
 #### Description
 
@@ -104,6 +106,8 @@ Whether a swing may be cancelled mid-animation is undecided.
 
 - Parent: `combat`
 - Children: none
+- Part of: none
+- Parts: none
 
 #### Description
 
@@ -132,6 +136,8 @@ melee is the wrong tool here.
 
 - Parent: `combat`
 - Children: none
+- Part of: none
+- Parts: none
 
 #### Description
 
