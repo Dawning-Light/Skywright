@@ -178,8 +178,8 @@ The same rule governs `economy.md`'s prose notes, below. A phrase like "see
 `fame`" or "the `quests` mechanic entry" is not that citation — it's a
 backtick-wrapped name, which `game-authoring`'s citation rule says
 `game-gdd`'s render never parses as a reference, so it neither resolves nor
-fails and the debt goes unnoticed until a dedicated sweep finds it, as
-happened twice across this project's own history. Reserve backticks in a
+fails and the debt goes unnoticed until a dedicated sweep finds it. Reserve
+backticks in a
 prose note for a literal identifier that isn't standing in for a citation —
 a node id, a connection id, a YAML field name — and write the citation
 itself as `[[mechanic:<slug>]]`, `[[pillar:<slug>]]`, `[[node:<id>]]`, etc.
