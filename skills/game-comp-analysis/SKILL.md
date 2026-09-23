@@ -116,9 +116,8 @@ The fixed answers this skill supplies:
   depart from `thorough` if the owner asks for a different depth during
   `research`'s own clarifying round.
 
-**The seven fields**, fixed by the spec's Behaviour 5
-(`docs/traverse/specs/2026-09-06-game-design-skillset.md`) and required of
-every competitor record `research` returns:
+**The seven fields**, fixed by this skill and required of every competitor
+record `research` returns:
 
 1. Genre/sub-genre.
 2. Core loop, broken into early-lifecycle milestones.

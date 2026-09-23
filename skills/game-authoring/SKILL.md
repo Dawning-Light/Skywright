@@ -102,10 +102,10 @@ are exactly the code-span text the line above excludes from parsing — so
 they neither resolve nor fail, the render reports success either way, and a
 passing render proves nothing about them. This is not hypothetical: this
 exact form — "(see `X`)", naming a mechanic, pillar, or node by its bare or
-backtick-wrapped name instead of a typed wikilink — spread through
-`economy.md` and most of `mechanics/*.md` under this rule's own watch, and
-was only found by two after-the-fact backfills (2026-09-11, 2026-09-14)
-rather than by anything in `game-gdd`'s render. Once rule 4 decides a
+backtick-wrapped name instead of a typed wikilink — spreads through
+`economy.md` and `mechanics/*.md` under this rule's own watch, and is caught
+only by an after-the-fact sweep, never by anything in `game-gdd`'s render.
+Once rule 4 decides a
 sentence is citing another record's fact, the citation is spelled
 `[[type:slug]]` — never a bare name, never a backtick-wrapped one, however
 identifying it looks. If nothing among the eight forms fits what's being

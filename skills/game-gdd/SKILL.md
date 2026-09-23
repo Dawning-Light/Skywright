@@ -51,8 +51,8 @@ never inside this skill's own repository:
   file is written only when it is missing, and overwritten only by
   `--reset-css`.
 
-`design/gdd.md` is the **core** GDD only: the ninth of nine
-supporting-document types the spec's research surveyed, and the only one
+`design/gdd.md` is the **core** GDD only: the ninth of the nine
+supporting-document types a GDD practice commonly names, and the only one
 rendered as a document of its own. One of the other eight, the Technical
 Design Document, folds into this file as its `## Technical Design` section;
 the remaining seven are named, with the reason each is absent, under "The
@@ -298,12 +298,11 @@ record; that check is `render_gdd.py`'s, at render time.
 
 ## The seven absent supporting documents
 
-The spec's own research surveyed nine supporting-document types a GDD
-practice commonly names. `design/gdd.md` renders the core GDD — the ninth —
-as a document of its own, and folds one more into it. The
-`## Supporting Documents Not Rendered` section states all seven of the rest,
-and why each is absent, rather than leaving a reader to wonder whether they
-were forgotten:
+A GDD practice commonly names nine supporting-document types.
+`design/gdd.md` renders the core GDD — the ninth — as a document of its own,
+and folds one more into it. The `## Supporting Documents Not Rendered`
+section states all seven of the rest, and why each is absent, rather than
+leaving a reader to wonder whether they were forgotten:
 
 - **Technical Design Document** — not absent, and not a separate document:
   at solo and small-team scale technical design folds into the GDD, so it
@@ -324,12 +323,8 @@ were forgotten:
   and rendering one without that data would mean inventing content rather
   than deriving it. Each is a documented future extension, not a silent
   omission — a later pass would need its own research to determine what
-  schema each requires, exactly as this spec already documents for
-  Elo/Monte Carlo/MCTS balancing in `game-mechanics`.
+  schema each requires, on the same footing as Elo/Monte Carlo/MCTS
+  balancing in `game-mechanics`.
 
-This is the spec's own accounting, not one invented here — see
-`docs/traverse/specs/2026-09-06-game-design-skillset.md`'s `## Out of scope`
-section for the source statement, and
-`docs/superpowers/specs/2026-09-11-game-tech-design.md` for the change that
-moved the Technical Design Document off the absent list. The section's
-fixed text lives in the script, beside every other section's rendering.
+The section's fixed text lives in the script, beside every other section's
+rendering.

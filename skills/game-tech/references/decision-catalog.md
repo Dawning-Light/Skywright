@@ -19,12 +19,10 @@ follows:
    eliciting.
 
 **Grounding note.** Every category below is sourced, but the categorization
-itself — this particular split into nine — is the research's own synthesis
-(`docs/research/game-design-tdd-2026-09-11.md`), not a pre-existing
-published split. The owner approved it as the domain judgement the research
-asked for. "Progress while the game is closed" was not a research finding;
-it appears only as a `simulation-model` trigger, never as a category of its
-own.
+itself — this particular split into nine — is this skillset's own synthesis,
+not a pre-existing published split. "Progress while the game is closed" is
+not one of the nine; it appears only as a `simulation-model` trigger, never
+as a category of its own.
 
 A record whose `category` matches none of the ids below carries `other`.
 

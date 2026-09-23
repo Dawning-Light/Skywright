@@ -84,7 +84,7 @@ supposed to be blind to.
 **Exactly one unit per dispatch.** Never the whole design, and never two units
 in one prompt. Each persona critiques **one unit at a time** because independent LLM
 critique degrades past a few thousand characters of input and under-identifies
-weaknesses relative to a human reviewer (the spec's Problem §2). One unit per
+weaknesses relative to a human reviewer. One unit per
 dispatch is what keeps every individual read inside the length the research
 shows critique quality holds at; batching two units to save a dispatch spends
 the whole reason this skill exists.
