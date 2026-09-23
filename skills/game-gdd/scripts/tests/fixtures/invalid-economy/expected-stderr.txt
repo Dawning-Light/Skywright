@@ -1,0 +1,3 @@
+design/economy.md
+has no `id`
+game-mechanics

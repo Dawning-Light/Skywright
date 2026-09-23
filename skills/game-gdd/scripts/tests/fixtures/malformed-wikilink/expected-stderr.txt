@@ -1,0 +1,5 @@
+design/mechanics/combat.md
+`[[zero-grind]]` is malformed
+is an untyped reference
+game-mechanics
+game-authoring

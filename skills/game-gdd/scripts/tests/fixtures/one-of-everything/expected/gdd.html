@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forge &amp; Foray — Game Design Document</title>
+<link rel="stylesheet" href="gdd.css">
+</head>
+<body>
+<div class="gdd-layout">
+<nav class="toc" aria-label="Table of contents">
+  <p class="toc-title">Contents</p>
+  <ol class="toc-list">
+    <li><a href="#concept">Concept</a></li>
+    <li><a href="#design-pillars">Design Pillars</a>
+      <ol>
+        <li><a href="#pillar-always-earned">Always Earned</a></li>
+        <li><a href="#pillar-zero-grind">Zero Grind</a></li>
+      </ol></li>
+    <li><a href="#mechanics">Mechanics</a>
+      <ol>
+        <li><a href="#mechanic-combat">Combat</a>
+          <ol>
+            <li><a href="#mechanic-melee">Melee</a></li>
+            <li><a href="#mechanic-ranged">Ranged</a></li>
+          </ol></li>
+        <li><a href="#mechanic-inventory">Inventory</a>
+          <ol>
+            <li><a href="#mechanic-stack-limits">Stack Limits</a></li>
+          </ol></li>
+      </ol></li>
+    <li><a href="#economy">Economy</a>
+      <ol>
+        <li><a href="#economy-nodes">Nodes</a>
+          <ol>
+            <li><a href="#node-ore-vein">Ore Vein</a></li>
+            <li><a href="#node-ingot-pool">Ingot Pool</a></li>
+            <li><a href="#node-forge">Forge</a></li>
+            <li><a href="#node-gold">Gold</a></li>
+            <li><a href="#node-mining-xp">Mining Xp</a></li>
+            <li><a href="#node-smith-xp">Smith Xp</a></li>
+          </ol></li>
+        <li><a href="#economy-families">Families</a>
+          <ol>
+            <li><a href="#family-skill-xp">Skill Xp</a></li>
+          </ol></li>
+        <li><a href="#economy-connections">Connections</a>
+          <ol>
+            <li><a href="#connection-mine">Mine</a></li>
+            <li><a href="#connection-smelt">Smelt</a></li>
+            <li><a href="#connection-sale">Sale</a></li>
+            <li><a href="#connection-forge-gate">Forge Gate</a></li>
+          </ol></li>
+      </ol></li>
+    <li><a href="#competitive-differentiation">Competitive Differentiation</a></li>
+    <li><a href="#technical-design">Technical Design</a>
+      <ol>
+        <li><a href="#tech-netcode">Netcode</a></li>
+        <li><a href="#tech-save-format">Save Format</a></li>
+      </ol></li>
+    <li><a href="#supporting-documents">Supporting Documents Not Rendered</a></li>
+  </ol>
+</nav>
+<main class="gdd">
+<header class="gdd-header">
+  <p class="gdd-kicker">Game Design Document</p>
+  <h1>Forge &amp; Foray</h1>
+  <p class="gdd-note">Rendered by <code>game-gdd</code> from the structured records under <code>design/</code>. Edit those records and re-render; edits made here do not survive the next render.</p>
+</header>
+
+<section id="concept" class="gdd-section concept" data-source="design/concept.md" data-updated="2026-09-10T09:15Z">
+  <h2>Concept</h2>
+  <p class="source"><code>design/concept.md</code> <time class="updated" datetime="2026-09-10T09:15Z">2026-09-10T09:15Z</time></p>
+  <div class="body">
+    <p>Forge &amp; Foray is a crafting-led action RPG in which the player mines ore, smelts it into ingots, and forges the weapons they then carry into short, hand-authored dungeon runs. Every run ends back at the forge, where the loot becomes the next weapon. What the genre's leaders do instead is recorded in <a href="#competitive-differentiation">comp-analysis</a>.</p>
+    <h3 class="open-questions">Open Questions</h3>
+    <p>Whether a run may end anywhere other than the forge is undecided.</p>
+  </div>
+  <details class="citations">
+    <summary>Citations <span class="citations-count">2</span></summary>
+    <p><a href="#pillar-always-earned"><code>always-earned</code></a>, <a href="#competitive-differentiation"><code>comp-analysis</code></a></p>
+  </details>
+</section>
+
+<section id="design-pillars" class="gdd-section pillars" data-source="design/pillars/">
+  <h2>Design Pillars</h2>
+  <article id="pillar-always-earned" class="record pillar" data-source="design/pillars/always-earned.md" data-updated="2026-09-09T18:20Z">
+    <h3>Always Earned</h3>
+    <p class="source"><code>design/pillars/always-earned.md</code> <time class="updated" datetime="2026-09-09T18:20Z">2026-09-09T18:20Z</time></p>
+    <p class="record-title">Every capability is earned through investment, never granted by a slot.</p>
+    <div class="body">
+      <p>The pillar <a href="#concept">concept</a> leans on hardest: the forge is open to anyone who invests in it.</p>
+      <h4>The test</h4>
+      <p>A capability reachable only by picking a class at creation fails this pillar. One reachable by anyone who invests in it passes.</p>
+      <h4>Worked keep</h4>
+      <p>Heavy-armour proficiency trained by wearing heavy armour. <strong>Kept.</strong></p>
+      <h4>Worked cut</h4>
+      <p>A &quot;Smith&quot; class that alone may use the forge. <strong>Cut.</strong></p>
+    </div>
+    <details class="citations">
+      <summary>Citations <span class="citations-count">2</span></summary>
+      <p><a href="#pillar-zero-grind"><code>zero-grind</code></a>, <code>tight-loop</code></p>
+    </details>
+  </article>
+  <article id="pillar-zero-grind" class="record pillar" data-source="design/pillars/zero-grind.md" data-updated="2026-09-10T08:05Z">
+    <h3>Zero Grind</h3>
+    <p class="source"><code>design/pillars/zero-grind.md</code> <time class="updated" datetime="2026-09-10T08:05Z">2026-09-10T08:05Z</time></p>
+    <p class="record-title">Progress always comes from a decision the player made, never from time they waited.</p>
+    <div class="body">
+      <p>Sits beside <a href="#pillar-always-earned">always-earned</a>, applies to <a href="#mechanic-combat">combat</a>, and is what <a href="#competitive-differentiation">comp-analysis</a> measures the competitors against. A literal <code>[[slug]]</code> inside a code span is prose about the syntax, not a reference.</p>
+      <h4>The test</h4>
+      <p>Given a proposed feature, ask whether its reward is gated by a choice the player made or by elapsed time. Gated by time alone, it is cut.</p>
+      <h4>Worked keep</h4>
+      <p>A forge recipe that unlocks once the player has <em>chosen</em> to smelt three different alloys. <strong>Kept</strong> — the gate is a decision.</p>
+      <h4>Worked cut</h4>
+      <p>A daily login chest. <strong>Cut</strong> — the gate is the calendar.</p>
+      <h4 class="open-questions">Open Questions</h4>
+      <p>Whether a cosmetic reward may be time-gated without failing this pillar is undecided.</p>
+    </div>
+    <details class="citations">
+      <summary>Citations <span class="citations-count">2</span></summary>
+      <p><code>tight-loop</code>, <a href="#mechanic-melee"><code>melee</code></a></p>
+    </details>
+  </article>
+  <p class="candidate-note">1 candidate pillar proposed by <code>game-comp-analysis</code> awaits review — approve or discard it with <code>game-pillars</code>.</p>
+</section>
+
+<section id="mechanics" class="gdd-section mechanics" data-source="design/mechanics/">
+  <h2>Mechanics</h2>
+  <article id="mechanic-combat" class="record mechanic" data-source="design/mechanics/combat.md" data-updated="2026-09-10T12:00Z">
+    <h3>Combat</h3>
+    <p class="source"><code>design/mechanics/combat.md</code> <time class="updated" datetime="2026-09-10T12:00Z">2026-09-10T12:00Z</time></p>
+    <dl class="fields">
+      <dt>Parent</dt>
+      <dd class="unrecorded">none</dd>
+      <dt>Children</dt>
+      <dd><a href="#mechanic-melee"><code>melee</code></a>, <a href="#mechanic-ranged"><code>ranged</code></a></dd>
+      <dt>Part of</dt>
+      <dd class="unrecorded">none</dd>
+      <dt>Parts</dt>
+      <dd class="unrecorded">none</dd>
+    </dl>
+    <div class="body">
+      <h4>Description</h4>
+      <p>Real-time combat resolved per swing. A hit lands when <code>atk &gt; def</code>, and a critical multiplies damage by 1.5 &amp; applies the weapon's &quot;on-crit&quot; rider. The weapons it is fought with are paid for out of <a href="#node-ingot-pool">ingot-pool</a>, and the skills it advances are <a href="#family-skill-xp">skill-xp</a>.</p>
+      <h4>Strong example</h4>
+      <p>A player who forged a high-<code>atk</code> blade cuts through a low-<code>def</code> pack in two swings.</p>
+      <h4>Weak example</h4>
+      <p>A player brings a blade whose <code>atk</code> is below every enemy's <code>def</code> and cannot damage anything at all, with no in-run way to recover.</p>
+      <h4 class="open-questions">Open Questions</h4>
+      <p>Whether a swing may be cancelled mid-animation is undecided.</p>
+    </div>
+    <details class="citations">
+      <summary>Citations <span class="citations-count">2</span></summary>
+      <p><a href="#pillar-zero-grind"><code>zero-grind</code></a>, <a href="#node-ingot-pool"><code>ingot-pool</code></a></p>
+    </details>
+  </article>
+  <div class="mechanic-children">
+    <article id="mechanic-melee" class="record mechanic" data-source="design/mechanics/melee.md" data-updated="2026-09-10T12:04Z">
+      <h3>Melee</h3>
+      <p class="source"><code>design/mechanics/melee.md</code> <time class="updated" datetime="2026-09-10T12:04Z">2026-09-10T12:04Z</time></p>
+      <dl class="fields">
+        <dt>Parent</dt>
+        <dd><a href="#mechanic-combat"><code>combat</code></a></dd>
+        <dt>Children</dt>
+        <dd class="unrecorded">none</dd>
+        <dt>Part of</dt>
+        <dd class="unrecorded">none</dd>
+        <dt>Parts</dt>
+        <dd class="unrecorded">none</dd>
+      </dl>
+      <div class="body">
+        <h4>Description</h4>
+        <p>Close-range swings that trade reach for damage. Serves <a href="#pillar-zero-grind">zero-grind</a>: every swing is a decision, never a wait.</p>
+        <p>A fenced block is never scanned for references, so the broken one below is inert text rather than a render failure:</p>
+        <pre><code>[[no-such-type:no-such-id]]</code></pre>
+        <h4>Strong example</h4>
+        <p>A player closes distance during an enemy's wind-up and lands a free swing.</p>
+        <h4>Weak example</h4>
+        <p>A player swings into a shielded enemy forever because nothing signals that melee is the wrong tool here.</p>
+      </div>
+    </article>
+    <article id="mechanic-ranged" class="record mechanic" data-source="design/mechanics/ranged.md" data-updated="2026-09-10T12:07Z">
+      <h3>Ranged</h3>
+      <p class="source"><code>design/mechanics/ranged.md</code> <time class="updated" datetime="2026-09-10T12:07Z">2026-09-10T12:07Z</time></p>
+      <dl class="fields">
+        <dt>Parent</dt>
+        <dd><a href="#mechanic-combat"><code>combat</code></a></dd>
+        <dt>Children</dt>
+        <dd class="unrecorded">none</dd>
+        <dt>Part of</dt>
+        <dd class="unrecorded">none</dd>
+        <dt>Parts</dt>
+        <dd class="unrecorded">none</dd>
+      </dl>
+      <div class="body">
+        <h4>Description</h4>
+        <p>Distance attacks that trade damage for safety. Whether two players see the same shot land is what <a href="#tech-netcode">netcode</a> decides.</p>
+        <h4>Strong example</h4>
+        <p>A player kites a slow enemy around a pillar and wins without taking a hit.</p>
+        <h4>Weak example</h4>
+        <p>Every encounter is won by backing away and firing, which makes melee pointless.</p>
+      </div>
+    </article>
+  </div>
+  <article id="mechanic-inventory" class="record mechanic" data-source="design/mechanics/inventory.md" data-updated="2026-09-10T12:10Z">
+    <h3>Inventory</h3>
+    <p class="source"><code>design/mechanics/inventory.md</code> <time class="updated" datetime="2026-09-10T12:10Z">2026-09-10T12:10Z</time></p>
+    <dl class="fields">
+      <dt>Parent</dt>
+      <dd class="unrecorded">none</dd>
+      <dt>Children</dt>
+      <dd class="unrecorded">none</dd>
+      <dt>Part of</dt>
+      <dd class="unrecorded">none</dd>
+      <dt>Parts</dt>
+      <dd><a href="#mechanic-stack-limits"><code>stack-limits</code></a></dd>
+    </dl>
+    <div class="body">
+      <h4>Description</h4>
+      <p>Where carried items live between runs.</p>
+      <h4>Strong example</h4>
+      <p>A player drops a spare blade to make room for ore and finishes the run.</p>
+      <h4>Weak example</h4>
+      <p>Capacity is large enough that nothing is ever dropped, so the choice the mechanic exists to pose never comes up.</p>
+    </div>
+  </article>
+  <div class="mechanic-children">
+    <article id="mechanic-stack-limits" class="record mechanic" data-source="design/mechanics/stack-limits.md" data-updated="2026-09-10T12:12Z">
+      <h3>Stack Limits</h3>
+      <p class="source"><code>design/mechanics/stack-limits.md</code> <time class="updated" datetime="2026-09-10T12:12Z">2026-09-10T12:12Z</time></p>
+      <dl class="fields">
+        <dt>Parent</dt>
+        <dd class="unrecorded">none</dd>
+        <dt>Children</dt>
+        <dd class="unrecorded">none</dd>
+        <dt>Part of</dt>
+        <dd><a href="#mechanic-inventory"><code>inventory</code></a></dd>
+        <dt>Parts</dt>
+        <dd class="unrecorded">none</dd>
+      </dl>
+      <div class="body">
+        <h4>Description</h4>
+        <p>How many of one item share a slot. A part of the inventory, not a kind of it.</p>
+        <h4>Strong example</h4>
+        <p>Ore stacks to 99, so a long dig costs one slot instead of ninety-nine.</p>
+        <h4>Weak example</h4>
+        <p>Every item stacks to 1, which makes the limit a second, redundant capacity cap rather than a distinct decision.</p>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section id="economy" class="gdd-section economy" data-source="design/economy.md" data-updated="2026-09-10T16:44Z">
+  <h2>Economy</h2>
+  <p class="source"><code>design/economy.md</code> <time class="updated" datetime="2026-09-10T16:44Z">2026-09-10T16:44Z</time></p>
+  <h3 id="economy-nodes">Nodes</h3>
+  <article id="node-ore-vein" class="record economy-node" data-source="design/economy.md#ore-vein">
+    <h4>Ore Vein</h4>
+    <p class="source">node <code>ore-vein</code></p>
+    <dl class="fields">
+      <dt>Type</dt>
+      <dd>source</dd>
+      <dt>Value progression</dt>
+      <dd class="unrecorded">none recorded</dd>
+    </dl>
+  </article>
+  <article id="node-ingot-pool" class="record economy-node" data-source="design/economy.md#ingot-pool">
+    <h4>Ingot Pool</h4>
+    <p class="source">node <code>ingot-pool</code></p>
+    <dl class="fields">
+      <dt>Type</dt>
+      <dd>pool</dd>
+      <dt>Value progression</dt>
+      <dd>model power; coefficients 1.8, 1.42; domain 1-20; fit 0.987</dd>
+    </dl>
+    <div class="body">
+      <p>The one pool every forged weapon is paid for out of. Its cost-by-tier curve is fitted rather than chosen — see <code>scripts/curve-fit.sh</code>. What the player spends it on is <a href="#mechanic-combat">combat</a>.</p>
+      <h6>Open question</h6>
+      <p>Whether ingots stack per alloy or share one pool is undecided.</p>
+    </div>
+    <details class="citations">
+      <summary>Citations <span class="citations-count">1</span></summary>
+      <p><a href="#mechanic-combat"><code>combat</code></a></p>
+    </details>
+  </article>
+  <article id="node-forge" class="record economy-node" data-source="design/economy.md#forge">
+    <h4>Forge</h4>
+    <p class="source">node <code>forge</code></p>
+    <dl class="fields">
+      <dt>Type</dt>
+      <dd>converter</dd>
+      <dt>Value progression</dt>
+      <dd class="unrecorded">none recorded</dd>
+    </dl>
+  </article>
+  <article id="node-gold" class="record economy-node" data-source="design/economy.md#gold">
+    <h4>Gold</h4>
+    <p class="source">node <code>gold</code></p>
+    <dl class="fields">
+      <dt>Type</dt>
+      <dd>pool</dd>
+      <dt>Value progression</dt>
+      <dd class="unrecorded">none recorded</dd>
+    </dl>
+  </article>
+  <article id="node-mining-xp" class="record economy-node" data-source="design/economy.md#mining-xp">
+    <h4>Mining Xp</h4>
+    <p class="source">node <code>mining-xp</code></p>
+    <dl class="fields">
+      <dt>Type</dt>
+      <dd>pool</dd>
+      <dt>Value progression</dt>
+      <dd class="unrecorded">none recorded</dd>
+    </dl>
+  </article>
+  <article id="node-smith-xp" class="record economy-node" data-source="design/economy.md#smith-xp">
+    <h4>Smith Xp</h4>
+    <p class="source">node <code>smith-xp</code></p>
+    <dl class="fields">
+      <dt>Type</dt>
+      <dd>pool</dd>
+      <dt>Value progression</dt>
+      <dd class="unrecorded">none recorded</dd>
+    </dl>
+  </article>
+  <h3 id="economy-families">Families</h3>
+  <article id="family-skill-xp" class="record economy-family" data-source="design/economy.md#@skill-xp">
+    <h4>Skill Xp</h4>
+    <p class="source">family <code>@skill-xp</code></p>
+    <dl class="fields">
+      <dt>Type</dt>
+      <dd>pool</dd>
+      <dt>Members</dt>
+      <dd><a href="#node-mining-xp"><code>mining-xp</code></a>, <a href="#node-smith-xp"><code>smith-xp</code></a></dd>
+    </dl>
+    <div class="body">
+      <p>Two named skills, <code>mining-xp</code> and <code>smith-xp</code>, each its own node with its own progression — never a shared &quot;crafting&quot; track. Only the member matching the action actually applies, which is what <a href="#connection-skill-rate">skill-rate</a> records.</p>
+    </div>
+    <p class="declarations-title">Declarations over this family</p>
+    <ul class="declarations">
+      <li id="connection-xp-gain" class="economy-connection declaration" data-source="design/economy.md#xp-gain">
+        <code class="conn-id">xp-gain</code>
+        <span class="edge"><a href="#node-ore-vein">ore-vein</a> → <a href="#family-skill-xp">@skill-xp</a></span>
+        <span class="meta">kind: resource · resource: xp</span>
+        <span class="expansion">expands to 2 connections · all live simultaneously</span>
+      </li>
+      <li id="connection-skill-rate" class="economy-connection declaration" data-source="design/economy.md#skill-rate">
+        <code class="conn-id">skill-rate</code>
+        <span class="edge"><a href="#family-skill-xp">@skill-xp</a> → <a href="#connection-mine">#mine</a></span>
+        <span class="meta">kind: state · subtype: label-modifier</span>
+        <span class="expansion">expands to 2 connections · one-of-family: exactly one live at a time</span>
+        <details class="citations">
+          <summary>Citations <span class="citations-count">1</span></summary>
+          <p><a href="#family-skill-xp"><code>@skill-xp</code></a></p>
+        </details>
+      </li>
+    </ul>
+    <details class="citations">
+      <summary>Citations <span class="citations-count">1</span></summary>
+      <p><a href="#mechanic-combat"><code>combat</code></a></p>
+    </details>
+  </article>
+  <h3 id="economy-connections">Connections</h3>
+  <article id="connection-mine" class="record economy-connection kind-resource" data-source="design/economy.md#mine">
+    <h4>Mine</h4>
+    <p class="source">connection <code>mine</code></p>
+    <dl class="fields">
+      <dt>From</dt>
+      <dd><a href="#node-ore-vein"><code>ore-vein</code></a></dd>
+      <dt>To</dt>
+      <dd><a href="#node-ingot-pool"><code>ingot-pool</code></a></dd>
+      <dt>Kind</dt>
+      <dd>resource</dd>
+      <dt>Rate</dt>
+      <dd>3</dd>
+    </dl>
+  </article>
+  <article id="connection-smelt" class="record economy-connection kind-resource" data-source="design/economy.md#smelt">
+    <h4>Smelt</h4>
+    <p class="source">connection <code>smelt</code></p>
+    <dl class="fields">
+      <dt>From</dt>
+      <dd><a href="#node-ingot-pool"><code>ingot-pool</code></a></dd>
+      <dt>To</dt>
+      <dd><a href="#node-forge"><code>forge</code></a></dd>
+      <dt>Kind</dt>
+      <dd>resource</dd>
+      <dt>Rate</dt>
+      <dd class="unrecorded">none recorded</dd>
+      <dt>Resource</dt>
+      <dd>ore</dd>
+    </dl>
+  </article>
+  <article id="connection-sale" class="record economy-connection kind-resource" data-source="design/economy.md#sale">
+    <h4>Sale</h4>
+    <p class="source">connection <code>sale</code></p>
+    <dl class="fields">
+      <dt>From</dt>
+      <dd><a href="#node-forge"><code>forge</code></a></dd>
+      <dt>To</dt>
+      <dd><a href="#node-gold"><code>gold</code></a></dd>
+      <dt>Kind</dt>
+      <dd>resource</dd>
+      <dt>Rate</dt>
+      <dd>5</dd>
+      <dt>Resource</dt>
+      <dd>gold</dd>
+    </dl>
+  </article>
+  <article id="connection-forge-gate" class="record economy-connection kind-state" data-source="design/economy.md#forge-gate">
+    <h4>Forge Gate</h4>
+    <p class="source">connection <code>forge-gate</code></p>
+    <dl class="fields">
+      <dt>From</dt>
+      <dd><a href="#node-gold"><code>gold</code></a></dd>
+      <dt>To</dt>
+      <dd><a href="#node-forge"><code>forge</code></a></dd>
+      <dt>Kind</dt>
+      <dd>state</dd>
+      <dt>Subtype</dt>
+      <dd class="unrecorded">none recorded</dd>
+      <dt>Rate</dt>
+      <dd class="unrecorded">none recorded</dd>
+    </dl>
+  </article>
+</section>
+
+<section id="competitive-differentiation" class="gdd-section comp-analysis" data-source="design/comp-analysis.md" data-updated="2026-09-10T14:02Z">
+  <h2>Competitive Differentiation</h2>
+  <p class="source"><code>design/comp-analysis.md</code> <time class="updated" datetime="2026-09-10T14:02Z">2026-09-10T14:02Z</time></p>
+  <div class="body">
+    <p>Forge &amp; Foray differentiates on loop length: its competitors all separate crafting from combat across sessions, where <a href="#concept">concept</a> closes both inside one fifteen-minute run. Where it currently looks like more of the same is its rarity-tier itemization, which every competitor below also ships.</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Competitor</th>
+            <th>Loop length</th>
+            <th>Crafting is</th>
+            <th>Source</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Anvilfall</td>
+            <td>~2 hours</td>
+            <td>a separate mode</td>
+            <td><code>docs/research/anvilfall-2026-09-01.md</code></td>
+          </tr>
+          <tr>
+            <td>Deepdelve</td>
+            <td>~45 minutes</td>
+            <td>a vendor menu</td>
+            <td><code>docs/research/deepdelve-2026-09-01.md</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>What the concept does that they don't:</p>
+    <ul>
+      <li>Closes crafting and combat inside a single run.</li>
+      <li>Makes the forge the run's <em>destination</em>, not its lobby.</li>
+      <li>Prices every weapon out of one visible pool.</li>
+    </ul>
+    <h3 class="open-questions">Open Questions</h3>
+    <p>Whether the co-op runs <a href="#tech-netcode">netcode</a> is deciding are a differentiator at all is unsettled — one competitor above may ship them first.</p>
+  </div>
+  <details class="citations">
+    <summary>Citations <span class="citations-count">2</span></summary>
+    <p><a href="#concept"><code>concept</code></a>, <a href="#pillar-zero-grind"><code>zero-grind</code></a></p>
+  </details>
+</section>
+
+<section id="technical-design" class="gdd-section tech" data-source="design/tech/">
+  <h2>Technical Design</h2>
+  <article id="tech-netcode" class="record tech-record status-open scope-cross-cutting" data-source="design/tech/netcode.md" data-updated="2026-09-11T11:00Z">
+    <h3>Netcode</h3>
+    <p class="source"><code>design/tech/netcode.md</code> <time class="updated" datetime="2026-09-11T11:00Z">2026-09-11T11:00Z</time></p>
+    <p class="record-title">How do two players share one dungeon run?</p>
+    <p class="open-note">Open — not yet decided.</p>
+    <dl class="fields">
+      <dt>Status</dt>
+      <dd>open</dd>
+      <dt>Category</dt>
+      <dd>networking-topology</dd>
+      <dt>Scope</dt>
+      <dd>cross-cutting</dd>
+      <dt>Drivers</dt>
+      <dd><a href="#concept"><code>design/concept.md</code></a>, <a href="#mechanic-combat"><code>design/mechanics/combat.md</code></a>, <a href="#connection-mine"><code>economy:#mine</code></a></dd>
+    </dl>
+    <div class="body">
+      <h4>Context</h4>
+      <p>The concept commits to short co-op runs, and combat resolves per swing, so a hit that lands on one client and not the other is visible immediately.</p>
+      <h4>Options considered</h4>
+      <ul>
+        <li>Lockstep: cheap bandwidth, brittle under packet loss.</li>
+        <li>Dedicated authoritative server: predictable, costs hosting.</li>
+        <li>Host-migrating listen server: no hosting bill, ugly migrations.</li>
+      </ul>
+    </div>
+    <details class="citations">
+      <summary>Citations <span class="citations-count">2</span></summary>
+      <p><a href="#mechanic-ranged"><code>ranged</code></a>, <a href="#competitive-differentiation"><code>comp-analysis</code></a></p>
+    </details>
+  </article>
+  <article id="tech-save-format" class="record tech-record status-accepted scope-contained" data-source="design/tech/save-format.md" data-updated="2026-09-04T07:45Z">
+    <h3>Save Format</h3>
+    <p class="source"><code>design/tech/save-format.md</code> <time class="updated" datetime="2026-09-04T07:45Z">2026-09-04T07:45Z</time></p>
+    <p class="record-title">Saves are a single append-only JSON document per guild.</p>
+    <dl class="fields">
+      <dt>Status</dt>
+      <dd>accepted</dd>
+      <dt>Category</dt>
+      <dd>persistence</dd>
+      <dt>Scope</dt>
+      <dd>contained</dd>
+      <dt>Drivers</dt>
+      <dd class="unrecorded">none</dd>
+    </dl>
+    <div class="body">
+      <h4>Context</h4>
+      <p>There is no team and no budget for a database, and the only constraint is that a save must survive a crash mid-run.</p>
+      <h4>Decision</h4>
+      <p>One append-only JSON document per guild, fsynced at each run boundary.</p>
+      <h4>Consequences</h4>
+      <p>Commits to a bounded save size. Forecloses partial loads, so a very large roster will pay the whole parse cost at launch.</p>
+      <h4>Assumptions to verify</h4>
+      <ul>
+        <li>A 10 MB save parses in under 100 ms on the target hardware.</li>
+      </ul>
+    </div>
+  </article>
+  <p class="superseded-note"><code>old-netcode</code> superseded by <code>netcode</code>.</p>
+</section>
+
+<section id="supporting-documents" class="gdd-section supporting" data-source="game-gdd">
+  <h2>Supporting Documents Not Rendered</h2>
+  <p>A GDD practice commonly names nine supporting-document types. This file renders the core GDD — the ninth — as a document of its own, and folds one more into it. The remaining seven are named here, with the reason each is absent, so a reader can tell a deliberate omission from a forgotten one.</p>
+  <ul class="supporting-list">
+    <li><strong>Technical Design Document</strong> — not absent, and not a separate document: at solo and small-team scale technical design folds into the GDD, so it renders above as <code>## Technical Design</code>, from the technical decision records <code>game-tech</code> writes, rather than as a standalone <code>design/tdd.md</code>.</li>
+    <li><strong>Concept Document</strong> — out of scope for this skillset, not merely undone: the concept statement <code>game-pillars</code> writes already serves this role, and it renders above as <code>## Concept</code>.</li>
+    <li><strong>Marketing &amp; Business Plan</strong> — out of scope for this skillset: a business concern outside this skillset's design-quality scope.</li>
+    <li><strong>Art Bible</strong> — absent for a grounding reason: the schema this skillset builds — pillars, mechanic entries, the economy graph, technical decision records — carries no visual data to render one from.</li>
+    <li><strong>Story/Narrative Bible</strong> — absent for a grounding reason: the same schema carries no narrative data to render one from.</li>
+    <li><strong>Level Design Document</strong> — absent for a grounding reason: the same schema carries no level or spatial data to render one from.</li>
+    <li><strong>Sound Design Document</strong> — absent for a grounding reason: the same schema carries no audio data to render one from.</li>
+    <li><strong>Test Plan</strong> — absent for a grounding reason: the same schema carries no QA data to render one from.</li>
+  </ul>
+  <p>Each of the five grounding-reason documents above is a documented future extension, not a silent omission — rendering one without the data it needs would mean inventing content rather than deriving it.</p>
+</section>
+</main>
+</div>
+<script>
+(function () {
+  "use strict";
+  var toc = document.querySelector("nav.toc");
+  if (!toc) { return; }
+  var targets = [];
+  var links = toc.querySelectorAll('a[href^="#"]');
+  for (var i = 0; i < links.length; i++) {
+    var id = decodeURIComponent(links[i].getAttribute("href").slice(1));
+    var el = document.getElementById(id);
+    if (el) { targets.push({ el: el, link: links[i] }); }
+  }
+  if (!targets.length) { return; }
+  targets.sort(function (a, b) {
+    return a.el.compareDocumentPosition(b.el) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+  });
+  var active = null;
+  function parentLink(link) {
+    var li = link.closest(".toc-list > li");
+    return li ? li.querySelector(":scope > a") : null;
+  }
+  function setActive(target) {
+    if (target === active) { return; }
+    var parent;
+    if (active) {
+      active.link.classList.remove("is-active");
+      active.link.removeAttribute("aria-current");
+      parent = parentLink(active.link);
+      if (parent) { parent.classList.remove("is-active-parent"); }
+    }
+    active = target;
+    active.link.classList.add("is-active");
+    active.link.setAttribute("aria-current", "true");
+    parent = parentLink(active.link);
+    if (parent && parent !== active.link) { parent.classList.add("is-active-parent"); }
+    if (toc.scrollHeight > toc.clientHeight) {
+      var linkBox = active.link.getBoundingClientRect();
+      var tocBox = toc.getBoundingClientRect();
+      var margin = 48;
+      if (linkBox.top < tocBox.top + margin || linkBox.bottom > tocBox.bottom - margin) {
+        toc.scrollTop += linkBox.top - (tocBox.top + tocBox.height / 2);
+      }
+    }
+  }
+  function update() {
+    var offset = Math.round(window.innerHeight * 0.25);
+    var current = targets[0];
+    for (var i = 0; i < targets.length; i++) {
+      if (targets[i].el.getBoundingClientRect().top <= offset) { current = targets[i]; }
+      else { break; }
+    }
+    var doc = document.documentElement;
+    if (window.innerHeight + window.pageYOffset >= doc.scrollHeight - 2) {
+      current = targets[targets.length - 1];
+    }
+    setActive(current);
+  }
+  var scheduled = false;
+  function schedule() {
+    if (scheduled) { return; }
+    scheduled = true;
+    window.requestAnimationFrame(function () { scheduled = false; update(); });
+  }
+  window.addEventListener("scroll", schedule, { passive: true });
+  window.addEventListener("resize", schedule);
+  window.addEventListener("hashchange", schedule);
+  update();
+})();
+(function () {
+  "use strict";
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  var stamps = document.querySelectorAll("time.updated[datetime]");
+  for (var i = 0; i < stamps.length; i++) {
+    var raw = stamps[i].getAttribute("datetime");
+    var when = new Date(raw);
+    if (isNaN(when.getTime())) { continue; }
+    var local = when.getFullYear() + "-" + pad(when.getMonth() + 1) + "-" +
+      pad(when.getDate()) + " " + pad(when.getHours()) + ":" + pad(when.getMinutes());
+    var zone = "";
+    try {
+      var parts = new Intl.DateTimeFormat(undefined, {
+        timeZoneName: "short"
+      }).formatToParts(when);
+      for (var j = 0; j < parts.length; j++) {
+        if (parts[j].type === "timeZoneName") { zone = parts[j].value; }
+      }
+    } catch (err) { zone = ""; }
+    stamps[i].textContent = zone ? local + " " + zone : local;
+    stamps[i].title = raw;
+  }
+})();
+</script>
+</body>
+</html>

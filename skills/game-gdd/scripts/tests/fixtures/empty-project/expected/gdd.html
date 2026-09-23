@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Game Design Document</title>
+<link rel="stylesheet" href="gdd.css">
+</head>
+<body>
+<div class="gdd-layout">
+<nav class="toc" aria-label="Table of contents">
+  <p class="toc-title">Contents</p>
+  <ol class="toc-list">
+    <li><a href="#concept">Concept</a></li>
+    <li><a href="#design-pillars">Design Pillars</a></li>
+    <li><a href="#mechanics">Mechanics</a></li>
+    <li><a href="#economy">Economy</a></li>
+    <li><a href="#competitive-differentiation">Competitive Differentiation</a></li>
+    <li><a href="#technical-design">Technical Design</a></li>
+    <li><a href="#supporting-documents">Supporting Documents Not Rendered</a></li>
+  </ol>
+</nav>
+<main class="gdd">
+<header class="gdd-header">
+  <p class="gdd-kicker">Game Design Document</p>
+  <h1>Game Design Document</h1>
+  <p class="gdd-note">Rendered by <code>game-gdd</code> from the structured records under <code>design/</code>. Edit those records and re-render; edits made here do not survive the next render.</p>
+</header>
+
+<section id="concept" class="gdd-section concept absent" data-source="design/concept.md">
+  <h2>Concept</h2>
+  <p class="absent">No concept statement has been recorded yet — <code>design/concept.md</code> does not exist. Run <code>game-pillars</code> to write one.</p>
+</section>
+
+<section id="design-pillars" class="gdd-section pillars absent" data-source="design/pillars/">
+  <h2>Design Pillars</h2>
+  <p class="absent">No approved design pillar has been recorded yet — <code>design/pillars/</code> holds no record with <code>status: approved</code>. Run <code>game-pillars</code> to write one.</p>
+</section>
+
+<section id="mechanics" class="gdd-section mechanics absent" data-source="design/mechanics/">
+  <h2>Mechanics</h2>
+  <p class="absent">No mechanic entry has been recorded yet — <code>design/mechanics/</code> holds no records. Run <code>game-mechanics</code> to write one.</p>
+</section>
+
+<section id="economy" class="gdd-section economy absent" data-source="design/economy.md">
+  <h2>Economy</h2>
+  <p class="absent">No economy graph has been recorded yet — <code>design/economy.md</code> does not exist. Run <code>game-mechanics</code> to write one.</p>
+</section>
+
+<section id="competitive-differentiation" class="gdd-section comp-analysis absent" data-source="design/comp-analysis.md">
+  <h2>Competitive Differentiation</h2>
+  <p class="absent">No differentiation statement has been recorded yet — <code>design/comp-analysis.md</code> does not exist. Run <code>game-comp-analysis</code> to write one.</p>
+</section>
+
+<section id="technical-design" class="gdd-section tech absent" data-source="design/tech/">
+  <h2>Technical Design</h2>
+  <p class="absent">No open or accepted technical decision has been recorded yet — <code>design/tech/</code> holds no record with <code>status: open</code> or <code>status: accepted</code>. Run <code>game-tech</code> to write one.</p>
+</section>
+
+<section id="supporting-documents" class="gdd-section supporting" data-source="game-gdd">
+  <h2>Supporting Documents Not Rendered</h2>
+  <p>A GDD practice commonly names nine supporting-document types. This file renders the core GDD — the ninth — as a document of its own, and folds one more into it. The remaining seven are named here, with the reason each is absent, so a reader can tell a deliberate omission from a forgotten one.</p>
+  <ul class="supporting-list">
+    <li><strong>Technical Design Document</strong> — not absent, and not a separate document: at solo and small-team scale technical design folds into the GDD, so it renders above as <code>## Technical Design</code>, from the technical decision records <code>game-tech</code> writes, rather than as a standalone <code>design/tdd.md</code>.</li>
+    <li><strong>Concept Document</strong> — out of scope for this skillset, not merely undone: the concept statement <code>game-pillars</code> writes already serves this role, and it renders above as <code>## Concept</code>.</li>
+    <li><strong>Marketing &amp; Business Plan</strong> — out of scope for this skillset: a business concern outside this skillset's design-quality scope.</li>
+    <li><strong>Art Bible</strong> — absent for a grounding reason: the schema this skillset builds — pillars, mechanic entries, the economy graph, technical decision records — carries no visual data to render one from.</li>
+    <li><strong>Story/Narrative Bible</strong> — absent for a grounding reason: the same schema carries no narrative data to render one from.</li>
+    <li><strong>Level Design Document</strong> — absent for a grounding reason: the same schema carries no level or spatial data to render one from.</li>
+    <li><strong>Sound Design Document</strong> — absent for a grounding reason: the same schema carries no audio data to render one from.</li>
+    <li><strong>Test Plan</strong> — absent for a grounding reason: the same schema carries no QA data to render one from.</li>
+  </ul>
+  <p>Each of the five grounding-reason documents above is a documented future extension, not a silent omission — rendering one without the data it needs would mean inventing content rather than deriving it.</p>
+</section>
+</main>
+</div>
+<script>
+(function () {
+  "use strict";
+  var toc = document.querySelector("nav.toc");
+  if (!toc) { return; }
+  var targets = [];
+  var links = toc.querySelectorAll('a[href^="#"]');
+  for (var i = 0; i < links.length; i++) {
+    var id = decodeURIComponent(links[i].getAttribute("href").slice(1));
+    var el = document.getElementById(id);
+    if (el) { targets.push({ el: el, link: links[i] }); }
+  }
+  if (!targets.length) { return; }
+  targets.sort(function (a, b) {
+    return a.el.compareDocumentPosition(b.el) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+  });
+  var active = null;
+  function parentLink(link) {
+    var li = link.closest(".toc-list > li");
+    return li ? li.querySelector(":scope > a") : null;
+  }
+  function setActive(target) {
+    if (target === active) { return; }
+    var parent;
+    if (active) {
+      active.link.classList.remove("is-active");
+      active.link.removeAttribute("aria-current");
+      parent = parentLink(active.link);
+      if (parent) { parent.classList.remove("is-active-parent"); }
+    }
+    active = target;
+    active.link.classList.add("is-active");
+    active.link.setAttribute("aria-current", "true");
+    parent = parentLink(active.link);
+    if (parent && parent !== active.link) { parent.classList.add("is-active-parent"); }
+    if (toc.scrollHeight > toc.clientHeight) {
+      var linkBox = active.link.getBoundingClientRect();
+      var tocBox = toc.getBoundingClientRect();
+      var margin = 48;
+      if (linkBox.top < tocBox.top + margin || linkBox.bottom > tocBox.bottom - margin) {
+        toc.scrollTop += linkBox.top - (tocBox.top + tocBox.height / 2);
+      }
+    }
+  }
+  function update() {
+    var offset = Math.round(window.innerHeight * 0.25);
+    var current = targets[0];
+    for (var i = 0; i < targets.length; i++) {
+      if (targets[i].el.getBoundingClientRect().top <= offset) { current = targets[i]; }
+      else { break; }
+    }
+    var doc = document.documentElement;
+    if (window.innerHeight + window.pageYOffset >= doc.scrollHeight - 2) {
+      current = targets[targets.length - 1];
+    }
+    setActive(current);
+  }
+  var scheduled = false;
+  function schedule() {
+    if (scheduled) { return; }
+    scheduled = true;
+    window.requestAnimationFrame(function () { scheduled = false; update(); });
+  }
+  window.addEventListener("scroll", schedule, { passive: true });
+  window.addEventListener("resize", schedule);
+  window.addEventListener("hashchange", schedule);
+  update();
+})();
+(function () {
+  "use strict";
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  var stamps = document.querySelectorAll("time.updated[datetime]");
+  for (var i = 0; i < stamps.length; i++) {
+    var raw = stamps[i].getAttribute("datetime");
+    var when = new Date(raw);
+    if (isNaN(when.getTime())) { continue; }
+    var local = when.getFullYear() + "-" + pad(when.getMonth() + 1) + "-" +
+      pad(when.getDate()) + " " + pad(when.getHours()) + ":" + pad(when.getMinutes());
+    var zone = "";
+    try {
+      var parts = new Intl.DateTimeFormat(undefined, {
+        timeZoneName: "short"
+      }).formatToParts(when);
+      for (var j = 0; j < parts.length; j++) {
+        if (parts[j].type === "timeZoneName") { zone = parts[j].value; }
+      }
+    } catch (err) { zone = ""; }
+    stamps[i].textContent = zone ? local + " " + zone : local;
+    stamps[i].title = raw;
+  }
+})();
+</script>
+</body>
+</html>

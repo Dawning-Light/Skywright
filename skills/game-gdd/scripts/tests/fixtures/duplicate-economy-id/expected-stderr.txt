@@ -1,0 +1,3 @@
+design/economy.md
+node id `ore-vein` is declared more than once
+game-mechanics
