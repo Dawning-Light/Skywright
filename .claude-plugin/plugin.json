@@ -1,0 +1,19 @@
+{
+  "name": "skywright",
+  "description": "Eight skills that elicit a game's design as structured data and render it as a GDD — pillars, competitor differentiation, mechanics and economy, technical decisions, and adversarial critique — plus the bundled research skill two of them delegate to.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Dawning Light",
+    "email": "austin@dawninglight.gg"
+  },
+  "homepage": "https://github.com/Dawning-Light/Skywright",
+  "repository": "https://github.com/Dawning-Light/Skywright",
+  "license": "MIT",
+  "keywords": [
+    "game-design",
+    "gdd",
+    "skills",
+    "game-development",
+    "design-documentation"
+  ]
+}

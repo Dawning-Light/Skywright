@@ -1,0 +1,16 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "skywright",
+  "description": "A game-design skillset for coding agents: structured design data in, a rendered GDD out.",
+  "owner": {
+    "name": "Dawning Light",
+    "email": "austin@dawninglight.gg"
+  },
+  "plugins": [
+    {
+      "name": "skywright",
+      "description": "Eight skills that elicit a game's design as structured data and render it as a GDD — pillars, competitor differentiation, mechanics and economy, technical decisions, and adversarial critique — plus the bundled research skill two of them delegate to.",
+      "source": "./"
+    }
+  ]
+}
