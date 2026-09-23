@@ -163,8 +163,8 @@ that run only, not future runs:
 wrong date also breaks the collision check below):
 
 - Create the `docs/research/` folder if it doesn't exist.
-- Tracked in git, not gitignored — a durable artifact, same tier as
-  `docs/traverse/specs/` and `plans/` in this repo.
+- Tracked in git, not gitignored — a durable artifact, not scratch output to
+  be cleaned up.
 - Docs accumulate indefinitely; never prune or overwrite a prior run's doc.
 - Naming collision (same slug+date, e.g. two runs on the same topic same day):
   append a numeric suffix (`-2`, `-3`, ...) rather than overwriting.
