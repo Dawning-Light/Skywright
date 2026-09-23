@@ -1,0 +1,5 @@
+design/pillars/tight-loop.md
+`[[pillar:no-such-pillar]]` resolves to nothing
+no pillar record named `no-such-pillar`
+game-pillars
+game-authoring

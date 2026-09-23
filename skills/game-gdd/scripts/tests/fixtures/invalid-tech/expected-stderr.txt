@@ -1,0 +1,3 @@
+design/tech/render-target.md
+`status: rejected` is outside the closed set
+game-tech
