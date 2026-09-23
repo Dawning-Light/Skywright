@@ -41,4 +41,4 @@ Everything these skills produce lives in **your** game project, under its own
 
 ## License
 
-MIT
+AGPL-3.0
