@@ -8,7 +8,7 @@ description: Use when a game project's design needs a technical decision made an
 Proposes, from a game project's existing design data, the technical decisions
 that data calls for, and records each decision the owner makes as its own
 file inside that project's `design/tech/` directory. This is the fourth of
-six independent Orrery skills for game design (`game-pillars`,
+six independent skills for game design (`game-pillars`,
 `game-comp-analysis`, `game-mechanics`, `game-tech`, `game-gdd`,
 `game-critique`). It defines exactly one record shape, the **technical
 decision record**, and every other skill that reads one (`game-gdd`,

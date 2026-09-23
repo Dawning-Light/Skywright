@@ -7,7 +7,7 @@ description: Use when a game project needs to know how its concept differs from 
 
 Turns competitive analysis into a repeatable procedure: identify competitors,
 research each one, and map the findings into a differentiation statement and a
-set of candidate design pillars. This is one of six independent Orrery
+set of candidate design pillars. This is one of six independent
 skills for game design (`game-pillars`, `game-comp-analysis`,
 `game-mechanics`, `game-tech`, `game-gdd`, `game-critique`). `game-pillars` is the sole
 definition of the pillar record shape and the `design/pillars/<slug>.md`

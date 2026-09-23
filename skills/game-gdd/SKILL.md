@@ -8,7 +8,7 @@ description: Use when a game project's design data needs upkeep rather than auth
 Renders the core Game Design Document as a **view** onto structured data that
 already exists elsewhere in the project, never as a document authored or
 hand-maintained in its own right. This is the fifth of six independent
-Orrery skills for game design (`game-pillars`, `game-comp-analysis`,
+skills for game design (`game-pillars`, `game-comp-analysis`,
 `game-mechanics`, `game-tech`, `game-gdd`, `game-critique`). It defines no record shape of
 its own — every field it reads is defined once, by the skill that writes it,
 and this file names that skill rather than restating the field.

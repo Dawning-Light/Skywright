@@ -7,7 +7,7 @@ description: Use when a game project has no concept statement or design pillars 
 
 Elicits, from the owner, a short concept statement and 2-4 design pillars for
 a videogame project, and writes each as its own file inside that project's
-`design/` directory. This is one of six independent Orrery skills for
+`design/` directory. This is one of six independent skills for
 game design (`game-pillars`, `game-comp-analysis`, `game-mechanics`,
 `game-tech`, `game-gdd`, `game-critique`); this file defines the concept-statement and
 pillar-record shapes once, and every other skill that reads or writes either

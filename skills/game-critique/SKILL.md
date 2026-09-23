@@ -6,7 +6,7 @@ description: Use when a game project's design data or rendered GDD needs adversa
 # Game Critique
 
 Reviews a game's design by dispatching independent critic personas against it.
-This is the sixth of six independent Orrery skills for game design
+This is the sixth of six independent skills for game design
 (`game-pillars`, `game-comp-analysis`, `game-mechanics`, `game-tech`,
 `game-gdd`, `game-critique`). It defines no design-data shape of its own —
 every record it reads is defined once, by the skill that writes it, and this
