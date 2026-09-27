@@ -372,6 +372,13 @@ def check_implementation(record, because, skill):
         )
 
 
+def shown_implementation(record):
+    """The ``implementation`` value a technical decision record's caption
+    shows: its own while ``accepted``, the one status that requires and checks
+    it, and nothing otherwise."""
+    return record["implementation"] if record["status"] == "accepted" else ""
+
+
 # ---------------------------------------------------------------------------
 # Shared render data
 # ---------------------------------------------------------------------------
@@ -932,15 +939,19 @@ def build_markdown(data):
     return text.rstrip("\n") + "\n"
 
 
-def md_caption(text, updated=""):
-    """The addressing caption under a heading, with `updated` when present.
+def md_caption(text, updated="", implementation=""):
+    """The addressing caption under a heading, with `updated` and
+    `implementation` when the record carries them.
 
     The timestamp is the record's raw UTC string: a plain-text file has no way
     to know the reader's timezone, so it is never converted.
     """
+    parts = ["Source: %s" % text]
     if updated:
-        return "*Source: %s · Updated: %s*" % (text, updated)
-    return "*Source: %s*" % text
+        parts.append("Updated: %s" % updated)
+    if implementation:
+        parts.append("Implementation: %s" % implementation)
+    return "*%s*" % " · ".join(parts)
 
 
 def md_concept(data):
@@ -980,7 +991,9 @@ def md_mechanics(data):
         return out
     for mech in mechanics:
         out.append("### %s" % mech["title"])
-        out.append(md_caption("`%s`" % mech["rel"], mech["updated"]))
+        out.append(
+            md_caption("`%s`" % mech["rel"], mech["updated"], mech["implementation"])
+        )
         parent = ref_code(mech["parent"]) if mech["parent"] else "none"
         children = code_list(mech["children"]) if mech["children"] else "none"
         part_of = ref_code(mech["part_of"]) if mech["part_of"] else "none"
@@ -1123,7 +1136,11 @@ def md_tech(data):
         out.append(ABSENT_TECH)
     for record in live:
         out.append("### %s" % record["name"])
-        out.append(md_caption("`%s`" % record["rel"], record["updated"]))
+        out.append(
+            md_caption(
+                "`%s`" % record["rel"], record["updated"], shown_implementation(record)
+            )
+        )
         if record["title"]:
             out.append(record["title"])
         if record["status"] == "open":
@@ -1217,6 +1234,9 @@ def _inline_plain(text, ctx):
 
 OPEN_QUESTIONS = "Open Questions"
 
+# The body headings the stylesheet knows by name, and the class each gets.
+HEADING_CLASSES = {OPEN_QUESTIONS: "open-questions", NOT_YET_BUILT: "not-yet-built"}
+
 _HR_RE = re.compile(r"^\s*(?:(?:\*\s*){3,}|(?:-\s*){3,}|(?:_\s*){3,})$")
 _BULLET_RE = re.compile(r"^(\s*)[-*]\s+(.*)$")
 _ORDERED_RE = re.compile(r"^(\s*)\d+[.)]\s+(.*)$")
@@ -1256,9 +1276,10 @@ def _md_to_html(text, demote, ctx):
         if heading:
             level = min(6, len(heading.group(1)) + demote)
             label = heading.group(2).strip()
-            # The one heading text the stylesheet knows by name: every shape
-            # that has a home for unsettled content calls it the same thing.
-            cls = ' class="open-questions"' if label == OPEN_QUESTIONS else ""
+            # The heading texts the stylesheet knows by name: every shape with
+            # a home for unsettled or unbuilt content calls it the same thing.
+            cls_name = HEADING_CLASSES.get(label)
+            cls = ' class="%s"' % cls_name if cls_name else ""
             out.append(
                 "<h%d%s>%s</h%d>" % (level, cls, inline(label, ctx), level)
             )
@@ -1768,17 +1789,24 @@ def source_attrs(source, updated=""):
     return attrs
 
 
-def source_caption(inner_html, updated=""):
+def source_caption(inner_html, updated="", implementation=""):
     """The `<p class="source">` caption under a heading.
 
     ``updated`` rides along as a `<time>` holding the raw UTC string, which is
     what a reader without JavaScript sees; the inline script at the end of the
     document rewrites the text to local time and leaves `datetime` alone.
+    ``implementation`` follows it as a `<span>` classed by value, so the
+    stylesheet can set `designed` and `partial` apart from `built`.
     """
     if updated:
         inner_html += ' <time class="updated" datetime="%s">%s</time>' % (
             h(updated),
             h(updated),
+        )
+    if implementation:
+        inner_html += (
+            ' <span class="implementation implementation-%s">%s</span>'
+            % (h(implementation), h(implementation))
         )
     return '<p class="source">%s</p>' % inner_html
 
@@ -1875,7 +1903,9 @@ def _html_mechanic(out, pad, mech, ctx):
     out.add(pad + 2, "<h3>%s</h3>" % h(mech["title"]))
     out.add(
         pad + 2,
-        source_caption("<code>%s</code>" % h(mech["rel"]), mech["updated"]),
+        source_caption(
+            "<code>%s</code>" % h(mech["rel"]), mech["updated"], mech["implementation"]
+        ),
     )
     dl_open(out, pad + 2)
     if mech["parent"]:
@@ -2158,7 +2188,11 @@ def html_tech(out, data, ctx):
         out.add(4, "<h3>%s</h3>" % h(record["name"]))
         out.add(
             4,
-            source_caption("<code>%s</code>" % h(record["rel"]), record["updated"]),
+            source_caption(
+                "<code>%s</code>" % h(record["rel"]),
+                record["updated"],
+                shown_implementation(record),
+            ),
         )
         if record["title"]:
             out.add(4, '<p class="record-title">%s</p>' % h(record["title"]))

@@ -21,6 +21,10 @@
      .updated               the <time> in that caption holding the record's
                             `updated` stamp; the raw UTC string in the markup,
                             rewritten to local time by the inline script
+     .implementation        the <span> after it holding a mechanic's or
+                            accepted decision's `implementation` value, with
+                            one class per value: .implementation-designed
+                            .implementation-partial .implementation-built
      .fields                <dl> of a record's frontmatter fields
      .body                  the record's own prose
      .citations             the "Citations" disclosure a record ends with,
@@ -29,6 +33,8 @@
      .citations-count       the quiet count badge inside the <summary>
      .open-questions        a body heading whose text is exactly "Open
                             Questions" — the shape's home for unsettled content
+     .not-yet-built         a body heading whose text is exactly "Not yet
+                            built" — what a `partial` record's code lacks
      .absent / .open-note / .candidate-note / .superseded-note
                             the non-record states a successful render can show
      .toc a.is-active       the TOC entry for what is on screen (set by the
@@ -103,6 +109,8 @@
   --c-absent: #868480;
   --c-candidate: #ffb454;
   --c-superseded: #868480;
+  --c-designed: #8fb0d9;    /* intent with no code behind it yet */
+  --c-partial: #d9b36c;     /* part-built */
 
   /* Type */
   --font-body: "Inter", "Inter Variable", ui-sans-serif, system-ui,
@@ -515,6 +523,33 @@ hr {
   opacity: 0.8;
 }
 
+/* A mechanic's or accepted decision's `implementation` value, after the
+   `updated` stamp. `built` recedes like the stamp beside it; `designed` and
+   `partial` are tinted, so a record describing code that does not fully
+   exist yet reads that way before its prose does. */
+.implementation {
+  margin-left: 0.5rem;
+  padding: 0.05rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.86em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.implementation-designed {
+  border-style: dashed;
+  border-color: var(--c-designed);
+  color: var(--c-designed);
+}
+
+.implementation-partial {
+  border-color: var(--c-partial);
+  color: var(--c-partial);
+}
+
 /* --------------------------------------------------------------------------
    Records — one card per rendered record, colour-coded by type
    -------------------------------------------------------------------------- */
@@ -764,14 +799,17 @@ hr {
   border-left: 3px solid var(--record-accent);
 }
 
-/* "Open Questions" — the one body heading the render names, so the unsettled
-   part of a record reads as unsettled at a glance. Light on purpose: it marks
-   the section without competing with the record's own accent. */
-.body .open-questions {
+/* "Open Questions" and "Not yet built" — the two body headings the render
+   names, so the unsettled or unbuilt part of a record reads that way at a
+   glance. Light on purpose: each marks its section without competing with
+   the record's own accent. */
+.body .open-questions,
+.body .not-yet-built {
   color: var(--text-muted);
 }
 
-.body .open-questions::after {
+.body .open-questions::after,
+.body .not-yet-built::after {
   content: "unsettled";
   margin-left: 0.6rem;
   padding: 0.1rem 0.5rem;
@@ -785,8 +823,18 @@ hr {
   color: var(--text-faint);
 }
 
+.body .not-yet-built::after {
+  content: "not built";
+  border-color: var(--c-partial);
+  color: var(--c-partial);
+}
+
 .record .body .open-questions {
   border-left-color: var(--border-strong);
+}
+
+.record .body .not-yet-built {
+  border-left-color: var(--c-partial);
 }
 
 .body ul,
