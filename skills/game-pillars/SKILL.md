@@ -7,9 +7,9 @@ description: Use when a game project has no concept statement or design pillars 
 
 Elicits, from the owner, a short concept statement and 2-4 design pillars for
 a videogame project, and writes each as its own file inside that project's
-`design/` directory. This is one of six independent skills for
+`design/` directory. This is one of seven independent skills for
 game design (`game-pillars`, `game-comp-analysis`, `game-mechanics`,
-`game-tech`, `game-gdd`, `game-critique`); this file defines the concept-statement and
+`game-tech`, `game-gdd`, `game-critique`, `game-sync`); this file defines the concept-statement and
 pillar-record shapes once, and every other skill that reads or writes either
 one names this file rather than restating the fields.
 
@@ -20,11 +20,11 @@ regardless of what already exists in that project's `design/` directory.
 Nothing here waits on another skill's output, and nothing here refuses to run
 for lack of one.
 
-A **suggested** order across the six skills exists —
+A **suggested** authoring order exists —
 `game-pillars` → `game-comp-analysis` → `game-mechanics` → `game-tech` →
 `game-gdd` → `game-critique`, looping back to `game-mechanics` after a
-critique pass — but
-it is a recommendation, not a requirement. Invoking this skill first, last,
+critique pass, with `game-sync` outside it, invoked whenever code changes —
+but it is a recommendation, not a requirement. Invoking this skill first, last,
 or on its own, against a project that has no other design files at all, is a
 legal use of it, not an out-of-order one.
 
