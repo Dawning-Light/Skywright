@@ -43,7 +43,7 @@ Elicit conversationally, in whatever order the owner naturally gives it:
    other mechanics already elicited (what it is a *kind of* and what it is a
    *part of*, if either; its children and its parts, if any), one strong
    example of it working as intended, one weak example of it failing or being
-   misused.
+   misused, and how much of it exists in code yet (`implementation`, below).
 2. **Systems and economy.** Ask what resources exist, where they enter play,
    where they leave, and what moves or gates them. Map each answer onto a
    node or a connection in the economy graph (below) as it's given, rather
@@ -126,6 +126,12 @@ Frontmatter:
 - `parts` — a list of `name`s of other mechanic entries under
   `design/mechanics/`, possibly empty. Same rule as `children`: each entry in
   the list is a filename to resolve, not a description of the part.
+- `implementation` — whether this mechanic exists in code: exactly one of
+  `designed` (none of it does), `partial` (some of it does), or `built` (all
+  of it does). **This set is closed**, and the field is required. Ask the
+  owner for it on every write that sets it, and never guess it. A newly
+  elicited mechanic is normally `designed`. `game-sync` proposes moving it
+  forward as code lands, and writes the change through this skill.
 - `updated` — the UTC time of the last write to this file, in the
   `YYYY-MM-DDTHH:MMZ` form `game-authoring` defines. Refreshed on every
   write.
@@ -158,6 +164,11 @@ structure:
 - `## Strong example` — one worked case of this mechanic doing what it's for.
 - `## Weak example` — one worked case of this mechanic failing, being
   misused, or producing an outcome the design didn't want.
+- `## Not yet built` — required when `implementation` is `partial`, and
+  absent otherwise. Lists what the code does not yet do, in plain
+  current-state prose ("Stack splitting across containers."), never as
+  history or a plan. It sits after `## Weak example` and before
+  `## Open Questions`.
 - `## Open Questions` — optional. What about this mechanic is unsettled,
   stated plainly per `game-authoring`, never folded into the description or
   the examples as a hedge. Omit the heading when nothing is open.
@@ -194,7 +205,10 @@ Frontmatter carries `nodes`, `connections`, the optional `families` block
 (below), and one file-level `updated` — the UTC time of the last write to
 the file, in the `YYYY-MM-DDTHH:MMZ` form `game-authoring` defines. The one
 field covers every node and connection in the file and moves on every
-write; `economy-tool` sets it on every change it makes.
+write; `economy-tool` sets it on every change it makes. The graph carries no
+`implementation` field: it spans many systems, so one value would be wrong
+for most of it. `game-sync` checks it against code only where the owner
+names it.
 
 Each **node** has:
 
