@@ -5,6 +5,7 @@ parent: combat
 children: []
 part_of: none
 parts: []
+implementation: partial
 updated: 2026-09-10T12:07Z
 ---
 
@@ -20,3 +21,7 @@ A player kites a slow enemy around a pillar and wins without taking a hit.
 ## Weak example
 
 Every encounter is won by backing away and firing, which makes melee pointless.
+
+## Not yet built
+
+- Projectile drop over distance.

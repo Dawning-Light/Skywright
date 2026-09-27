@@ -50,6 +50,10 @@ under `parent`, so `loadout` lists a part that renders elsewhere.
 
 The set of gear a character takes into a run.
 
+#### Not yet built
+
+- Swapping a loadout mid-run.
+
 ### Quick Slots
 
 *Source: `design/mechanics/quick-slots.md` · Updated: 2026-09-20T09:03Z*

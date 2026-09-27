@@ -88,7 +88,8 @@ not redefine, rename, or add a field to any of them:
 - **The pillar record**, `design/pillars/<slug>.md` — shape defined by
   `game-pillars`, including its `status` field (`approved` or `candidate`).
 - **The mechanic entry**, `design/mechanics/<slug>.md` — shape defined by
-  `game-mechanics`.
+  `game-mechanics`, including its `implementation` field (`designed`,
+  `partial`, `built`) and the `## Not yet built` heading `partial` requires.
 - **The economy graph**, `design/economy.md`, read as its `nodes`,
   `connections` and `families` — shape defined by `game-mechanics`, including
   `value_progression`, `id`, `subtype`, `resource`, the `families` block, the
@@ -98,8 +99,9 @@ not redefine, rename, or add a field to any of them:
 - **The technical decision record**, `design/tech/<slug>.md` — shape
   defined by `game-tech`, including its `status` field (`open`, `accepted`,
   `superseded`), its `scope` field (`contained`, `cross-cutting`), its
-  `category`, `drivers`, and `superseded_by` fields, and which body headings
-  its status and scope require.
+  `category`, `drivers`, and `superseded_by` fields, its `implementation`
+  field (required while `accepted`) and the `## Not yet built` heading
+  `partial` requires, and which body headings its status and scope require.
 
 Two things cut across all six, both defined once by `game-authoring` and
 read here at its definition: the `updated` frontmatter field every shape
@@ -218,7 +220,12 @@ family name declared twice, block-style edges, slash-joined headings, or a
 reference that resolves to nothing in `design/economy.md` (fixed with
 `game-mechanics`); a technical decision record whose `status` or
 `scope` lies outside its closed set, or that is missing a body heading its
-status and scope require (fixed with `game-tech`); a typed wikilink in any
+status and scope require (fixed with `game-tech`); a mechanic entry or
+accepted technical decision record whose `implementation` is missing or
+outside its closed set, or that carries `## Not yet built` without being
+`partial` or is `partial` without it (fixed with `game-mechanics` or
+`game-tech`; a missing value also names `game-sync`, whose audit proposes one
+from the code — the render never assumes a default); a typed wikilink in any
 record body that is malformed — an unknown type, a missing identifier, or
 an untyped `[[slug]]` — or that resolves to no record, and an `updated`
 value outside the `YYYY-MM-DDTHH:MMZ` form (both defined by
@@ -291,7 +298,9 @@ same as `render_gdd.py`'s own render.
 when `<target>` itself is malformed — an unknown type, a missing
 identifier, or a path that isn't a recognized record shape — with the
 reason on stderr. It does not check that `<target>` resolves to a real
-record; that check is `render_gdd.py`'s, at render time.
+record; that check is `render_gdd.py`'s, at render time. Nor does it apply
+the render's `implementation` checks, so it runs on a corpus whose
+`implementation` values `game-sync` has not yet backfilled.
 
 **Tests.** `scripts/tests/test_find_references.py`, run with
 `python3 -m unittest scripts/tests/test_find_references.py`.
