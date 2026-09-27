@@ -5,6 +5,7 @@ parent: none
 children: []
 part_of: ring-two
 parts: [ring-two]
+implementation: designed
 updated: 2026-09-20T09:04Z
 ---
 

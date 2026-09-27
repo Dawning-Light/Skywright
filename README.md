@@ -1,9 +1,9 @@
 # Skywright
 
-Eight skills that elicit a game's design as structured data and render it as
+Nine skills that elicit a game's design as structured data and render it as
 a GDD — pillars, competitor differentiation, mechanics and economy,
-technical decisions, and adversarial critique — plus the bundled research
-skill two of them delegate to.
+technical decisions, adversarial critique, and keeping the records in step
+with the code — plus the bundled research skill two of them delegate to.
 
 Everything these skills produce lives in **your** game project, under its own
 `design/` directory. This repo holds only the skills.
@@ -18,7 +18,8 @@ Everything these skills produce lives in **your** game project, under its own
 | `game-tech` | A technical decision needs making and recording — networking, simulation, persistence, engine. |
 | `game-gdd` | The design data needs upkeep — rendering the GDD, checking references, other maintenance. |
 | `game-critique` | The design data or rendered GDD needs adversarial review rather than more authoring. |
-| `game-authoring` | Never invoked directly — the shared authoring rule set the other six load before they write. |
+| `game-sync` | A code change altered behaviour a design record states — fixes and tuning included — or the records need checking against the code. |
+| `game-authoring` | Never invoked directly — the shared authoring rule set the design-writing skills load before they write. |
 | `research` | Never invoked directly — the web-research capability `game-comp-analysis` and `game-critique` delegate to for competitor and best-practice research. |
 
 ## Install

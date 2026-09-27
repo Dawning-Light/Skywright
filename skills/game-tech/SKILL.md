@@ -8,11 +8,11 @@ description: Use when a game project's design needs a technical decision made an
 Proposes, from a game project's existing design data, the technical decisions
 that data calls for, and records each decision the owner makes as its own
 file inside that project's `design/tech/` directory. This is the fourth of
-six independent skills for game design (`game-pillars`,
+seven independent skills for game design (`game-pillars`,
 `game-comp-analysis`, `game-mechanics`, `game-tech`, `game-gdd`,
-`game-critique`). It defines exactly one record shape, the **technical
+`game-critique`, `game-sync`). It defines exactly one record shape, the **technical
 decision record**, and every other skill that reads one (`game-gdd`,
-`game-critique`) names this file rather than restating the fields. Every
+`game-critique`, `game-sync`) names this file rather than restating the fields. Every
 field it reads from another skill's record is defined once, by the skill
 that writes it, and this file names that skill rather than restating the
 field.
@@ -30,10 +30,11 @@ little design data currently exists. It is the one skill in the set whose
 job is reading the other skills' data, and it requires none of it: on a
 project with no design data it proposes nothing on the strength of data, but
 the owner can still walk the catalog or name a decision directly. The
-suggested order across the six skills — `game-pillars` →
+suggested authoring order — `game-pillars` →
 `game-comp-analysis` → `game-mechanics` → `game-tech` → `game-gdd` →
 `game-critique`, looping back to `game-mechanics` after a critique pass — is
-a recommendation, not a requirement this skill enforces.
+a recommendation, not a requirement this skill enforces. `game-sync` sits
+outside it, invoked whenever code changes.
 
 ## What this skill produces
 
@@ -85,6 +86,7 @@ uses: a YAML frontmatter block between `---` lines, then a markdown body.
 | `status` | Exactly one of `open`, `accepted`, `superseded`. **This set is closed.** `open` means the owner has confirmed the decision is needed but has not made it. A catalog proposal the owner declines is never written at all, so there is no `rejected` status. |
 | `category` | A category id from the decision catalog (`references/decision-catalog.md`), or `other`. |
 | `scope` | Exactly one of `contained`, `cross-cutting`. **This set is closed.** This is the blast-radius classification, and it decides which body sections are required (below). |
+| `implementation` | Present only when `status: accepted`: exactly one of `designed` (none of the decision exists in code), `partial` (some of it does), or `built` (all of it does). **This set is closed.** `accepted` means decided, not built; this field says what is built. Absent while `open`, and removed when the record is superseded. `game-sync` proposes moving it forward as code lands. |
 | `drivers` | A list, possibly empty, of what forces this decision. Each entry takes one of three forms. A path to a concept, pillar, mechanic, or comp-analysis record (`design/concept.md`, `design/pillars/<slug>.md`, `design/mechanics/<slug>.md`, `design/comp-analysis.md`). Or `economy:<ref>`, where `<ref>` follows `game-mechanics`' sigil rule: a bare node id, `#<connection-id>`, or `@<family>`. Or a path to another technical decision record, `design/tech/<slug>.md`. A driver that resolves to nothing is invalid. A decision forced only by owner constraints (skills, budget, an existing codebase) has an empty `drivers` list, and its `## Context` states the constraint. |
 | `superseded_by` | Present only when `status: superseded`: the `name` of the replacing record. |
 | `source` | Always `game-tech`. |
@@ -97,22 +99,38 @@ One heading per section, so a reader and a renderer see the same structure:
 | Heading | Required when |
 | --- | --- |
 | `## Context` | Always. States the forces behind the decision. Unlike `game-mechanics`' schema, design-intent forces such as feel and pacing belong here: a technical decision is often driven by exactly the emergent property the mechanics schema excludes. GGPO's "as responsive as offline" is the model case. |
-| `## Decision` | `accepted` or `superseded`. Absent while `open`. |
+| `## Decision` | `accepted` or `superseded`. Absent while `open`. The choice and the rules an implementer must not break, in about 40 lines (Rules, below). |
 | `## Options considered` | Always when `cross-cutting`; optional when `contained`. Each option comes with its trade-offs. For an `open` record, the options known so far. |
-| `## Consequences` | `accepted` or `superseded`; optional while `open`. States what the decision commits to *and what it forecloses*. |
+| `## Consequences` | `accepted` or `superseded`; optional while `open`. States what the decision commits to *and what it forecloses*. May name the code seam once, as a backtick path, with no field-level detail. |
+| `## Not yet built` | `implementation: partial`, and never otherwise. Lists what the code does not yet do, in plain current-state prose ("Delta-compressed snapshots."), never as history or a plan. Sits after `## Consequences` and before `## Assumptions to verify`. |
 | `## Assumptions to verify` | Optional. Things taken on faith until code exists. |
 
 ### Rules
 
-- **Supersede, never reverse in place.** An accepted decision's
-  `## Decision` is never edited to say something different. A changed
-  decision is a new record. The old record's `status` becomes `superseded`,
-  and its `superseded_by` names the new one. Every other edit — a typo, an
-  added driver, a new assumption, a refined consequence — is made in place,
-  and `updated` moves on every one of them. Superseded records are kept,
-  never deleted: they are the project's record of decisions that turned out
+- **`## Decision` is the choice, not the implementation.** It states the
+  choice and the rules an implementer must not break, in about 40 lines.
+  Implementation detail — tool or function signatures, field lists,
+  schemas, identifiers, tuning values — belongs to the code and its tests,
+  not the record. The rest of the record has no budget: `## Options
+  considered` can legitimately run long. `game-gdd`'s render warns, without
+  failing, when an accepted record's `## Decision` runs past 40 lines.
+- **Supersede when the decision changes; otherwise edit in place.**
+  Supersede when the chosen option changes, or when `## Consequences`
+  changes what the decision commits to or forecloses. The changed decision
+  is a new record; the old record's `status` becomes `superseded`, its
+  `superseded_by` names the new one, and its `implementation` field and any
+  `## Not yet built` heading are removed. Every other edit is made in
+  place — a corrected detail, a clarified rule, a trimmed implementation
+  spec, a typo, an added driver, a new assumption — and `updated` moves on
+  every one of them. Under the rule above, a detail worth correcting should
+  rarely be in `## Decision` at all. Superseded records are kept, never
+  deleted: they are the project's record of decisions that turned out
   wrong, the source a future agent-facing digest would draw its
   "past mistakes to avoid" from.
+- **`implementation` is asked for, never guessed.** Whenever a record is
+  written `accepted` — elicited new, settled from `open`, or written to
+  supersede another — ask the owner whether the decision exists in code
+  yet, and write `## Not yet built` with it when the answer is `partial`.
 - **Unverified assumptions do not block `accepted`.** On a project with no
   code yet, every engine assumption is unverified, so a rule that held a
   record at `open` until its assumptions were checked would leave nothing
@@ -128,6 +146,7 @@ title: Multiplayer parties run on a dedicated authoritative server; clients pred
 status: accepted
 category: networking-topology
 scope: cross-cutting
+implementation: partial
 drivers:
   - design/concept.md
   - design/mechanics/party.md
@@ -141,7 +160,8 @@ The concept commits to small-form multiplayer through a dedicated server,
 where a party mixes two guilds' characters. <...forces, including feel...>
 
 ## Decision
-<...the owner's stated decision...>
+<...the owner's stated choice, and the rules an implementer must not break —
+no signatures, field lists, schemas, or tuning values...>
 
 ## Options considered
 - P2P rollback: <trade-offs>
@@ -150,7 +170,10 @@ where a party mixes two guilds' characters. <...forces, including feel...>
 
 ## Consequences
 Commits to hosting a server. Rules out offline-only builds having party
-play. <...>
+play. The server's code lives in `<code seam>`. <...>
+
+## Not yet built
+- <...what the code does not yet do, stated as current fact...>
 
 ## Assumptions to verify
 - <...>
@@ -195,7 +218,9 @@ keep their own path and `economy:<ref>` forms above.
 2. **Open records first.** List every `open` record before proposing
    anything new, and offer to settle each now. An `open` record settled in
    this step is edited in place: `## Decision` and `## Consequences` are
-   added, `status` becomes `accepted`, and `updated` moves to now.
+   added, `status` becomes `accepted`, `implementation` is asked for and
+   added (with `## Not yet built` when it is `partial`), and `updated`
+   moves to now.
 3. **Match triggers.** Walk the catalog. Every category that some record
    triggers becomes a proposal carrying the record's address and a
    **verbatim quote** of the triggering phrase. A category no record
@@ -224,7 +249,8 @@ keep their own path and `economy:<ref>` forms above.
    `## Decision` the owner did not state or explicitly confirm** — the
    facilitator's rule, and the same propose-and-confirm stance
    `game-mechanics` takes toward a family. A decision the owner makes now is
-   written `accepted`; one they defer is written `open`.
+   written `accepted`, with the `implementation` value the owner gives; one
+   they defer is written `open`.
 6. **Classify scope by blast radius.** Ask: "Do this decision's consequences
    reach another decision, or more than one mechanic?" Yes gives
    `cross-cutting` and no gives `contained`. **Unsure gives
@@ -234,10 +260,23 @@ keep their own path and `economy:<ref>` forms above.
    batched at the end. A decision settled early in the conversation and
    never revisited should already be a file by the time the conversation
    ends.
-8. **Supersede rather than reverse.** When the owner changes an accepted
-   decision, write the new record and mark the old one `superseded` per the
-   Rules above. Never edit an accepted `## Decision` to say something
-   different.
+8. **Supersede only when the decision changes.** When the owner changes the
+   chosen option, or changes what `## Consequences` commits to or
+   forecloses, write the new record and mark the old one `superseded` per
+   the Rules above. Any other change to an accepted record — a corrected
+   detail, a clarified rule, a trimmed implementation spec — is an edit in
+   place, with `updated` moved.
+9. **Repoint every citer after a supersede.** `[[tech:<old-slug>]]` does not
+   resolve to a superseded record, and `game-gdd`'s render refuses until
+   every such citation is fixed. List the body citations with `game-gdd`'s
+   `scripts/find_references.py tech:<old-slug>`, run from the project root
+   as `game-gdd` describes. It does not read `drivers`, so also search
+   `design/tech/` for `design/tech/<old-slug>.md`. For each citer, re-check
+   its claim against the new decision and revise it through the skill that
+   owns it: repoint it to `[[tech:<new-slug>]]` (or the new path, for a
+   `drivers` entry) where the claim still holds, and rewrite the claim where
+   it no longer does, never relinking a claim the new decision does not
+   support.
 
 ## Out of this skill's job
 
@@ -247,7 +286,10 @@ never read as a substitute for its records: an engine config file holds
 values with no rationale, so it cannot stand in for a decision record. When
 the owner already has an engine, that fact is recorded as an `accepted`
 `engine` record whose `## Context` says so, without re-arguing the choice —
-see the catalog's `engine` section.
+see the catalog's `engine` section. Code cannot stand in for a record
+either, but `game-sync` checks accepted `built` and `partial` records
+against the code, and revises them through this skill when the owner
+confirms a change.
 
 Technical critique — a technical persona, cross-decision conflict review, a
 certification checklist — is not built here. A technical decision record

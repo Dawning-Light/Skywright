@@ -11,7 +11,9 @@ its own: `game-pillars`, `game-comp-analysis`, `game-mechanics`, and
 `game-tech` each invoke it before writing or revising a record they own, and
 the seven rules below govern what they write. `game-gdd` (renders only) and
 `game-critique` (reads only, and its critique notes are not a shape these
-rules govern) do not invoke it.
+rules govern) do not invoke it. `game-sync` does not either: it revises a
+record only by invoking the skill that owns it, which loads these rules
+itself.
 
 This is the one and only place these rules are defined. A calling skill
 names this file; it does not restate the rules.
@@ -24,7 +26,10 @@ names this file; it does not restate the rules.
    migration", "replacing..." — in a record body, unless the design itself is
    about change over time (a mechanic whose own state changes during play).
    History belongs in git and, where deliberately kept, in `design/ideas.md`
-   or a superseded record — never in the live one.
+   or a superseded record — never in the live one. Present-tense prose
+   describes the design; whether that design exists in code is stated by the
+   record's `implementation` field and, for `partial`, its `## Not yet built`
+   heading — never by tense or hedging in the prose.
 
 2. **Rewrite the affected unit, don't splice.** When a decision changes,
    rewrite each affected paragraph and example so it reads as though the
@@ -126,6 +131,13 @@ prose notes are rationale, a different purpose from an open question. The
 technical decision record already has `## Assumptions to verify`, its own
 version of the same idea, scoped to unverified engine assumptions.
 
+`## Not yet built` is a different heading with a different purpose. It lists
+what the code does not yet do on a mechanic entry or technical decision
+record whose `implementation` is `partial`: settled design awaiting code, not
+unsettled design. Each owning skill places it in its own shape. Nothing
+unsettled goes under it, and nothing merely unbuilt goes under
+`## Open Questions`.
+
 ## `updated`
 
 Every record shape's frontmatter carries `updated`:
@@ -156,4 +168,7 @@ rewrite of the file. `game-gdd` renders the value beside each section's
   reads like a citation but is never parsed as one (rule 4) — replace it.
 - Is anything uncertain? Say so under `## Open Questions`, and remove the
   certainty it replaces (rule 6).
+- Does `implementation` still match the code?
+- For a technical decision record, is `## Decision` the choice and its
+  rules, within about 40 lines?
 - Is `updated` the current UTC time?

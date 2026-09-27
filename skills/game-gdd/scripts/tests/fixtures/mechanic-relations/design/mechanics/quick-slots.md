@@ -5,6 +5,7 @@ parent: none
 children: []
 part_of: loadout
 parts: []
+implementation: designed
 updated: 2026-09-20T09:03Z
 ---
 

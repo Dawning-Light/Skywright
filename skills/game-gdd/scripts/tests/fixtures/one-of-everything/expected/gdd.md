@@ -72,7 +72,7 @@ undecided.
 
 ### Combat
 
-*Source: `design/mechanics/combat.md` · Updated: 2026-09-10T12:00Z*
+*Source: `design/mechanics/combat.md` · Updated: 2026-09-10T12:00Z · Implementation: built*
 
 - Parent: none
 - Children: `melee`, `ranged`
@@ -102,7 +102,7 @@ Whether a swing may be cancelled mid-animation is undecided.
 
 ### Melee
 
-*Source: `design/mechanics/melee.md` · Updated: 2026-09-10T12:04Z*
+*Source: `design/mechanics/melee.md` · Updated: 2026-09-10T12:04Z · Implementation: built*
 
 - Parent: `combat`
 - Children: none
@@ -132,7 +132,7 @@ melee is the wrong tool here.
 
 ### Ranged
 
-*Source: `design/mechanics/ranged.md` · Updated: 2026-09-10T12:07Z*
+*Source: `design/mechanics/ranged.md` · Updated: 2026-09-10T12:07Z · Implementation: partial*
 
 - Parent: `combat`
 - Children: none
@@ -152,9 +152,13 @@ A player kites a slow enemy around a pillar and wins without taking a hit.
 
 Every encounter is won by backing away and firing, which makes melee pointless.
 
+#### Not yet built
+
+- Projectile drop over distance.
+
 ### Inventory
 
-*Source: `design/mechanics/inventory.md` · Updated: 2026-09-10T12:10Z*
+*Source: `design/mechanics/inventory.md` · Updated: 2026-09-10T12:10Z · Implementation: designed*
 
 - Parent: none
 - Children: none
@@ -176,7 +180,7 @@ mechanic exists to pose never comes up.
 
 ### Stack Limits
 
-*Source: `design/mechanics/stack-limits.md` · Updated: 2026-09-10T12:12Z*
+*Source: `design/mechanics/stack-limits.md` · Updated: 2026-09-10T12:12Z · Implementation: designed*
 
 - Parent: none
 - Children: none
@@ -364,7 +368,7 @@ a hit that lands on one client and not the other is visible immediately.
 
 ### Save Format
 
-*Source: `design/tech/save-format.md` · Updated: 2026-09-04T07:45Z*
+*Source: `design/tech/save-format.md` · Updated: 2026-09-04T07:45Z · Implementation: partial*
 
 Saves are a single append-only JSON document per guild.
 
@@ -386,6 +390,10 @@ One append-only JSON document per guild, fsynced at each run boundary.
 
 Commits to a bounded save size. Forecloses partial loads, so a very large
 roster will pay the whole parse cost at launch.
+
+#### Not yet built
+
+- Fsyncing at each run boundary.
 
 #### Assumptions to verify
 

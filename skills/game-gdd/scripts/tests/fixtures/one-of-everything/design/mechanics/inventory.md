@@ -5,6 +5,7 @@ parent: none
 children: []
 part_of: none
 parts: [stack-limits]
+implementation: designed
 updated: 2026-09-10T12:10Z
 ---
 
