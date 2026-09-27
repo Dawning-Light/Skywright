@@ -18,7 +18,10 @@ that fixes it, and the exit code is non-zero. A body's typed ``[[...]]``
 references and a record's ``updated`` stamp are held to that same discipline --
 a reference that does not resolve to something this render anchors, and a
 timestamp outside ``YYYY-MM-DDTHH:MMZ``, each stop the render. Both forms are
-defined by ``game-authoring``.
+defined by ``game-authoring``. One condition warns instead of blocking: an
+accepted technical decision record whose ``## Decision`` runs past
+``DECISION_BUDGET`` lines prints one ``warning:`` line to stderr, and the
+render still writes and exits 0.
 
 Stdlib only. Deterministic: byte-identical output for byte-identical input.
 """
@@ -377,6 +380,32 @@ def shown_implementation(record):
     shows: its own while ``accepted``, the one status that requires and checks
     it, and nothing otherwise."""
     return record["implementation"] if record["status"] == "accepted" else ""
+
+
+DECISION_BUDGET = 40
+
+
+def decision_warnings(data):
+    """One non-fatal stderr line per accepted technical decision record whose
+    ``## Decision`` runs past ``DECISION_BUDGET`` lines -- the budget
+    ``game-tech`` sets. Lines are counted from the first to the last non-blank
+    line under the heading, blank lines between them included. A superseded
+    record is history and is never warned about."""
+    warnings = []
+    for record in data["tech_live"]:
+        if record["status"] != "accepted":
+            continue
+        sections, _ = split_sections(record["body"])
+        decision = sections.get("Decision", "")
+        count = len(decision.split("\n")) if decision else 0
+        if count > DECISION_BUDGET:
+            warnings.append(
+                "warning: %s: `## Decision` runs %d lines, over the budget of "
+                "about %d that `game-tech` sets; move implementation detail "
+                "into the code and its tests, with `game-tech`. The render "
+                "still succeeded." % (record["rel"], count, DECISION_BUDGET)
+            )
+    return warnings
 
 
 # ---------------------------------------------------------------------------
@@ -2285,6 +2314,7 @@ def main(argv=None):
         ctx["backlinks"] = build_backlinks(data, ctx)
         markdown = build_markdown(data)
         html = build_html(data, ctx)
+        warnings = decision_warnings(data)
     except InvalidInput as exc:
         sys.stderr.write("%s\n" % exc)
         return 1
@@ -2301,6 +2331,8 @@ def main(argv=None):
 
     seed_fonts(os.path.join(os.path.dirname(template), "fonts"), root, args.reset_css)
 
+    for warning in warnings:
+        sys.stderr.write("%s\n" % warning)
     return 0
 
 
