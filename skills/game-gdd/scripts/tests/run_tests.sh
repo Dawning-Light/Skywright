@@ -7,7 +7,9 @@
 #
 # A fixture directory holding `expected-stderr.txt` is an invalid-input case
 # (non-zero exit, one stderr message, no files written). Every other fixture is
-# a valid case, diffed against `expected/gdd.md` and `expected/gdd.html`.
+# a valid case, diffed against `expected/gdd.md` and `expected/gdd.html`; its
+# stderr must be empty unless it holds `expected-warnings.txt`, whose lines the
+# stderr must each contain (a warning never stops the render).
 #
 # The tests never diff `gdd.css`'s contents against a checked-in copy -- only
 # against the live `templates/default.css` -- so the real stylesheet can change
@@ -97,6 +99,26 @@ run_valid_fixture() {
     return
   fi
   pass "$name: exits 0"
+
+  # A valid render may still warn. `expected-warnings.txt` lists lines the
+  # stderr must each contain; a fixture without one must print nothing.
+  if [ -f "$FIXTURES/$name/expected-warnings.txt" ]; then
+    local line missing=0
+    while IFS= read -r line; do
+      [ -z "$line" ] && continue
+      if ! grep -qF -- "$line" "$WORK/err"; then
+        missing=1
+        fail "$name: stderr warns \`$line\`" "stderr was: $(cat "$WORK/err")"
+      fi
+    done < "$FIXTURES/$name/expected-warnings.txt"
+    if [ "$missing" -eq 0 ]; then
+      pass "$name: stderr carries the expected warnings"
+    fi
+  elif [ -s "$WORK/err" ]; then
+    fail "$name: stderr is empty" "stderr was: $(cat "$WORK/err")"
+  else
+    pass "$name: stderr is empty"
+  fi
 
   if [ "$UPDATE" = "1" ]; then
     mkdir -p "$expected"
