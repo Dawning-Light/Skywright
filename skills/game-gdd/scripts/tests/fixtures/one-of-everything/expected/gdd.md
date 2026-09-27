@@ -152,6 +152,10 @@ A player kites a slow enemy around a pillar and wins without taking a hit.
 
 Every encounter is won by backing away and firing, which makes melee pointless.
 
+#### Not yet built
+
+- Projectile drop over distance.
+
 ### Inventory
 
 *Source: `design/mechanics/inventory.md` · Updated: 2026-09-10T12:10Z*
@@ -386,6 +390,10 @@ One append-only JSON document per guild, fsynced at each run boundary.
 
 Commits to a bounded save size. Forecloses partial loads, so a very large
 roster will pay the whole parse cost at launch.
+
+#### Not yet built
+
+- Fsyncing at each run boundary.
 
 #### Assumptions to verify
 

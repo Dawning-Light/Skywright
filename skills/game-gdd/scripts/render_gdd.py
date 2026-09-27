@@ -152,6 +152,7 @@ def load_design(root):
         )
         parent = as_text(fields.get("parent", "")).strip()
         part_of = as_text(fields.get("part_of", "")).strip()
+        sections, _ = split_sections(body)
         data["mechanics"].append(
             {
                 "slug": slug,
@@ -161,8 +162,10 @@ def load_design(root):
                 "children": [c for c in as_list(fields.get("children")) if c != "none"],
                 "part_of": "" if part_of in ("", "none") else part_of,
                 "parts": [p for p in as_list(fields.get("parts")) if p != "none"],
+                "implementation": as_text(fields.get("implementation", "")).strip(),
                 "updated": read_updated(fields, rel, "game-mechanics"),
                 "body": body,
+                "headings": set(sections.keys()),
             }
         )
     data["mechanics_tree"] = mechanic_tree(data["mechanics"])
@@ -195,6 +198,7 @@ def load_design(root):
             "status": as_text(fields.get("status", "")).strip(),
             "category": as_text(fields.get("category", "")).strip(),
             "scope": as_text(fields.get("scope", "")).strip(),
+            "implementation": as_text(fields.get("implementation", "")).strip(),
             "drivers": as_list(fields.get("drivers")),
             "superseded_by": as_text(fields.get("superseded_by", "")).strip(),
             "updated": read_updated(fields, rel, "game-tech"),
@@ -316,6 +320,55 @@ def validate_tech(record):
             "%s: `status: superseded` requires a `superseded_by` field naming "
             "the replacing record, which this record does not have; fix it with "
             "`game-tech`." % rel
+        )
+
+
+IMPLEMENTATION_VALUES = ("designed", "partial", "built")
+NOT_YET_BUILT = "Not yet built"
+
+
+def validate_implementation(data):
+    """Every mechanic entry and accepted technical decision record carries an
+    ``implementation`` from the closed set, and a ``## Not yet built`` heading
+    exactly when that value is ``partial``.
+
+    Called by the render's ``main``, never by ``load_design``:
+    ``find_references.py`` loads the same records and must keep working on a
+    corpus ``game-sync`` has not yet backfilled.
+    """
+    for mech in data["mechanics"]:
+        check_implementation(mech, "a mechanic entry", "game-mechanics")
+    for record in data["tech_live"]:
+        if record["status"] == "accepted":
+            check_implementation(record, "`status: accepted`", "game-tech")
+
+
+def check_implementation(record, because, skill):
+    rel = record["rel"]
+    value = record["implementation"]
+    if not value:
+        raise InvalidInput(
+            "%s: %s requires an `implementation` field, exactly one of the "
+            "closed set (designed, partial, built), which this record does not "
+            "have; run `game-sync` to propose a value from the code, and write "
+            "it with `%s`." % (rel, because, skill)
+        )
+    if value not in IMPLEMENTATION_VALUES:
+        raise InvalidInput(
+            "%s: `implementation: %s` is outside the closed set (designed, "
+            "partial, built); fix it with `%s`." % (rel, value, skill)
+        )
+    has_heading = NOT_YET_BUILT in record["headings"]
+    if value == "partial" and not has_heading:
+        raise InvalidInput(
+            "%s: `implementation: partial` requires a `## Not yet built` body "
+            "heading listing what the code does not yet do, which this record "
+            "does not have; fix it with `%s`." % (rel, skill)
+        )
+    if value != "partial" and has_heading:
+        raise InvalidInput(
+            "%s: `implementation: %s` must not carry a `## Not yet built` body "
+            "heading; only `partial` does. Fix it with `%s`." % (rel, value, skill)
         )
 
 
@@ -2192,6 +2245,7 @@ def main(argv=None):
 
     try:
         data = load_design(root)
+        validate_implementation(data)
         ctx = build_context(data)
         validate_references(data, ctx)
         ctx["backlinks"] = build_backlinks(data, ctx)

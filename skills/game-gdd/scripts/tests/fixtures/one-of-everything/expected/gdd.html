@@ -200,6 +200,10 @@
         <p>A player kites a slow enemy around a pillar and wins without taking a hit.</p>
         <h4>Weak example</h4>
         <p>Every encounter is won by backing away and firing, which makes melee pointless.</p>
+        <h4>Not yet built</h4>
+        <ul>
+          <li>Projectile drop over distance.</li>
+        </ul>
       </div>
     </article>
   </div>
@@ -525,6 +529,10 @@
       <p>One append-only JSON document per guild, fsynced at each run boundary.</p>
       <h4>Consequences</h4>
       <p>Commits to a bounded save size. Forecloses partial loads, so a very large roster will pay the whole parse cost at launch.</p>
+      <h4>Not yet built</h4>
+      <ul>
+        <li>Fsyncing at each run boundary.</li>
+      </ul>
       <h4>Assumptions to verify</h4>
       <ul>
         <li>A 10 MB save parses in under 100 ms on the target hardware.</li>

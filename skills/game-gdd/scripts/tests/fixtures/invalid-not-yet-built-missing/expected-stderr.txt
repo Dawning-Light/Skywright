@@ -1,0 +1,3 @@
+design/mechanics/combat.md
+`implementation: partial` requires a `## Not yet built` body heading
+game-mechanics

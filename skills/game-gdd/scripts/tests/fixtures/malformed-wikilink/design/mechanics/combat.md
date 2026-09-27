@@ -3,6 +3,7 @@ name: combat
 title: Combat
 parent: none
 children: []
+implementation: designed
 updated: 2026-09-11T09:00Z
 ---
 

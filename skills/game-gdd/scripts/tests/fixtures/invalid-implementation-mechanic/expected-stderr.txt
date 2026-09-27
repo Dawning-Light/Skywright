@@ -1,0 +1,4 @@
+design/mechanics/combat.md
+a mechanic entry requires an `implementation` field
+game-sync
+game-mechanics

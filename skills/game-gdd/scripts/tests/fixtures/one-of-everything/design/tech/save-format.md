@@ -4,6 +4,7 @@ title: Saves are a single append-only JSON document per guild.
 status: accepted
 category: persistence
 scope: contained
+implementation: partial
 drivers: []
 source: game-tech
 updated: 2026-09-04T07:45Z
@@ -22,6 +23,10 @@ One append-only JSON document per guild, fsynced at each run boundary.
 
 Commits to a bounded save size. Forecloses partial loads, so a very large
 roster will pay the whole parse cost at launch.
+
+## Not yet built
+
+- Fsyncing at each run boundary.
 
 ## Assumptions to verify
 
