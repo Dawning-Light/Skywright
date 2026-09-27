@@ -5,6 +5,7 @@ parent: no-such-mechanic
 children: []
 part_of: loadout
 parts: []
+implementation: built
 updated: 2026-09-20T09:06Z
 ---
 

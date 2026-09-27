@@ -1,0 +1,4 @@
+design/tech/save-format.md
+`status: accepted` requires an `implementation` field
+game-sync
+game-tech

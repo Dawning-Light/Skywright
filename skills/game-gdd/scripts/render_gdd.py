@@ -18,7 +18,10 @@ that fixes it, and the exit code is non-zero. A body's typed ``[[...]]``
 references and a record's ``updated`` stamp are held to that same discipline --
 a reference that does not resolve to something this render anchors, and a
 timestamp outside ``YYYY-MM-DDTHH:MMZ``, each stop the render. Both forms are
-defined by ``game-authoring``.
+defined by ``game-authoring``. One condition warns instead of blocking: an
+accepted technical decision record whose ``## Decision`` runs past
+``DECISION_BUDGET`` lines prints one ``warning:`` line to stderr, and the
+render still writes and exits 0.
 
 Stdlib only. Deterministic: byte-identical output for byte-identical input.
 """
@@ -152,6 +155,7 @@ def load_design(root):
         )
         parent = as_text(fields.get("parent", "")).strip()
         part_of = as_text(fields.get("part_of", "")).strip()
+        sections, _ = split_sections(body)
         data["mechanics"].append(
             {
                 "slug": slug,
@@ -161,8 +165,10 @@ def load_design(root):
                 "children": [c for c in as_list(fields.get("children")) if c != "none"],
                 "part_of": "" if part_of in ("", "none") else part_of,
                 "parts": [p for p in as_list(fields.get("parts")) if p != "none"],
+                "implementation": as_text(fields.get("implementation", "")).strip(),
                 "updated": read_updated(fields, rel, "game-mechanics"),
                 "body": body,
+                "headings": set(sections.keys()),
             }
         )
     data["mechanics_tree"] = mechanic_tree(data["mechanics"])
@@ -195,6 +201,7 @@ def load_design(root):
             "status": as_text(fields.get("status", "")).strip(),
             "category": as_text(fields.get("category", "")).strip(),
             "scope": as_text(fields.get("scope", "")).strip(),
+            "implementation": as_text(fields.get("implementation", "")).strip(),
             "drivers": as_list(fields.get("drivers")),
             "superseded_by": as_text(fields.get("superseded_by", "")).strip(),
             "updated": read_updated(fields, rel, "game-tech"),
@@ -317,6 +324,88 @@ def validate_tech(record):
             "the replacing record, which this record does not have; fix it with "
             "`game-tech`." % rel
         )
+
+
+IMPLEMENTATION_VALUES = ("designed", "partial", "built")
+NOT_YET_BUILT = "Not yet built"
+
+
+def validate_implementation(data):
+    """Every mechanic entry and accepted technical decision record carries an
+    ``implementation`` from the closed set, and a ``## Not yet built`` heading
+    exactly when that value is ``partial``.
+
+    Called by the render's ``main``, never by ``load_design``:
+    ``find_references.py`` loads the same records and must keep working on a
+    corpus ``game-sync`` has not yet backfilled.
+    """
+    for mech in data["mechanics"]:
+        check_implementation(mech, "a mechanic entry", "game-mechanics")
+    for record in data["tech_live"]:
+        if record["status"] == "accepted":
+            check_implementation(record, "`status: accepted`", "game-tech")
+
+
+def check_implementation(record, because, skill):
+    rel = record["rel"]
+    value = record["implementation"]
+    if not value:
+        raise InvalidInput(
+            "%s: %s requires an `implementation` field, exactly one of the "
+            "closed set (designed, partial, built), which this record does not "
+            "have; run `game-sync` to propose a value from the code, and write "
+            "it with `%s`." % (rel, because, skill)
+        )
+    if value not in IMPLEMENTATION_VALUES:
+        raise InvalidInput(
+            "%s: `implementation: %s` is outside the closed set (designed, "
+            "partial, built); fix it with `%s`." % (rel, value, skill)
+        )
+    has_heading = NOT_YET_BUILT in record["headings"]
+    if value == "partial" and not has_heading:
+        raise InvalidInput(
+            "%s: `implementation: partial` requires a `## Not yet built` body "
+            "heading listing what the code does not yet do, which this record "
+            "does not have; fix it with `%s`." % (rel, skill)
+        )
+    if value != "partial" and has_heading:
+        raise InvalidInput(
+            "%s: `implementation: %s` must not carry a `## Not yet built` body "
+            "heading; only `partial` does. Fix it with `%s`." % (rel, value, skill)
+        )
+
+
+def shown_implementation(record):
+    """The ``implementation`` value a technical decision record's caption
+    shows: its own while ``accepted``, the one status that requires and checks
+    it, and nothing otherwise."""
+    return record["implementation"] if record["status"] == "accepted" else ""
+
+
+DECISION_BUDGET = 40
+
+
+def decision_warnings(data):
+    """One non-fatal stderr line per accepted technical decision record whose
+    ``## Decision`` runs past ``DECISION_BUDGET`` lines -- the budget
+    ``game-tech`` sets. Lines are counted from the first to the last non-blank
+    line under the heading, blank lines between them included. A superseded
+    record is history and is never warned about."""
+    warnings = []
+    for record in data["tech_live"]:
+        if record["status"] != "accepted":
+            continue
+        sections, _ = split_sections(record["body"])
+        decision = sections.get("Decision", "")
+        count = len(decision.split("\n")) if decision else 0
+        if count > DECISION_BUDGET:
+            warnings.append(
+                "warning: %s: `## Decision` runs %d lines, over the budget of "
+                "about %d that `game-tech` sets; move implementation detail "
+                "into the code and its tests, with `game-tech`. The render "
+                "still succeeded." % (record["rel"], count, DECISION_BUDGET)
+            )
+    return warnings
 
 
 # ---------------------------------------------------------------------------
@@ -879,15 +968,19 @@ def build_markdown(data):
     return text.rstrip("\n") + "\n"
 
 
-def md_caption(text, updated=""):
-    """The addressing caption under a heading, with `updated` when present.
+def md_caption(text, updated="", implementation=""):
+    """The addressing caption under a heading, with `updated` and
+    `implementation` when the record carries them.
 
     The timestamp is the record's raw UTC string: a plain-text file has no way
     to know the reader's timezone, so it is never converted.
     """
+    parts = ["Source: %s" % text]
     if updated:
-        return "*Source: %s · Updated: %s*" % (text, updated)
-    return "*Source: %s*" % text
+        parts.append("Updated: %s" % updated)
+    if implementation:
+        parts.append("Implementation: %s" % implementation)
+    return "*%s*" % " · ".join(parts)
 
 
 def md_concept(data):
@@ -927,7 +1020,9 @@ def md_mechanics(data):
         return out
     for mech in mechanics:
         out.append("### %s" % mech["title"])
-        out.append(md_caption("`%s`" % mech["rel"], mech["updated"]))
+        out.append(
+            md_caption("`%s`" % mech["rel"], mech["updated"], mech["implementation"])
+        )
         parent = ref_code(mech["parent"]) if mech["parent"] else "none"
         children = code_list(mech["children"]) if mech["children"] else "none"
         part_of = ref_code(mech["part_of"]) if mech["part_of"] else "none"
@@ -1070,7 +1165,11 @@ def md_tech(data):
         out.append(ABSENT_TECH)
     for record in live:
         out.append("### %s" % record["name"])
-        out.append(md_caption("`%s`" % record["rel"], record["updated"]))
+        out.append(
+            md_caption(
+                "`%s`" % record["rel"], record["updated"], shown_implementation(record)
+            )
+        )
         if record["title"]:
             out.append(record["title"])
         if record["status"] == "open":
@@ -1164,6 +1263,9 @@ def _inline_plain(text, ctx):
 
 OPEN_QUESTIONS = "Open Questions"
 
+# The body headings the stylesheet knows by name, and the class each gets.
+HEADING_CLASSES = {OPEN_QUESTIONS: "open-questions", NOT_YET_BUILT: "not-yet-built"}
+
 _HR_RE = re.compile(r"^\s*(?:(?:\*\s*){3,}|(?:-\s*){3,}|(?:_\s*){3,})$")
 _BULLET_RE = re.compile(r"^(\s*)[-*]\s+(.*)$")
 _ORDERED_RE = re.compile(r"^(\s*)\d+[.)]\s+(.*)$")
@@ -1203,9 +1305,10 @@ def _md_to_html(text, demote, ctx):
         if heading:
             level = min(6, len(heading.group(1)) + demote)
             label = heading.group(2).strip()
-            # The one heading text the stylesheet knows by name: every shape
-            # that has a home for unsettled content calls it the same thing.
-            cls = ' class="open-questions"' if label == OPEN_QUESTIONS else ""
+            # The heading texts the stylesheet knows by name: every shape with
+            # a home for unsettled or unbuilt content calls it the same thing.
+            cls_name = HEADING_CLASSES.get(label)
+            cls = ' class="%s"' % cls_name if cls_name else ""
             out.append(
                 "<h%d%s>%s</h%d>" % (level, cls, inline(label, ctx), level)
             )
@@ -1715,17 +1818,24 @@ def source_attrs(source, updated=""):
     return attrs
 
 
-def source_caption(inner_html, updated=""):
+def source_caption(inner_html, updated="", implementation=""):
     """The `<p class="source">` caption under a heading.
 
     ``updated`` rides along as a `<time>` holding the raw UTC string, which is
     what a reader without JavaScript sees; the inline script at the end of the
     document rewrites the text to local time and leaves `datetime` alone.
+    ``implementation`` follows it as a `<span>` classed by value, so the
+    stylesheet can set `designed` and `partial` apart from `built`.
     """
     if updated:
         inner_html += ' <time class="updated" datetime="%s">%s</time>' % (
             h(updated),
             h(updated),
+        )
+    if implementation:
+        inner_html += (
+            ' <span class="implementation implementation-%s">%s</span>'
+            % (h(implementation), h(implementation))
         )
     return '<p class="source">%s</p>' % inner_html
 
@@ -1822,7 +1932,9 @@ def _html_mechanic(out, pad, mech, ctx):
     out.add(pad + 2, "<h3>%s</h3>" % h(mech["title"]))
     out.add(
         pad + 2,
-        source_caption("<code>%s</code>" % h(mech["rel"]), mech["updated"]),
+        source_caption(
+            "<code>%s</code>" % h(mech["rel"]), mech["updated"], mech["implementation"]
+        ),
     )
     dl_open(out, pad + 2)
     if mech["parent"]:
@@ -2105,7 +2217,11 @@ def html_tech(out, data, ctx):
         out.add(4, "<h3>%s</h3>" % h(record["name"]))
         out.add(
             4,
-            source_caption("<code>%s</code>" % h(record["rel"]), record["updated"]),
+            source_caption(
+                "<code>%s</code>" % h(record["rel"]),
+                record["updated"],
+                shown_implementation(record),
+            ),
         )
         if record["title"]:
             out.add(4, '<p class="record-title">%s</p>' % h(record["title"]))
@@ -2192,11 +2308,13 @@ def main(argv=None):
 
     try:
         data = load_design(root)
+        validate_implementation(data)
         ctx = build_context(data)
         validate_references(data, ctx)
         ctx["backlinks"] = build_backlinks(data, ctx)
         markdown = build_markdown(data)
         html = build_html(data, ctx)
+        warnings = decision_warnings(data)
     except InvalidInput as exc:
         sys.stderr.write("%s\n" % exc)
         return 1
@@ -2213,6 +2331,8 @@ def main(argv=None):
 
     seed_fonts(os.path.join(os.path.dirname(template), "fonts"), root, args.reset_css)
 
+    for warning in warnings:
+        sys.stderr.write("%s\n" % warning)
     return 0
 
 

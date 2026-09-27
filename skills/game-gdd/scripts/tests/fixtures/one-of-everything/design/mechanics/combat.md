@@ -5,6 +5,7 @@ parent: none
 children: [melee, ranged]
 part_of: none
 parts: []
+implementation: built
 updated: 2026-09-10T12:00Z
 ---
 

@@ -6,9 +6,9 @@ description: Use when a game project's design data or rendered GDD needs adversa
 # Game Critique
 
 Reviews a game's design by dispatching independent critic personas against it.
-This is the sixth of six independent skills for game design
+This is the sixth of seven independent skills for game design
 (`game-pillars`, `game-comp-analysis`, `game-mechanics`, `game-tech`,
-`game-gdd`, `game-critique`). It defines no design-data shape of its own —
+`game-gdd`, `game-critique`, `game-sync`). It defines no design-data shape of its own —
 every record it reads is defined once, by the skill that writes it, and this
 file names that skill rather than restating the fields. It defines exactly
 one shape: the critique note.
@@ -28,11 +28,11 @@ this skill back into the failure it was built against.
 
 Run this skill against any game project, regardless of how much or how little
 design data currently exists. Nothing here waits on another skill's output and
-nothing here refuses to run for lack of one. The suggested order across the
-six skills — `game-pillars` → `game-comp-analysis` → `game-mechanics` →
+nothing here refuses to run for lack of one. The suggested authoring order —
+`game-pillars` → `game-comp-analysis` → `game-mechanics` →
 `game-tech` → `game-gdd` → `game-critique`, looping back to `game-mechanics`
 after a critique pass — is a recommendation, not a requirement this skill
-enforces.
+enforces. `game-sync` sits outside it, invoked whenever code changes.
 
 A project with no `design/gdd.md` still gets a critique: its records are
 critiqued directly, and the owner is told once that GDD sections were not

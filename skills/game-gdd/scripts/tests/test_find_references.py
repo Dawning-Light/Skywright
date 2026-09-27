@@ -147,6 +147,17 @@ class CliIntegrationTests(unittest.TestCase):
         self.assertIn("design/pillars/zero-grind.md:", out)
         self.assertNotIn("[[slug]]", out)
 
+    def test_runs_on_a_corpus_missing_implementation(self):
+        # The render refuses a mechanic entry with no `implementation`; the
+        # reverse lookup must not, or `game-sync` could not search a corpus
+        # it has not backfilled yet.
+        result = self.run_cli(
+            os.path.join(FIXTURES, "invalid-implementation-mechanic"),
+            "mechanic:combat",
+        )
+        self.assertEqual(result.returncode, 0, result.stderr.decode())
+        self.assertIn("No references to [[mechanic:combat]]", result.stdout.decode())
+
 
 if __name__ == "__main__":
     unittest.main()

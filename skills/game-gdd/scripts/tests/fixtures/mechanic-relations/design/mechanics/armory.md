@@ -5,6 +5,7 @@ parent: none
 children: [gauntlets]
 part_of: none
 parts: []
+implementation: built
 updated: 2026-09-20T09:00Z
 ---
 

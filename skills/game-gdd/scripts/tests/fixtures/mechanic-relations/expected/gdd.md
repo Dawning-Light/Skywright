@@ -12,7 +12,7 @@ No approved design pillar has been recorded yet — `design/pillars/` holds no r
 
 ### Armory
 
-*Source: `design/mechanics/armory.md` · Updated: 2026-09-20T09:00Z*
+*Source: `design/mechanics/armory.md` · Updated: 2026-09-20T09:00Z · Implementation: built*
 
 - Parent: none
 - Children: `gauntlets`
@@ -25,7 +25,7 @@ The room a character's gear is stored and swapped in.
 
 ### Gauntlets
 
-*Source: `design/mechanics/gauntlets.md` · Updated: 2026-09-20T09:01Z*
+*Source: `design/mechanics/gauntlets.md` · Updated: 2026-09-20T09:01Z · Implementation: built*
 
 - Parent: `armory`
 - Children: none
@@ -39,7 +39,7 @@ under `parent`, so `loadout` lists a part that renders elsewhere.
 
 ### Loadout
 
-*Source: `design/mechanics/loadout.md` · Updated: 2026-09-20T09:02Z*
+*Source: `design/mechanics/loadout.md` · Updated: 2026-09-20T09:02Z · Implementation: partial*
 
 - Parent: none
 - Children: none
@@ -50,9 +50,13 @@ under `parent`, so `loadout` lists a part that renders elsewhere.
 
 The set of gear a character takes into a run.
 
+#### Not yet built
+
+- Swapping a loadout mid-run.
+
 ### Quick Slots
 
-*Source: `design/mechanics/quick-slots.md` · Updated: 2026-09-20T09:03Z*
+*Source: `design/mechanics/quick-slots.md` · Updated: 2026-09-20T09:03Z · Implementation: designed*
 
 - Parent: none
 - Children: none
@@ -65,7 +69,7 @@ Composition alone: no parent, so this nests under its container.
 
 ### Salvage Rules
 
-*Source: `design/mechanics/salvage-rules.md` · Updated: 2026-09-20T09:06Z*
+*Source: `design/mechanics/salvage-rules.md` · Updated: 2026-09-20T09:06Z · Implementation: built*
 
 - Parent: `no-such-mechanic`
 - Children: none
@@ -79,7 +83,7 @@ A dangling parent. It renders as a root rather than falling back to its
 
 ### Ring One
 
-*Source: `design/mechanics/ring-one.md` · Updated: 2026-09-20T09:04Z*
+*Source: `design/mechanics/ring-one.md` · Updated: 2026-09-20T09:04Z · Implementation: designed*
 
 - Parent: none
 - Children: none
@@ -93,7 +97,7 @@ still renders exactly once.
 
 ### Ring Two
 
-*Source: `design/mechanics/ring-two.md` · Updated: 2026-09-20T09:05Z*
+*Source: `design/mechanics/ring-two.md` · Updated: 2026-09-20T09:05Z · Implementation: designed*
 
 - Parent: none
 - Children: none

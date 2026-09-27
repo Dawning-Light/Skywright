@@ -5,6 +5,7 @@ parent: none
 children: []
 part_of: inventory
 parts: []
+implementation: designed
 updated: 2026-09-10T12:12Z
 ---
 

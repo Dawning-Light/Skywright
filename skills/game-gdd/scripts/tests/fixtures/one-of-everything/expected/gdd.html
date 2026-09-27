@@ -129,7 +129,7 @@
   <h2>Mechanics</h2>
   <article id="mechanic-combat" class="record mechanic" data-source="design/mechanics/combat.md" data-updated="2026-09-10T12:00Z">
     <h3>Combat</h3>
-    <p class="source"><code>design/mechanics/combat.md</code> <time class="updated" datetime="2026-09-10T12:00Z">2026-09-10T12:00Z</time></p>
+    <p class="source"><code>design/mechanics/combat.md</code> <time class="updated" datetime="2026-09-10T12:00Z">2026-09-10T12:00Z</time> <span class="implementation implementation-built">built</span></p>
     <dl class="fields">
       <dt>Parent</dt>
       <dd class="unrecorded">none</dd>
@@ -158,7 +158,7 @@
   <div class="mechanic-children">
     <article id="mechanic-melee" class="record mechanic" data-source="design/mechanics/melee.md" data-updated="2026-09-10T12:04Z">
       <h3>Melee</h3>
-      <p class="source"><code>design/mechanics/melee.md</code> <time class="updated" datetime="2026-09-10T12:04Z">2026-09-10T12:04Z</time></p>
+      <p class="source"><code>design/mechanics/melee.md</code> <time class="updated" datetime="2026-09-10T12:04Z">2026-09-10T12:04Z</time> <span class="implementation implementation-built">built</span></p>
       <dl class="fields">
         <dt>Parent</dt>
         <dd><a href="#mechanic-combat"><code>combat</code></a></dd>
@@ -182,7 +182,7 @@
     </article>
     <article id="mechanic-ranged" class="record mechanic" data-source="design/mechanics/ranged.md" data-updated="2026-09-10T12:07Z">
       <h3>Ranged</h3>
-      <p class="source"><code>design/mechanics/ranged.md</code> <time class="updated" datetime="2026-09-10T12:07Z">2026-09-10T12:07Z</time></p>
+      <p class="source"><code>design/mechanics/ranged.md</code> <time class="updated" datetime="2026-09-10T12:07Z">2026-09-10T12:07Z</time> <span class="implementation implementation-partial">partial</span></p>
       <dl class="fields">
         <dt>Parent</dt>
         <dd><a href="#mechanic-combat"><code>combat</code></a></dd>
@@ -200,12 +200,16 @@
         <p>A player kites a slow enemy around a pillar and wins without taking a hit.</p>
         <h4>Weak example</h4>
         <p>Every encounter is won by backing away and firing, which makes melee pointless.</p>
+        <h4 class="not-yet-built">Not yet built</h4>
+        <ul>
+          <li>Projectile drop over distance.</li>
+        </ul>
       </div>
     </article>
   </div>
   <article id="mechanic-inventory" class="record mechanic" data-source="design/mechanics/inventory.md" data-updated="2026-09-10T12:10Z">
     <h3>Inventory</h3>
-    <p class="source"><code>design/mechanics/inventory.md</code> <time class="updated" datetime="2026-09-10T12:10Z">2026-09-10T12:10Z</time></p>
+    <p class="source"><code>design/mechanics/inventory.md</code> <time class="updated" datetime="2026-09-10T12:10Z">2026-09-10T12:10Z</time> <span class="implementation implementation-designed">designed</span></p>
     <dl class="fields">
       <dt>Parent</dt>
       <dd class="unrecorded">none</dd>
@@ -228,7 +232,7 @@
   <div class="mechanic-children">
     <article id="mechanic-stack-limits" class="record mechanic" data-source="design/mechanics/stack-limits.md" data-updated="2026-09-10T12:12Z">
       <h3>Stack Limits</h3>
-      <p class="source"><code>design/mechanics/stack-limits.md</code> <time class="updated" datetime="2026-09-10T12:12Z">2026-09-10T12:12Z</time></p>
+      <p class="source"><code>design/mechanics/stack-limits.md</code> <time class="updated" datetime="2026-09-10T12:12Z">2026-09-10T12:12Z</time> <span class="implementation implementation-designed">designed</span></p>
       <dl class="fields">
         <dt>Parent</dt>
         <dd class="unrecorded">none</dd>
@@ -506,7 +510,7 @@
   </article>
   <article id="tech-save-format" class="record tech-record status-accepted scope-contained" data-source="design/tech/save-format.md" data-updated="2026-09-04T07:45Z">
     <h3>Save Format</h3>
-    <p class="source"><code>design/tech/save-format.md</code> <time class="updated" datetime="2026-09-04T07:45Z">2026-09-04T07:45Z</time></p>
+    <p class="source"><code>design/tech/save-format.md</code> <time class="updated" datetime="2026-09-04T07:45Z">2026-09-04T07:45Z</time> <span class="implementation implementation-partial">partial</span></p>
     <p class="record-title">Saves are a single append-only JSON document per guild.</p>
     <dl class="fields">
       <dt>Status</dt>
@@ -525,6 +529,10 @@
       <p>One append-only JSON document per guild, fsynced at each run boundary.</p>
       <h4>Consequences</h4>
       <p>Commits to a bounded save size. Forecloses partial loads, so a very large roster will pay the whole parse cost at launch.</p>
+      <h4 class="not-yet-built">Not yet built</h4>
+      <ul>
+        <li>Fsyncing at each run boundary.</li>
+      </ul>
       <h4>Assumptions to verify</h4>
       <ul>
         <li>A 10 MB save parses in under 100 ms on the target hardware.</li>
