@@ -154,7 +154,10 @@ Three properties the render is built to guarantee, because `game-critique`
   carries one — raw UTC in `gdd.md`; in `gdd.html` a `<time>` element the
   inline script converts to local time, plus a `data-updated` attribute on
   the same element that carries `data-source`. The economy graph's one
-  file-level `updated` is shown once, on its section caption.
+  file-level `updated` is shown once, on its section caption. A mechanic
+  entry's `implementation` value, and an accepted technical decision
+  record's, follows `updated` in the same caption — plain text in `gdd.md`,
+  a `<span>` classed by value in `gdd.html`.
 - **Linked.** A typed wikilink in any record body resolves to the anchor of
   the section it names, so a citation in the data is a working link in
   `gdd.html`; `gdd.md` carries the same reference text through unchanged.
@@ -248,8 +251,11 @@ section and record in the HTML carries a class for its kind (`.pillar`,
 `.mechanic`, `.economy-node`, `.economy-family`, `.economy-connection`,
 `.tech-record`), each non-record state a render can show has one too
 (`.absent`, `.open-note`, `.candidate-note`, `.superseded-note`), and so do
-the `updated` time (`.updated`), an `## Open Questions` heading inside a
-record body (`.open-questions`), and the reverse-citations disclosure a
+the `updated` time (`.updated`), the `implementation` value
+(`.implementation`, plus `.implementation-designed`,
+`.implementation-partial`, or `.implementation-built`), an
+`## Open Questions` or `## Not yet built` heading inside a record body
+(`.open-questions`, `.not-yet-built`), and the reverse-citations disclosure a
 cited section ends with (`.citations`, a plain `<details>` — no script
 involved), so a theme has real hooks for every category.
 `templates/default.css` documents the full structure at the top of the
