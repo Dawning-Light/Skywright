@@ -7,9 +7,9 @@ description: Use when a game project's design data needs upkeep rather than auth
 
 Renders the core Game Design Document as a **view** onto structured data that
 already exists elsewhere in the project, never as a document authored or
-hand-maintained in its own right. This is the fifth of six independent
+hand-maintained in its own right. This is the fifth of seven independent
 skills for game design (`game-pillars`, `game-comp-analysis`,
-`game-mechanics`, `game-tech`, `game-gdd`, `game-critique`). It defines no record shape of
+`game-mechanics`, `game-tech`, `game-gdd`, `game-critique`, `game-sync`). It defines no record shape of
 its own — every field it reads is defined once, by the skill that writes it,
 and this file names that skill rather than restating the field.
 
@@ -20,10 +20,10 @@ of the structured data below currently exists. Nothing here waits on a
 complete set of inputs, and nothing here refuses to run because a pillar,
 mechanic, or comp-analysis file is missing — a project with only a concept
 statement and nothing else still gets a GDD, and so does a project with
-nothing at all. The suggested order across the six skills —
+nothing at all. The suggested authoring order —
 `game-pillars` → `game-comp-analysis` → `game-mechanics` → `game-tech` →
 `game-gdd` → `game-critique` — is a recommendation, not a requirement this
-skill enforces.
+skill enforces. `game-sync` sits outside it, invoked whenever code changes.
 
 ## What this skill produces
 

@@ -1,7 +1,7 @@
 # Skywright
 
 A game-design skillset for coding agents, distributed as a Claude Code and
-Codex plugin. Eight skills under `skills/`, and the manifests that package
+Codex plugin. Nine skills under `skills/`, and the manifests that package
 them. Nothing else.
 
 ## This repo is skills-only

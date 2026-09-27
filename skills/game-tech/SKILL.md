@@ -8,11 +8,11 @@ description: Use when a game project's design needs a technical decision made an
 Proposes, from a game project's existing design data, the technical decisions
 that data calls for, and records each decision the owner makes as its own
 file inside that project's `design/tech/` directory. This is the fourth of
-six independent skills for game design (`game-pillars`,
+seven independent skills for game design (`game-pillars`,
 `game-comp-analysis`, `game-mechanics`, `game-tech`, `game-gdd`,
-`game-critique`). It defines exactly one record shape, the **technical
+`game-critique`, `game-sync`). It defines exactly one record shape, the **technical
 decision record**, and every other skill that reads one (`game-gdd`,
-`game-critique`) names this file rather than restating the fields. Every
+`game-critique`, `game-sync`) names this file rather than restating the fields. Every
 field it reads from another skill's record is defined once, by the skill
 that writes it, and this file names that skill rather than restating the
 field.
@@ -30,10 +30,11 @@ little design data currently exists. It is the one skill in the set whose
 job is reading the other skills' data, and it requires none of it: on a
 project with no design data it proposes nothing on the strength of data, but
 the owner can still walk the catalog or name a decision directly. The
-suggested order across the six skills — `game-pillars` →
+suggested authoring order — `game-pillars` →
 `game-comp-analysis` → `game-mechanics` → `game-tech` → `game-gdd` →
 `game-critique`, looping back to `game-mechanics` after a critique pass — is
-a recommendation, not a requirement this skill enforces.
+a recommendation, not a requirement this skill enforces. `game-sync` sits
+outside it, invoked whenever code changes.
 
 ## What this skill produces
 
