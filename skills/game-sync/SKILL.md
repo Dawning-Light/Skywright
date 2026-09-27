@@ -87,8 +87,12 @@ On request, over the whole corpus or a subset the owner names.
 
 1. **Select records.** Every `built` record, and every `partial` record with
    its `## Not yet built` items excluded from the check. `designed` records
-   are skipped. Records missing `implementation` are collected separately,
-   for step 5. The economy graph is included only where the owner names it.
+   are skipped. Records that require `implementation` but lack it — every
+   mechanic entry, and every `accepted` technical decision record — are
+   collected separately, for step 5. An `open` or `superseded` technical
+   decision record correctly carries no `implementation` field and is never
+   collected for backfill. The economy graph is included only where the
+   owner names it.
 2. **Extract claims.** From each selected record, the concrete, checkable
    claims: values, names, counts, sequencing, and rules. Design rationale,
    feel, and examples are not claims.
@@ -104,18 +108,21 @@ On request, over the whole corpus or a subset the owner names.
    skill never edits code). A `not found` claim goes to the owner the same
    way: the record may be less built than its `implementation` says, or the
    code may name the thing differently.
-5. **Backfill `implementation`.** For each record missing the field, propose
-   a value from what the code shows, with the evidence — the code that
-   implements it, or its absence — and write the confirmed value through the
-   owning skill, with `## Not yet built` for `partial`. There is no default:
-   a missing value is never assumed to be `designed`, since that would hide
-   exactly the built records this audit exists to check.
+5. **Backfill `implementation`.** For each record collected in step 1,
+   propose a value from what the code shows, with the evidence — the code
+   that implements it, or its absence — and write the confirmed value
+   through the owning skill, with `## Not yet built` for `partial`. There is
+   no default: a missing value is never assumed to be `designed`, since that
+   would hide exactly the built records this audit exists to check.
 
-**Upgrading a corpus.** Records written before the `implementation` field
-existed fail `game-gdd`'s render, which names each one and points here. Run
-audit mode over the whole corpus: with every value missing, it reduces to
-step 5. Once the render passes, run it again to check the records the
-backfill classified `built` or `partial`.
+**Upgrading a corpus.** A mechanic entry or `accepted` technical decision
+record written before the `implementation` field existed fails `game-gdd`'s
+render, which names the first such record per run and points here. Run audit
+mode over the whole corpus: step 1 collects every mechanic entry and every
+`accepted` tech record still missing the field, and for those it reduces to
+step 5 — an `open` or `superseded` tech record is untouched, since it never
+carries the field. Once the render passes, run it again to check the records
+the backfill classified `built` or `partial`.
 
 ## The dispatch budget
 
