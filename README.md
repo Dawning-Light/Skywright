@@ -147,4 +147,11 @@ skills only.
 
 ## License
 
-[AGPL-3.0](LICENSE)
+[AGPL-3.0](LICENSE), with an [output exception](LICENSE-EXCEPTION.md).
+
+The license covers Skywright's skills and scripts, not what they produce.
+The files these skills create in or copy into your project are yours to use
+under any terms, closed-source or commercial included. That covers your
+design records, the rendered GDD, and the seeded `gdd.css`. The AGPL applies
+only if you modify Skywright itself and distribute it or run it as a
+service.
