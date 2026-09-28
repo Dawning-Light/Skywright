@@ -8,6 +8,56 @@ research skill two of them delegate to.
 
 Distributed as a plugin for Claude Code and Codex.
 
+## Why use it
+
+When you build a game with a coding agent, the design tends to go wrong in
+a few predictable ways. Skywright is built to prevent each of them.
+
+**The design lives in your head, or in chat history.** Decisions get made
+in conversation and then scroll away. The next session has no idea why a
+mechanic works the way it does, so the agent guesses, and the game drifts.
+Skywright writes every decision down as a small file in your repo, where
+any later session (and any collaborator) can read it.
+
+**The agent designs the game for you.** Ask an agent for pillars or
+mechanics and it will happily invent them. The skills interview you
+instead: they ask, propose, and push back, but nothing is recorded until
+you've stated or confirmed it. The design stays yours.
+
+**The design doc goes stale.** A traditional GDD is written once and starts
+rotting the day code diverges from it. Here the GDD is rendered from the
+records, never hand-edited, so it can't disagree with them. Each record
+also says whether its design is `designed`, `partial`, or `built`. When
+code changes something a built record states, `game-sync` flags the
+mismatch and asks you which side is wrong: the record or the code.
+
+**The agent reviews its own work and approves it.** A session that wrote a
+design tends to defend it. `game-critique` sends each pillar, mechanic, or
+GDD section to independent critics that never see the reasoning behind it.
+Each critic applies a named framework (design-pattern analysis, fit
+against your pillars, player motivation), and every finding traces back to
+that framework.
+
+**"Unique" is asserted, not checked.** `game-comp-analysis` researches the
+real competitors in your genre, then states how your concept differs from
+them and which pillars that difference suggests.
+
+**Numbers and references quietly break.** Mechanics cross-reference each
+other, your pillars, and a typed economy graph of resources and flows. The
+renderer refuses to build a GDD with a broken reference or an invalid
+record, and it names which skill fixes the problem. `game-mechanics` can
+also fit value curves and compute expected values for drop tables.
+
+**Technical choices get made by accident.** `game-tech` reads your design
+and points out the decisions it implies, such as networking model,
+simulation, persistence, or engine. Each proposal quotes the line in your
+design that calls for it, and only the choice you make gets recorded.
+
+Skywright suits solo developers and small teams who build games with a
+coding agent and want the design to stay explicit and current, and to
+remain theirs. You can adopt one skill at a time: each one runs on whatever
+the project already has.
+
 ## How it works
 
 You don't call these skills by name. Describe what you're doing ("we need
