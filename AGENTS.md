@@ -2,8 +2,8 @@
 
 A game-design skillset for coding agents, distributed as a Claude Code and
 Codex plugin. Nine skills under `skills/`, the manifests that package
-them, the public `README.md` and `CONTRIBUTING.md`, and this file.
-Nothing else. `CLAUDE.md` is a one-line `@AGENTS.md` import, because Claude
+them, the public `README.md` and `CONTRIBUTING.md`, the license files
+(`LICENSE`, `LICENSE-EXCEPTION.md`), and this file. Nothing else. `CLAUDE.md` is a one-line `@AGENTS.md` import, because Claude
 Code doesn't read `AGENTS.md` on its own; put instructions here, not there.
 
 `CONTRIBUTING.md` holds this repo's conventions — skill-writing rules,

@@ -3,7 +3,9 @@
    --------------------------------------------------------------------------
    Seeded once by game-gdd's render_gdd.py into design/gdd.css. After that
    it is yours: edit freely, re-render as often as you like, and nothing
-   here is touched again unless you pass --reset-css.
+   here is touched again unless you pass --reset-css. Skywright's output
+   exception (LICENSE-EXCEPTION.md) lets you use this file, as seeded or
+   as edited, under any terms you choose.
 
    Structure of the document this styles (see render_gdd.py):
      .gdd-layout            two-column grid: sticky <nav class="toc"> + <main class="gdd">,

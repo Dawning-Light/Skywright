@@ -18,8 +18,9 @@ include the smallest `design/` input that reproduces the failure.
 
 ## The repo holds skills only
 
-This repo holds the skills under `skills/`, the plugin manifests, and this
-file and the README. That's everything.
+This repo holds the skills under `skills/`, the plugin manifests, the
+README, this file, `AGENTS.md` and its `CLAUDE.md` import, and the license
+files. That's everything.
 
 **Never commit a spec, plan, design document, research write-up, backlog, or
 notes file**, whether under `docs/`, at the root, or anywhere else. That
@@ -151,5 +152,13 @@ committing design documents, which agent workflows break most often.
 
 ## License
 
-Skywright is licensed under [AGPL-3.0](LICENSE). By contributing, you agree
-that your contribution is licensed under the same terms.
+Skywright is licensed under [AGPL-3.0](LICENSE), with an
+[output exception](LICENSE-EXCEPTION.md) that leaves the files a skill
+creates in or copies into a user's project free of the AGPL. By
+contributing, you agree that your contribution is licensed under the same
+terms, exception included.
+
+If your change makes a skill write or copy something new into a user's
+project, that material falls under the exception. Don't contribute
+anything to a `templates/` directory that you can't license that way, such
+as third-party code under a copyleft license.
