@@ -231,6 +231,23 @@ class GddSectionTests(PayloadTestCase):
         self.assertIn("unit: Lonely Action", text)
         self.assertIn("design/critique/%s-player-motivation-lonely-action.md" % today(), text)
 
+    def test_mechanic_section_carries_the_entry_context(self):
+        text = self.build("mechanics-literalist", "Hub Action")
+        labels = ["The unit under review", "The record it addresses"] + MECHANIC_LABELS[1:]
+        positions = [text.index("\n## %s\n" % label) for label in labels]
+        self.assertEqual(positions, sorted(positions))
+        self.assertIn("design/mechanics/base.md", self.section(text, "Its parent"))
+        linked = self.section(text, "Entries it links to")
+        self.assertIn("Link 12 forecloses running while it charges.", linked)
+        self.assertEqual(self.section(text, "Linked but not carried").strip(), "- `link-13`")
+        self.assertIn("id: train:fire-xp", self.section(text, "Economy nodes and connections it names"))
+
+    def test_pillar_and_economy_sections_carry_no_mechanic_context(self):
+        for heading in ("Core", "Mana"):
+            text = self.build("pillar-fit", heading)
+            self.assertNotIn("\n## Taxonomy index\n", text, heading)
+            self.assertNotIn("\n## Entries it links to\n", text, heading)
+
     def test_economy_node_section_carries_the_node(self):
         text = self.build("pillar-fit", "Mana")
         record = self.section(text, "The record it addresses")
@@ -331,6 +348,10 @@ class InvalidEconomyTests(PayloadTestCase):
         self.assertEqual(
             self.section(text, "Economy nodes and connections it names").strip(), "none"
         )
+
+    def test_a_gdd_section_from_a_mechanic_naming_the_economy_is_refused(self):
+        self.write("design/gdd.md", "### Cast\n\n*Source: `design/mechanics/cast.md`*\n")
+        self.assertIn("has no `id`", self.refused("mechanics-literalist", "Cast"))
 
 
 def today():

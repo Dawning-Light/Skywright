@@ -332,6 +332,17 @@ def load_economy_or_refuse(root):
 def mechanic_payload(root, slug):
     mechanics = load_mechanics(root)
     unit = mechanics[slug]
+    return (
+        [section("The unit under review", ["`%s` (mechanic entry)" % unit["rel"], fenced(unit["text"])])]
+        + mechanic_context(root, unit, mechanics)
+        + [section("Approved pillars", pillar_parts(root))]
+    )
+
+
+def mechanic_context(root, unit, mechanics):
+    """What travels with a mechanic entry besides the entry itself: its
+    relations, its linked entries, the taxonomy index, and the economy slice
+    its text names. A GDD section rendered from the entry carries the same."""
     fields = unit["fields"]
     parent = relation(fields.get("parent"))
     children = relation_list(fields.get("children"))
@@ -354,7 +365,6 @@ def mechanic_payload(root, slug):
         slice_parts = economy_slice(economy, names)
 
     return [
-        section("The unit under review", ["`%s` (mechanic entry)" % unit["rel"], fenced(unit["text"])]),
         section("Its parent", [trimmed_entry(parent, mechanics)] if parent else []),
         section("Its children", [trimmed_entry(c, mechanics) for c in children]),
         section("Its container (`part_of`)", [trimmed_entry(part_of, mechanics)] if part_of else []),
@@ -363,7 +373,6 @@ def mechanic_payload(root, slug):
         section("Linked but not carried", ["\n".join("- `%s`" % s for s in not_carried)]),
         section("Taxonomy index", [taxonomy_index(mechanics)]),
         section("Economy nodes and connections it names", slice_parts),
-        section("Approved pillars", pillar_parts(root)),
     ]
 
 
@@ -481,11 +490,18 @@ def gdd_payload(root, name):
             "section unit; render it with `game-gdd`." % name
         )
     heading, text = find_gdd_section(read_text(gdd_path), name)
-    return heading, [
+    sections = [
         section("The unit under review", ["Section `%s` of `design/gdd.md`" % heading, fenced(text)]),
         section("The record it addresses", addressed_record(root, heading, text)),
-        section("Approved pillars", pillar_parts(root)),
     ]
+    # A section rendered from a mechanic entry depends on what the entry
+    # depends on, so it carries the entry's context as well.
+    rel, _kind, _ident = source_caption(heading, text)
+    match = re.match(r"^design/mechanics/([^/]+)\.md$", rel)
+    if match and os.path.isfile(os.path.join(root, "mechanics", match.group(1) + ".md")):
+        mechanics = load_mechanics(root)
+        sections += mechanic_context(root, mechanics[match.group(1)], mechanics)
+    return heading, sections + [section("Approved pillars", pillar_parts(root))]
 
 
 # ---------------------------------------------------------------------------
