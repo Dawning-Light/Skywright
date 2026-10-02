@@ -9,7 +9,7 @@ The rule set every design-writing skill in the game-design skillset loads
 before it writes. This skill defines no record shape and produces no file of
 its own: `game-pillars`, `game-comp-analysis`, `game-mechanics`, and
 `game-tech` each invoke it before writing or revising a record they own, and
-the seven rules below govern what they write. `game-gdd` (renders only) and
+the eight rules below govern what they write. `game-gdd` (renders only) and
 `game-critique` (reads only, and its critique notes are not a shape these
 rules govern) do not invoke it. `game-sync` does not either: it revises a
 record only by invoking the skill that owns it, which loads these rules
@@ -18,7 +18,7 @@ itself.
 This is the one and only place these rules are defined. A calling skill
 names this file; it does not restate the rules.
 
-## The seven rules
+## The eight rules
 
 1. **Current-state prose only.** A record states what the design is, never
    what it used to be or how it changed. No history or transition wording —
@@ -68,6 +68,20 @@ names this file; it does not restate the rules.
 
 7. **Be concise.** Explain clearly and simply, in as few words as the content
    needs. Prefer the plain statement over the padded one.
+
+8. **Write it down when it's settled.** When the owner settles a decision,
+   or the reason behind one, that changes how a reader understands a record,
+   write it into the record that owns it in the same turn. Don't leave it in
+   chat, and don't save it for the end of the session. The test: if a fresh
+   reader of the record would raise the objection just settled, the answer
+   belongs in the record. A reason that lives only in chat is lost to every
+   later reader, including a critic who will raise the same objection again.
+   It goes where the shape keeps reasons — a mechanic entry's
+   `## Description` or `## Consequences`, a pillar's keep-or-cut reasoning,
+   a technical decision record's `## Context` or `## Consequences` — and
+   rules 2-4 still apply: rewrite the affected paragraph rather than splice
+   a clause onto it, ask before writing anything with no heading to go
+   under, and cite the owning record rather than restating its fact.
 
 ## Typed wikilinks
 
@@ -168,6 +182,9 @@ rewrite of the file. `game-gdd` renders the value beside each section's
   reads like a citation but is never parsed as one (rule 4) — replace it.
 - Is anything uncertain? Say so under `## Open Questions`, and remove the
   certainty it replaces (rule 6).
+- Did the owner settle a decision or a reason in this conversation that a
+  fresh reader of this record would object to without? Write it in now
+  (rule 8).
 - Does `implementation` still match the code?
 - For a technical decision record, is `## Decision` the choice and its
   rules, within about 40 lines?
