@@ -34,7 +34,7 @@ tracking, open an issue for it.
 - `skills/<name>/SKILL.md`: one skill per directory, with its own
   `scripts/`, `references/`, and `templates/` where it needs them. A plugin
   install deploys each skill's whole directory tree, so a skill must not
-  reach outside its own directory at runtime. The one exception is below.
+  reach outside its own directory at runtime. The exceptions are below.
 - `.claude-plugin/plugin.json`: the Claude Code manifest.
 - `.codex-plugin/plugin.json`: the Codex manifest.
 - `.claude-plugin/marketplace.json`: the marketplace for both. Codex reads
@@ -45,8 +45,11 @@ tracking, open an issue for it.
 
 `game-mechanics` and `game-gdd` are coupled on purpose. `game-mechanics`'s
 `economy-tool` imports `economy_frontmatter` from `game-gdd/scripts/` by
-relative path, and its tests read `game-gdd`'s fixtures the same way, so the
-two must stay siblings under one `skills/` root. Don't add another
+relative path, and its tests read `game-gdd`'s fixtures the same way.
+`game-critique` is coupled to `game-gdd` the same way: its
+`build_payload.py` imports `economy_frontmatter` and `render_gdd` from
+`game-gdd/scripts/`, so it reads records through the one frontmatter parser.
+All three must stay siblings under one `skills/` root. Don't add another
 cross-skill import without discussing it in an issue first.
 
 ## Writing a skill
@@ -84,7 +87,7 @@ reads or writes a design record goes through `game-gdd/scripts/economy_frontmatt
 so the repo has exactly one frontmatter parser.
 
 Every script ships with tests beside it in `scripts/tests/`. Before you open
-a PR, run all five suites from the repo root:
+a PR, run all six suites from the repo root:
 
 ```bash
 skills/game-gdd/scripts/tests/run_tests.sh
@@ -92,6 +95,7 @@ python3 -m unittest skills/game-gdd/scripts/tests/test_economy_frontmatter.py
 python3 -m unittest skills/game-gdd/scripts/tests/test_find_references.py
 python3 -m unittest skills/game-mechanics/scripts/tests/test_economy_tool.py
 bash skills/game-mechanics/scripts/tests/test_curve_fit.sh
+python3 -m unittest skills/game-critique/scripts/tests/test_build_payload.py
 ```
 
 If you add a suite, add it to that list here and in `AGENTS.md`.

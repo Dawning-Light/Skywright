@@ -89,13 +89,20 @@ dispatch is what keeps every individual read inside the length the research
 shows critique quality holds at; batching two units to save a dispatch spends
 the whole reason this skill exists.
 
-**The persona's reference file is inlined verbatim into the dispatch prompt.**
-Read `references/<persona>.md` and paste its full text into the prompt. Do not
-name the path and trust the agent to open it, and do not summarise it —
-exactly the reason `research`'s own subagent brief is inlined rather than
-referenced: paraphrasing drops exactly the lines that matter, and the lines
-that matter here are the checks and the re-grounding rule. A rule the
-dispatched agent never reads does not bind it.
+**The persona gets one assembled brief, written by a script.**
+`scripts/build_payload.py` writes the whole brief to one file: the persona's
+reference file verbatim, the unit, its payload under fixed section labels,
+and the critique note's path and shape. The dispatch prompt is a short
+instruction to read that file in full before doing anything else, giving its
+path and line count, and stating that the file is the whole brief. Never
+summarise or paraphrase the reference file or the payload into the prompt:
+paraphrasing drops exactly the lines that matter, and the lines that matter
+here are the checks and the re-grounding rule. A rule the dispatched agent
+never reads does not bind it. A script copies them verbatim, and does it
+without spending this session's output on retyping a reference file nine
+times a pass. Never hand the agent the reference path, the record paths, or
+any other list of sources to go and find: it gets one assembled file, and
+nothing else to open.
 
 **No persona sees another persona's output.** Not at dispatch, not at
 follow-up, not in a summary. A persona's dispatch prompt carries no other
@@ -110,7 +117,9 @@ actually read it.
 
 **The dispatch payload — the one and only definition of what a persona can
 see.** Each dispatch carries the unit, the material below, and nothing else.
-What travels depends on the unit type:
+`scripts/build_payload.py` implements this table; where the two disagree,
+this table is right and the script has a bug. What travels depends on the
+unit type:
 
 | Unit type | What travels with it |
 | --- | --- |
@@ -240,7 +249,8 @@ One file per persona per pass, at
 - `<persona>` — the persona's name exactly as the persona table spells it.
 - `<unit-slug>` — the unit's own slug: for a pillar record or mechanic entry,
   its filename without `.md`; for a GDD section, the section heading
-  lowercased with non-alphanumerics replaced by hyphens.
+  lowercased, each run of non-alphanumerics replaced by one hyphen, with
+  none left at either end.
 
 **Same-day repeats.** If that exact path already exists, the new note takes
 the suffix `-2` before `.md`. If `-2` also exists, it takes `-3`, and so on to
@@ -268,9 +278,12 @@ Frontmatter:
   Neither is set until each resolution is written into the record that owns
   it (**Write the resolution into the record**, below).
 
-Body: one finding per check that failed, each naming the check it came from,
-in the finding shape that persona's reference file defines, plus any check the
-persona recorded as applicable but unrunnable against its payload. A pass in
+Body: every check the persona's reference file names, by number, each with
+its outcome — passed, not applicable, applicable but unrunnable, or failed.
+Each failed check carries one finding in the finding shape that persona's
+reference file defines; each unrunnable one names the material that was
+missing. Listing every check is what shows the persona read its whole brief:
+a check missing from the note was never run. A pass in
 which every check that applied and could run passed still writes its note, with
 a body stating that and no findings — a clean pass is a recorded result, not a
 missing file. An unrunnable check reported here is a defect in the dispatch
@@ -286,18 +299,29 @@ payload above, not in the design under review; take it to the payload table.
 3. **Check the budget.** Multiply persona count by unit count. If it exceeds
    9, apply the overflow rule above and settle a smaller pass before
    dispatching anything.
-4. **Assemble each unit's dispatch payload** per the payload table above,
-   including the taxonomy index for every mechanic entry. Where
-   `design/gdd.md` is absent, drop GDD-section units and tell the owner once.
-5. **Dispatch.** For each persona-unit pair, make the **dispatch call** with a
-   prompt carrying, in this order: the persona reference file's full text; the
-   unit; that unit's dispatch payload from step 4; and the critique-note path
-   and shape above. Record the agent identifier the call returns — that
-   identifier is what the follow-up call addresses.
+4. **Build each brief.** For each persona-unit pair, run from the consuming
+   project's root, with `<skill>` the directory this file sits in:
+
+   ```
+   python3 <skill>/scripts/build_payload.py --persona <name> --unit <unit>
+   ```
+
+   `<unit>` is the record's path (`design/pillars/<slug>.md`,
+   `design/mechanics/<slug>.md`) or a `design/gdd.md` section's heading. The
+   script writes the brief to the OS temp directory, never into `design/`,
+   with the note path's same-day ordinal already resolved, and prints the
+   file's path and line count. Where it refuses — an invalid economy graph,
+   a GDD section with no `design/gdd.md` — relay its message to the owner and
+   drop that unit; where `design/gdd.md` is absent, tell the owner once.
+5. **Dispatch.** For each brief, make the **dispatch call** with a short
+   prompt: read the file at `<path>` (`<N>` lines) in full before doing
+   anything else; it is your whole brief. Record the agent identifier the
+   call returns — that identifier is what the follow-up call addresses.
 6. **Collect the notes.** Confirm each dispatched persona wrote its note at
-   the expected path. A persona that returned findings without writing the
-   file has not completed its pass; re-dispatch it rather than writing the
-   note on its behalf.
+   the expected path, and that the note lists every check its reference file
+   names. A persona that returned findings without writing the file, or whose
+   note skips a check, has not completed its pass; re-dispatch it rather than
+   writing or completing the note on its behalf.
 7. **Report** the note paths to the owner, one line each. Do not merge the
    notes into a single verdict or reconcile disagreements between personas —
    the disagreement is information the owner reads, and reconciling it here
@@ -351,21 +375,23 @@ section and nothing else.
 
 | Call | On a Claude Code host | Notes |
 | --- | --- | --- |
-| **dispatch call** | the agent-dispatch tool (`Agent`, `Task` in some builds), with `subagent_type` set to a general-purpose fresh agent and the whole dispatch prompt in `prompt` | returns an agent identifier the follow-up call addresses. `subagent_type: "fork"` is the context-inheriting form the dispatch contract bars — never select it here |
+| **dispatch call** | the agent-dispatch tool (`Agent`, `Task` in some builds), with `subagent_type` set to a general-purpose fresh agent and the short dispatch prompt from Procedure step 5 in `prompt` | returns an agent identifier the follow-up call addresses. `subagent_type: "fork"` is the context-inheriting form the dispatch contract bars — never select it here |
 | **follow-up call** | the agent-messaging tool (`SendMessage`), addressed by the identifier the dispatch call returned | reaches only an agent dispatched by this same session |
 
 **A host with no addressable dispatch.** Codex receives this skill under the
 same global distribution and has a fresh-agent equivalent of the dispatch call
 but no follow-up call. There, everything through step 7 of the Procedure runs
-unchanged: the personas are dispatched, they read their inlined reference
-files, and they write their critique notes. What is unavailable is the live
-follow-up conversation. Handle the owner's pushback there by making a fresh
-**dispatch call** carrying the persona's reference file, the same unit and its
-material, the prior critique note, and the pushback — the persona then answers
+unchanged: the personas are dispatched, they read their assembled briefs, and
+they write their critique notes. What is unavailable is the live follow-up
+conversation. Handle the owner's pushback there by rebuilding the persona's
+brief with `scripts/build_payload.py` and making a fresh **dispatch call**
+whose short prompt also carries the prior critique note's text and the
+pushback, and tells the persona to edit that prior note in place at its own
+path rather than write the new path the brief names. The persona then answers
 under the re-grounding rule against that note.
 
 **Addressability is session-bound.** Even where the follow-up call exists, it
 reaches a persona only within the session that dispatched it. A later session
 cannot resume the original agent, and must not pretend to: it re-dispatches
-the persona fresh, with its reference file, the unit, and the prior critique
-note as input — the same procedure the no-follow-up-call host uses above.
+the persona fresh, with a rebuilt brief and the prior critique note — the same
+procedure the no-follow-up-call host uses above.

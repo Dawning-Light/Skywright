@@ -33,8 +33,10 @@ a file.
 
 `skills/game-mechanics` and `skills/game-gdd` are coupled: `game-mechanics`'s
 `economy-tool` imports `economy_frontmatter` from `game-gdd/scripts/` by
-relative path, and its tests read `game-gdd`'s fixtures the same way. The two
-must stay siblings under one `skills/` root.
+relative path, and its tests read `game-gdd`'s fixtures the same way.
+`skills/game-critique` is coupled to `game-gdd` the same way:
+`build_payload.py` imports `economy_frontmatter` and `render_gdd` from
+`game-gdd/scripts/`. All three must stay siblings under one `skills/` root.
 
 ## Tests
 
@@ -44,6 +46,7 @@ python3 -m unittest skills/game-gdd/scripts/tests/test_economy_frontmatter.py
 python3 -m unittest skills/game-gdd/scripts/tests/test_find_references.py
 python3 -m unittest skills/game-mechanics/scripts/tests/test_economy_tool.py
 bash skills/game-mechanics/scripts/tests/test_curve_fit.sh
+python3 -m unittest skills/game-critique/scripts/tests/test_build_payload.py
 ```
 
 Python 3 standard library only; no dependencies to install.
