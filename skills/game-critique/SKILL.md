@@ -299,7 +299,14 @@ payload above, not in the design under review; take it to the payload table.
 3. **Check the budget.** Multiply persona count by unit count. If it exceeds
    9, apply the overflow rule above and settle a smaller pass before
    dispatching anything.
-4. **Build each brief.** For each persona-unit pair, run from the consuming
+4. **Settle the model.** Tell the owner the pass will dispatch N agents, N
+   being the product from step 3, and that each is a full agent session
+   costing tens of thousands of tokens. Ask which model they should run on:
+   this session's own model, or a cheaper one the host offers (see the
+   Adapter). A model different from the one that authored the design also
+   adds independence, for the same reason a fresh agent does. Use the answer
+   for every dispatch and follow-up in this invocation.
+5. **Build each brief.** For each persona-unit pair, run from the consuming
    project's root, with `<skill>` the directory this file sits in:
 
    ```
@@ -313,16 +320,16 @@ payload above, not in the design under review; take it to the payload table.
    file's path and line count. Where it refuses — an invalid economy graph,
    a GDD section with no `design/gdd.md` — relay its message to the owner and
    drop that unit; where `design/gdd.md` is absent, tell the owner once.
-5. **Dispatch.** For each brief, make the **dispatch call** with a short
+6. **Dispatch.** For each brief, make the **dispatch call** with a short
    prompt: read the file at `<path>` (`<N>` lines) in full before doing
    anything else; it is your whole brief. Record the agent identifier the
    call returns — that identifier is what the follow-up call addresses.
-6. **Collect the notes.** Confirm each dispatched persona wrote its note at
+7. **Collect the notes.** Confirm each dispatched persona wrote its note at
    the expected path, and that the note lists every check its reference file
    names. A persona that returned findings without writing the file, or whose
    note skips a check, has not completed its pass; re-dispatch it rather than
    writing or completing the note on its behalf.
-7. **Report** the note paths to the owner, one line each. Do not merge the
+8. **Report** the note paths to the owner, one line each. Do not merge the
    notes into a single verdict or reconcile disagreements between personas —
    the disagreement is information the owner reads, and reconciling it here
    would substitute this session's judgement for the frameworks'.
@@ -333,7 +340,7 @@ The owner reads a note, disagrees with a finding, and wants to argue with the
 critic rather than receive a fixed objection list. A follow-up is for that
 pushback only: the owner disagrees and the design is unchanged.
 
-1. Make the **follow-up call** to that persona's agent identifier from step 5,
+1. Make the **follow-up call** to that persona's agent identifier from step 6,
    carrying the owner's pushback and nothing from any other persona.
 2. The persona answers under the re-grounding rule, and either states that the
    finding stands or states which check now passes and why.
@@ -375,12 +382,12 @@ section and nothing else.
 
 | Call | On a Claude Code host | Notes |
 | --- | --- | --- |
-| **dispatch call** | the agent-dispatch tool (`Agent`, `Task` in some builds), with `subagent_type` set to a general-purpose fresh agent and the short dispatch prompt from Procedure step 5 in `prompt` | returns an agent identifier the follow-up call addresses. `subagent_type: "fork"` is the context-inheriting form the dispatch contract bars — never select it here |
+| **dispatch call** | the agent-dispatch tool (`Agent`, `Task` in some builds), with `subagent_type` set to a general-purpose fresh agent, the short dispatch prompt from Procedure step 6 in `prompt`, and the model settled in Procedure step 4 in `model` (omit it to run on this session's own model) | returns an agent identifier the follow-up call addresses. `subagent_type: "fork"` is the context-inheriting form the dispatch contract bars — never select it here |
 | **follow-up call** | the agent-messaging tool (`SendMessage`), addressed by the identifier the dispatch call returned | reaches only an agent dispatched by this same session |
 
 **A host with no addressable dispatch.** Codex receives this skill under the
 same global distribution and has a fresh-agent equivalent of the dispatch call
-but no follow-up call. There, everything through step 7 of the Procedure runs
+but no follow-up call. There, everything through step 8 of the Procedure runs
 unchanged: the personas are dispatched, they read their assembled briefs, and
 they write their critique notes. What is unavailable is the live follow-up
 conversation. Handle the owner's pushback there by rebuilding the persona's
@@ -389,6 +396,10 @@ whose short prompt also carries the prior critique note's text and the
 pushback, and tells the persona to edit that prior note in place at its own
 path rather than write the new path the brief names. The persona then answers
 under the re-grounding rule against that note.
+
+For Procedure step 4 on Codex, pass the chosen model through whatever model
+selection its fresh-agent call offers. Where it offers none, tell the owner
+the critics will run on this session's model, and skip the question.
 
 **Addressability is session-bound.** Even where the follow-up call exists, it
 reaches a persona only within the session that dispatched it. A later session
