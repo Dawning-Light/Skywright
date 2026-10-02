@@ -14,6 +14,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SCRIPT = os.path.join(os.path.dirname(HERE), "build_payload.py")
 SKILL_DIR = os.path.dirname(os.path.dirname(HERE))
 FIXTURES = os.path.join(HERE, "fixtures")
+RENDER = os.path.normpath(
+    os.path.join(SKILL_DIR, os.pardir, "game-gdd", "scripts", "render_gdd.py")
+)
 
 MECHANIC_LABELS = [
     "The unit under review",
@@ -31,6 +34,9 @@ MECHANIC_LABELS = [
 
 class PayloadTestCase(unittest.TestCase):
     fixture = "linked-project"
+    # Render design/gdd.md with the real renderer rather than check one in, so
+    # a change to its captions breaks these tests instead of passing them.
+    render = True
 
     def setUp(self):
         self.scratch = tempfile.mkdtemp()
@@ -41,6 +47,10 @@ class PayloadTestCase(unittest.TestCase):
             os.path.join(FIXTURES, self.fixture, "design"),
             os.path.join(self.project, "design"),
         )
+        if self.render:
+            subprocess.run(
+                [sys.executable, RENDER], cwd=self.project, check=True, capture_output=True
+            )
 
     def tearDown(self):
         shutil.rmtree(self.scratch)
@@ -61,6 +71,18 @@ class PayloadTestCase(unittest.TestCase):
             text=True,
             encoding="utf-8",
         )
+
+    def write(self, rel, text):
+        path = os.path.join(self.project, *rel.split("/"))
+        with open(path, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(text)
+
+    def refused(self, persona, unit):
+        result = self.run_script(persona, unit)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, "")
+        self.assertEqual(os.listdir(self.out_dir), [])
+        return result.stderr
 
     def build(self, persona, unit):
         result = self.run_script(persona, unit)
@@ -169,6 +191,20 @@ class MechanicEntryTests(PayloadTestCase):
         self.assertNotIn("idea", pillars)
 
 
+    def test_a_linked_slug_with_no_entry_is_named(self):
+        self.write(
+            "design/mechanics/lonely.md",
+            "---\nname: lonely\ntitle: Lonely Action\nparent: none\nchildren: []\n"
+            "part_of: none\nparts: []\nimplementation: designed\n---\n\n"
+            "## Description\n\nReads [[mechanic:ghost]].\n",
+        )
+        text = self.build("mechanics-literalist", "design/mechanics/lonely.md")
+        self.assertIn(
+            "`ghost`: no mechanic entry by that name exists.",
+            self.section(text, "Entries it links to"),
+        )
+
+
 class PillarRecordTests(PayloadTestCase):
     def test_pillar_carries_itself_and_the_concept_body(self):
         text = self.build("pillar-fit", "design/pillars/core.md")
@@ -177,6 +213,11 @@ class PillarRecordTests(PayloadTestCase):
         self.assertIn("A small fixture game whose actions link to one another.", concept)
         self.assertNotIn("title: Linked Fixture", concept)
         self.assertNotIn("\n## Taxonomy index\n", text)
+
+    def test_missing_concept_says_none(self):
+        os.remove(os.path.join(self.project, "design", "concept.md"))
+        text = self.build("pillar-fit", "design/pillars/core.md")
+        self.assertEqual(self.section(text, "Concept statement").strip(), "none")
 
 
 class GddSectionTests(PayloadTestCase):
@@ -189,6 +230,54 @@ class GddSectionTests(PayloadTestCase):
         self.assertIn("design/pillars/core.md", self.section(text, "Approved pillars"))
         self.assertIn("unit: Lonely Action", text)
         self.assertIn("design/critique/%s-player-motivation-lonely-action.md" % today(), text)
+
+    def test_mechanic_section_carries_the_entry_context(self):
+        text = self.build("mechanics-literalist", "Hub Action")
+        labels = ["The unit under review", "The record it addresses"] + MECHANIC_LABELS[1:]
+        positions = [text.index("\n## %s\n" % label) for label in labels]
+        self.assertEqual(positions, sorted(positions))
+        self.assertIn("design/mechanics/base.md", self.section(text, "Its parent"))
+        linked = self.section(text, "Entries it links to")
+        self.assertIn("Link 12 forecloses running while it charges.", linked)
+        self.assertEqual(self.section(text, "Linked but not carried").strip(), "- `link-13`")
+        self.assertIn("id: train:fire-xp", self.section(text, "Economy nodes and connections it names"))
+
+    def test_pillar_and_economy_sections_carry_no_mechanic_context(self):
+        for heading in ("Core", "Mana"):
+            text = self.build("pillar-fit", heading)
+            self.assertNotIn("\n## Taxonomy index\n", text, heading)
+            self.assertNotIn("\n## Entries it links to\n", text, heading)
+
+    def test_economy_node_section_carries_the_node(self):
+        text = self.build("pillar-fit", "Mana")
+        record = self.section(text, "The record it addresses")
+        self.assertIn("`design/economy.md`, node `mana`", record)
+        self.assertIn("{ id: mana, type: pool }", record)
+        self.assertIn("The pool every action is paid from.", record)
+
+    def test_economy_family_section_carries_the_expansion(self):
+        text = self.build("pillar-fit", "Skills")
+        record = self.section(text, "The record it addresses")
+        self.assertIn("Family `@skills`", record)
+        self.assertIn("id: train:fire-xp", record)
+
+    def test_a_chapter_or_grouping_is_refused(self):
+        for heading in ("Mechanics", "Design Pillars", "Nodes", "Supporting Documents Not Rendered"):
+            self.assertIn("names no single record", self.refused("pillar-fit", heading), heading)
+
+    def test_the_whole_economy_chapter_is_refused(self):
+        self.assertIn("whole economy graph", self.refused("pillar-fit", "Economy"))
+
+    def test_an_unknown_heading_is_refused(self):
+        self.assertIn("no section headed `Nowhere`", self.refused("pillar-fit", "Nowhere"))
+
+    def test_an_ambiguous_heading_is_refused(self):
+        gdd = os.path.join(self.project, "design", "gdd.md")
+        with open(gdd, "a", encoding="utf-8") as handle:
+            handle.write("\n### Lonely Action\n\n*Source: `design/mechanics/lonely.md`*\n")
+        self.assertIn(
+            "2 sections headed `Lonely Action`", self.refused("pillar-fit", "Lonely Action")
+        )
 
     def test_missing_gdd_is_refused(self):
         os.remove(os.path.join(self.project, "design", "gdd.md"))
@@ -237,6 +326,7 @@ class RefusalTests(PayloadTestCase):
 
 class InvalidEconomyTests(PayloadTestCase):
     fixture = "invalid-economy"
+    render = False
 
     def test_invalid_economy_is_refused(self):
         result = self.run_script("mechanics-literalist", "design/mechanics/cast.md")
@@ -246,6 +336,22 @@ class InvalidEconomyTests(PayloadTestCase):
         self.assertIn("has no `id`", result.stderr)
         self.assertIn("game-mechanics", result.stderr)
         self.assertEqual(os.listdir(self.out_dir), [])
+
+    def test_a_unit_naming_no_economy_element_still_builds(self):
+        self.write(
+            "design/mechanics/quiet.md",
+            "---\nname: quiet\ntitle: Quiet\nparent: none\nchildren: []\n"
+            "part_of: none\nparts: []\nimplementation: designed\n---\n\n"
+            "## Description\n\nTouches no resource.\n",
+        )
+        text = self.build("mechanics-literalist", "design/mechanics/quiet.md")
+        self.assertEqual(
+            self.section(text, "Economy nodes and connections it names").strip(), "none"
+        )
+
+    def test_a_gdd_section_from_a_mechanic_naming_the_economy_is_refused(self):
+        self.write("design/gdd.md", "### Cast\n\n*Source: `design/mechanics/cast.md`*\n")
+        self.assertIn("has no `id`", self.refused("mechanics-literalist", "Cast"))
 
 
 def today():

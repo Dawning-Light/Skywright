@@ -125,7 +125,7 @@ unit type:
 | --- | --- |
 | Pillar record, `design/pillars/<slug>.md` | that file's full text; `design/concept.md`'s body |
 | Mechanic entry, `design/mechanics/<slug>.md` | that file's full text; the taxonomy index (below); the `title`, `## Description`, and `## Consequences` only of its `parent`, of each entry in its `children`, of its `part_of`, and of each entry in its `parts`; the same trimmed form of each mechanic entry the unit's own body cites as `[[mechanic:<slug>]]`, up to 12, in the order the body first cites them, not counting an entry already carried as a relation; the slugs of any further cited entries, listed under "Linked but not carried"; the nodes and connections of `design/economy.md` that the entry's own text names, connections each named by its `id`; for each family the entry's own text names, both the family declaration and its expanded members, each named by the derived id `game-mechanics` defines; every `design/pillars/<slug>.md` record whose `status` is `approved`, in full |
-| GDD section, a section of `design/gdd.md` | that section's text; the record it addresses, by the path or identifier the section names (`game-gdd` guarantees every rendered section names its record); every `design/pillars/<slug>.md` record whose `status` is `approved`, in full |
+| GDD section, a section of `design/gdd.md` | that section's text; the record it addresses, by the path or identifier the section names (`game-gdd` guarantees every rendered section names its record); when that record is a mechanic entry, everything else a mechanic entry carries — its relations and linked entries in trimmed form, "Linked but not carried", the taxonomy index, and the economy slice its text names, all exactly as in the row above; every `design/pillars/<slug>.md` record whose `status` is `approved`, in full |
 
 **The taxonomy index** is every mechanic entry's `name`, `parent` and
 `part_of`, and nothing else — three fields per entry, no titles, no
@@ -161,7 +161,10 @@ rather than critiquing it on a best-effort basis — a finding about a
 connection that cannot be cited back to a record is not a finding the owner
 can resolve — naming which of these behaviours the file fails, and pointing
 to `game-mechanics`, where the upgrade is proposed and confirmed with the
-owner.
+owner. Only a unit whose payload would carry part of the graph — a mechanic
+entry naming a node, family, or connection, a GDD section rendered from such
+an entry, or a GDD section rendered from a node, family, or connection — is
+refused; any other unit is critiqued as usual.
 
 **Technical decision records reach critique only through their GDD
 section.** A record `game-tech` writes at `design/tech/<slug>.md` is not a
@@ -269,14 +272,17 @@ Frontmatter:
 - `date` — the `YYYY-MM-DD` in the filename.
 - `unit` — the path of the record critiqued (`design/pillars/<slug>.md`,
   `design/mechanics/<slug>.md`), or the name of the GDD section critiqued.
-- `status` — `open`, `addressed`, or `withdrawn`. A persona writes `open`
-  when it creates the note and never changes it: during a follow-up it edits
-  its findings in place and leaves `status` alone. This session sets the
-  other two values. It sets `addressed` once the owner has changed the design
-  or accepted the finding, and `withdrawn` only when a follow-up returns with
-  every finding in the note withdrawn under the re-grounding rule above.
-  Neither is set until each resolution is written into the record that owns
-  it (**Write the resolution into the record**, below).
+- `status` — `open`, `addressed`, or `withdrawn`, describing the note as a
+  whole. A persona writes `open` when it creates the note and never changes
+  it: during a follow-up it edits its findings in place and leaves `status`
+  alone. The dispatching session — the one running this skill — sets the
+  other two. A finding is closed once it is **resolved** (the owner changed
+  the design or accepted it) or **withdrawn** under the re-grounding rule
+  above. The note stays `open` while any finding is still standing. It
+  becomes `withdrawn` when every finding was withdrawn, and `addressed` when
+  every finding is closed and at least one was resolved. No finding is closed
+  until its resolution is written into the record that owns it (**Write the
+  resolution into the record**, below).
 
 Body: every check the persona's reference file names, by number, each with
 its outcome — passed, not applicable, applicable but unrunnable, or failed.
@@ -305,8 +311,8 @@ payload above, not in the design under review; take it to the payload table.
    resets on a rolling window may want to start the pass at the beginning of
    a fresh window rather than partway through one. Critics run by default on
    the host's **critic model** — a capable model cheaper than its strongest,
-   named per host in the Adapter. It costs less, and a model other than the
-   one that authored the design adds independence, for the same reason a
+   named per host in the Adapter. It costs less, and where the design was
+   authored on a different model, it adds independence, for the same reason a
    fresh agent does. Ask whether they want the host's strongest model
    instead. Use the answer for every dispatch and follow-up in this
    invocation.
@@ -321,9 +327,11 @@ payload above, not in the design under review; take it to the payload table.
    `design/mechanics/<slug>.md`) or a `design/gdd.md` section's heading. The
    script writes the brief to the OS temp directory, never into `design/`,
    with the note path's same-day ordinal already resolved, and prints the
-   file's path and line count. Where it refuses — an invalid economy graph,
-   a GDD section with no `design/gdd.md` — relay its message to the owner and
-   drop that unit; where `design/gdd.md` is absent, tell the owner once.
+   file's path and line count. Where it refuses — an invalid economy graph
+   the unit's payload would carry part of, a GDD section that groups several records rather
+   than naming one — relay its message to the owner and drop that unit.
+   Where `design/gdd.md` is absent, drop every GDD-section unit and tell the
+   owner once, rather than once per unit.
 6. **Dispatch.** For each brief, make the **dispatch call** with a short
    prompt: read the file at `<path>` (`<N>` lines) in full before doing
    anything else; it is your whole brief. Record the agent identifier the
@@ -349,15 +357,15 @@ pushback only: the owner disagrees and the design is unchanged.
 2. The persona answers under the re-grounding rule, and either states that the
    finding stands or states which check now passes and why.
 3. Where a finding was revised or withdrawn, the persona edits its existing
-   note in place and leaves `status` alone. When the follow-up returns with
-   every finding in the note withdrawn, this session sets the note's `status`
-   to `withdrawn`.
+   note in place and leaves `status` alone. When the follow-up returns, this
+   session updates the note's `status` by the rule above.
 
 **When the owner changes the design instead, no agent is contacted.** The
 owner changed a record in response to a finding, so there is nothing to argue
 and nothing for the persona to re-ground. This session marks that finding
 resolved in the note, with one line under it naming the record that changed,
-and sets the note's `status` to `addressed`. Sending the persona a follow-up
+and updates the note's `status` by the rule above — `addressed` only once no
+finding in it is still standing. Sending the persona a follow-up
 to confirm the change would spend a whole agent session to learn what the
 owner already decided.
 
@@ -384,7 +392,7 @@ The only section that names a host's tools. Everything above is written in
 terms of the two calls and the critic model named here; a move to another
 host rewrites this section and nothing else.
 
-| Call | On a Claude Code host | Notes |
+| Call or setting | On a Claude Code host | Notes |
 | --- | --- | --- |
 | **dispatch call** | the agent-dispatch tool (`Agent`, `Task` in some builds), with `subagent_type` set to a general-purpose fresh agent, the short dispatch prompt from Procedure step 6 in `prompt`, and `model` set to the model settled in Procedure step 4 | returns an agent identifier the follow-up call addresses. `subagent_type: "fork"` is the context-inheriting form the dispatch contract bars — never select it here |
 | **follow-up call** | the agent-messaging tool (`SendMessage`), addressed by the identifier the dispatch call returned | reaches only an agent dispatched by this same session |

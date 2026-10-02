@@ -172,7 +172,8 @@ structure:
 - `## Consequences` — optional. What committing to this mechanic forecloses,
   costs, or makes harder elsewhere in the design, citing the records it
   affects with typed wikilinks. `game-critique`'s `mechanics-literalist`
-  reads it from this heading and flags an entry without it.
+  reads it from this heading first, and suggests moving consequences stated
+  elsewhere in the entry under it.
 - `## Strong example` — one worked case of this mechanic doing what it's for.
 - `## Weak example` — one worked case of this mechanic failing, being
   misused, or producing an outcome the design didn't want.

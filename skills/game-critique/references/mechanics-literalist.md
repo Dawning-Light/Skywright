@@ -123,9 +123,11 @@ committing to this foreclose? Fails when the unit says what happens when it
 fires and says nothing about what it costs, rules out, or makes harder
 elsewhere in the design. Every mechanic forecloses something; an entry that
 names nothing has not been checked. On a mechanic entry, read the
-Consequences from its `## Consequences` heading. The heading is optional in
-`game-mechanics`'s shape, so an entry without it is a finding the owner can
-fix by adding it, not a schema error.
+Consequences from its `## Consequences` heading first. An entry without that
+heading still passes when another heading, usually `## Description`, states
+what committing to it costs or rules out; record the pass, and add one line
+suggesting the text move under `## Consequences`, where `game-mechanics`'s
+shape puts it. An entry that states them nowhere fails.
 
 **Check 8 — Instantiation is not confused with modulation.** *(mechanic
 entry)*
@@ -152,11 +154,13 @@ entry the unit links to, a named economy node, the concept statement, the
 record a GDD section addresses. Fails when the unit's rules make something
 in that material unreachable, or when their Consequences cancel.
 
-Where an entry is listed under "Linked but not carried" — the unit links to
-it, but past the cap, so you were given its slug and nothing else — and you
-have concrete reason to suspect a conflict with it, that is still a finding:
-write it, and make its "what would clear the check" a critique pass over that
-named entry. Report a suspected conflict as suspected, never as established.
+Where the unit's own text *names* another unit or record you were not given
+and you have concrete reason to suspect a conflict with it, that is still a
+finding: write it, and make its "what would clear the check" a critique pass
+over that named unit. The commonest case is an entry listed under "Linked but
+not carried" — the unit links to it, but past the cap, so you were given its
+slug and nothing else. A cited technical decision record is another. Report a
+suspected conflict as suspected, never as established.
 
 **Check 10 — The unit is addressable back to a record.** *(GDD section)*
 The section names the record it renders from, and that record is one you were
