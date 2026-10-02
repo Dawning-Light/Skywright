@@ -115,7 +115,7 @@ What travels depends on the unit type:
 | Unit type | What travels with it |
 | --- | --- |
 | Pillar record, `design/pillars/<slug>.md` | that file's full text; `design/concept.md`'s body |
-| Mechanic entry, `design/mechanics/<slug>.md` | that file's full text; the taxonomy index (below); the `title` and `## Description` only of its `parent`, of each entry in its `children`, of its `part_of`, and of each entry in its `parts`; the nodes and connections of `design/economy.md` that the entry's own text names, connections each named by its `id`; for each family the entry's own text names, both the family declaration and its expanded members, each named by the derived id `game-mechanics` defines; every `design/pillars/<slug>.md` record whose `status` is `approved`, in full |
+| Mechanic entry, `design/mechanics/<slug>.md` | that file's full text; the taxonomy index (below); the `title`, `## Description`, and `## Consequences` only of its `parent`, of each entry in its `children`, of its `part_of`, and of each entry in its `parts`; the same trimmed form of each mechanic entry the unit's own body cites as `[[mechanic:<slug>]]`, up to 8, in the order the body first cites them, not counting an entry already carried as a relation; the slugs of any further cited entries, listed under "Linked but not carried"; the nodes and connections of `design/economy.md` that the entry's own text names, connections each named by its `id`; for each family the entry's own text names, both the family declaration and its expanded members, each named by the derived id `game-mechanics` defines; every `design/pillars/<slug>.md` record whose `status` is `approved`, in full |
 | GDD section, a section of `design/gdd.md` | that section's text; the record it addresses, by the path or identifier the section names (`game-gdd` guarantees every rendered section names its record); every `design/pillars/<slug>.md` record whose `status` is `approved`, in full |
 
 **The taxonomy index** is every mechanic entry's `name`, `parent` and
@@ -127,9 +127,23 @@ properties of the taxonomy's *shape* that cannot be read off a single entry.
 It stays three fields wide for the same reason one unit per dispatch is the
 rule: a list of slugs is a bounded read, a directory of entries is not.
 
-Related entries travel as title-plus-description rather than in full, and the
-economy graph travels only as the nodes the unit names, for that same reason —
-the bound on the read is what preserves the critique.
+**Linked entries travel because the unit depends on them.** `game-mechanics`
+records modulation — one mechanic changing another's rate, cost, or
+availability — as a `[[mechanic:<slug>]]` wikilink in prose rather than a
+relation field, and `game-authoring` has a record cite another's fact rather
+than restate it. So the facts a mechanic depends on most often live in the
+entries its body links to. A critic that never receives them raises points
+those entries already settle, and cannot run a check that needs them.
+
+The bound on the read still holds: what travels is trimmed entries the unit
+itself names, capped. Relations and linked entries travel in the same trimmed
+form — `title`, `## Description`, `## Consequences` — never in full, and at
+most 8 linked entries travel. A linked entry that already travels as a
+relation is carried once and not counted toward the 8. Past the cap, the
+remaining slugs are listed under "Linked but not carried"; a check that needed
+one is recorded as applicable but unrunnable, naming the slug. The economy
+graph travels only as the nodes the unit names, for the same reason. The
+unit's own text sets the bound, never the size of the design.
 
 **Invalid when a connection in `design/economy.md` has no `id`, or when the
 file carries block-style edges or slash-joined headings:** this skill writes
