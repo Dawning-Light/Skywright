@@ -265,6 +265,8 @@ Frontmatter:
   other two values. It sets `addressed` once the owner has changed the design
   or accepted the finding, and `withdrawn` only when a follow-up returns with
   every finding in the note withdrawn under the re-grounding rule above.
+  Neither is set until each resolution is written into the record that owns
+  it (**Write the resolution into the record**, below).
 
 Body: one finding per check that failed, each naming the check it came from,
 in the finding shape that persona's reference file defines, plus any check the
@@ -327,6 +329,19 @@ owner already decided.
 A re-check of a changed record is a new pass, not a follow-up: it writes a
 same-day repeat note (`-2`, per the repeat rule above) and runs only when the
 owner asks for one.
+
+**Write the resolution into the record.** Before a finding is marked
+resolved, or a note is set to `addressed` or `withdrawn`, the resolution is
+written into the record that owns the fact — not only into the critique note.
+That holds when the owner changed the design, and when a finding was
+withdrawn because the owner gave a reason the record did not state. A
+critique note is never part of a later dispatch payload, so a resolution kept
+only there is invisible to the next critic, who raises the same objection
+again. This skill writes no design record itself: invoke the skill that owns
+the record (`game-mechanics`, `game-pillars`, or `game-tech`) to make the
+write, which loads `game-authoring` and its rule on writing settled decisions
+down. A finding withdrawn because the persona misread what the record
+already states needs no write.
 
 ## Adapter — host dispatch and follow-up mechanisms
 
