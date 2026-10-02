@@ -16,6 +16,11 @@ critical multiplies damage by 1.5 & applies the weapon's "on-crit" rider. The
 weapons it is fought with are paid for out of [[node:ingot-pool]], and the
 skills it advances are [[family:skill-xp]].
 
+## Consequences
+
+Every ingot spent on a blade is one not spent on [[mechanic:inventory]]
+upgrades, so a combat-heavy run leaves less room to carry ore home.
+
 ## Strong example
 
 A player who forged a high-`atk` blade cuts through a low-`def` pack in two
