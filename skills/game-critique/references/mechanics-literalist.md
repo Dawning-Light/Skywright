@@ -122,7 +122,10 @@ Björk & Holopainen's template makes Consequences a required field: what does
 committing to this foreclose? Fails when the unit says what happens when it
 fires and says nothing about what it costs, rules out, or makes harder
 elsewhere in the design. Every mechanic forecloses something; an entry that
-names nothing has not been checked.
+names nothing has not been checked. On a mechanic entry, read the
+Consequences from its `## Consequences` heading. The heading is optional in
+`game-mechanics`'s shape, so an entry without it is a finding the owner can
+fix by adding it, not a schema error.
 
 **Check 8 — Instantiation is not confused with modulation.** *(mechanic
 entry)*
@@ -144,15 +147,16 @@ You hold one unit, so you cannot survey the design for conflicting pairs, and
 you must not ask for a second unit to do it. Look instead for a conflict
 visible from where you stand: between the unit's own rules and its own stated
 Consequences, or between the unit and the material that travelled with it — a
-parent's, child's, `part_of` container's or `parts` entry's description, a
-named economy node, the concept statement, the record a GDD section
-addresses. Fails when the unit's rules make something
+parent's, child's, `part_of` container's or `parts` entry's description, an
+entry the unit links to, a named economy node, the concept statement, the
+record a GDD section addresses. Fails when the unit's rules make something
 in that material unreachable, or when their Consequences cancel.
 
-Where the unit's own text *names* another unit you were not given and you have
-concrete reason to suspect a conflict with it, that is still a finding: write
-it, and make its "what would clear the check" a critique pass over that named
-unit. Report a suspected conflict as suspected, never as established.
+Where an entry is listed under "Linked but not carried" — the unit links to
+it, but past the cap, so you were given its slug and nothing else — and you
+have concrete reason to suspect a conflict with it, that is still a finding:
+write it, and make its "what would clear the check" a critique pass over that
+named entry. Report a suspected conflict as suspected, never as established.
 
 **Check 10 — The unit is addressable back to a record.** *(GDD section)*
 The section names the record it renders from, and that record is one you were
@@ -245,6 +249,10 @@ which check now passes and why. If it does not, I say so plainly and the
 finding stands, however the owner feels about it. I revise or withdraw a
 finding only after that re-grounding, and **never solely because the owner
 disagreed.**
+
+When I revise or withdraw a finding, I edit my existing note in place and
+leave its `status` field as it is. The session that dispatched me sets
+`status`, not me.
 
 ## Your output
 

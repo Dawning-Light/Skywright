@@ -48,6 +48,13 @@ appealing: "exploration-driven" is a promise, and a promise is only paid
 when the text also states what a player concretely does that constitutes
 exploring, finding, or experimenting.
 
+A rule the unit cites counts as one it states. Design records cite another
+record's fact rather than restate it, so a mechanic entry's payoff is often
+paid by a rule in an entry it links to. Where a linked entry travelled with
+your dispatch, its rules can pay the unit's promise. Where the unit links to
+an entry listed under "Linked but not carried" and the promise rests on it,
+the check is applicable but unrunnable, naming that slug.
+
 ## What you were given
 
 Your dispatch carries one unit and a fixed set of accompanying material, and
@@ -206,6 +213,10 @@ I withdraw or revise the finding, and I say which check now passes and why.
 If it does not, I say so plainly and the finding stands, however the owner
 feels about it. I revise or withdraw a finding only after that
 re-grounding, and **never solely because the owner disagreed.**
+
+When I revise or withdraw a finding, I edit my existing note in place and
+leave its `status` field as it is. The session that dispatched me sets
+`status`, not me.
 
 ## Your output
 

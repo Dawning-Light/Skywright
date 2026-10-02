@@ -211,7 +211,10 @@ all is a legal starting state, and still gets a complete render made
 entirely of absent-section statements). With `--reset-css` it also
 overwrites `design/gdd.css` and `design/gdd-fonts/` with the default
 template, discarding any hand-edits — the only destructive path the script
-has, and one it takes only when asked. Relay the outcome to the owner and
+has, and one it takes only when asked. It prints one stdout line starting
+`rendered design/gdd.md and design/gdd.html:` that counts the mechanics,
+approved pillars, open and accepted tech records, and warnings it rendered;
+no such line means nothing was rendered. Relay the outcome to the owner and
 name the three file paths. A successful render can still print a warning to
 stderr: one line starting `warning:` per accepted technical decision record
 whose `## Decision` runs past the 40-line budget `game-tech` sets. It blocks
@@ -270,9 +273,9 @@ style change, and no re-render is needed to see one.
 `scripts/tests/fixtures/` and diffs the result against checked-in expected
 output. Run it after any change to the script or to the record shapes it
 reads; `UPDATE=1` regenerates the expected files once a change to the
-render is intended. A valid fixture's stderr must be empty unless the
-fixture holds `expected-warnings.txt`, whose lines the stderr must each
-contain. `scripts/tests/test_economy_frontmatter.py` tests the
+render is intended. A valid fixture's stdout must hold the `rendered` line,
+and its stderr must be empty unless the fixture holds
+`expected-warnings.txt`, whose lines the stderr must each contain. `scripts/tests/test_economy_frontmatter.py` tests the
 shared module directly — its frontmatter span, the economy validator, and
 the serializer's byte-for-byte round trip — run with
 `python3 -m unittest scripts/tests/test_economy_frontmatter.py`.

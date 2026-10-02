@@ -89,13 +89,20 @@ dispatch is what keeps every individual read inside the length the research
 shows critique quality holds at; batching two units to save a dispatch spends
 the whole reason this skill exists.
 
-**The persona's reference file is inlined verbatim into the dispatch prompt.**
-Read `references/<persona>.md` and paste its full text into the prompt. Do not
-name the path and trust the agent to open it, and do not summarise it —
-exactly the reason `research`'s own subagent brief is inlined rather than
-referenced: paraphrasing drops exactly the lines that matter, and the lines
-that matter here are the checks and the re-grounding rule. A rule the
-dispatched agent never reads does not bind it.
+**The persona gets one assembled brief, written by a script.**
+`scripts/build_payload.py` writes the whole brief to one file: the persona's
+reference file verbatim, the unit, its payload under fixed section labels,
+and the critique note's path and shape. The dispatch prompt is a short
+instruction to read that file in full before doing anything else, giving its
+path and line count, and stating that the file is the whole brief. Never
+summarise or paraphrase the reference file or the payload into the prompt:
+paraphrasing drops exactly the lines that matter, and the lines that matter
+here are the checks and the re-grounding rule. A rule the dispatched agent
+never reads does not bind it. A script copies them verbatim, and does it
+without spending this session's output on retyping a reference file nine
+times a pass. Never hand the agent the reference path, the record paths, or
+any other list of sources to go and find: it gets one assembled file, and
+nothing else to open.
 
 **No persona sees another persona's output.** Not at dispatch, not at
 follow-up, not in a summary. A persona's dispatch prompt carries no other
@@ -110,12 +117,14 @@ actually read it.
 
 **The dispatch payload — the one and only definition of what a persona can
 see.** Each dispatch carries the unit, the material below, and nothing else.
-What travels depends on the unit type:
+`scripts/build_payload.py` implements this table; where the two disagree,
+this table is right and the script has a bug. What travels depends on the
+unit type:
 
 | Unit type | What travels with it |
 | --- | --- |
 | Pillar record, `design/pillars/<slug>.md` | that file's full text; `design/concept.md`'s body |
-| Mechanic entry, `design/mechanics/<slug>.md` | that file's full text; the taxonomy index (below); the `title` and `## Description` only of its `parent`, of each entry in its `children`, of its `part_of`, and of each entry in its `parts`; the nodes and connections of `design/economy.md` that the entry's own text names, connections each named by its `id`; for each family the entry's own text names, both the family declaration and its expanded members, each named by the derived id `game-mechanics` defines; every `design/pillars/<slug>.md` record whose `status` is `approved`, in full |
+| Mechanic entry, `design/mechanics/<slug>.md` | that file's full text; the taxonomy index (below); the `title`, `## Description`, and `## Consequences` only of its `parent`, of each entry in its `children`, of its `part_of`, and of each entry in its `parts`; the same trimmed form of each mechanic entry the unit's own body cites as `[[mechanic:<slug>]]`, up to 12, in the order the body first cites them, not counting an entry already carried as a relation; the slugs of any further cited entries, listed under "Linked but not carried"; the nodes and connections of `design/economy.md` that the entry's own text names, connections each named by its `id`; for each family the entry's own text names, both the family declaration and its expanded members, each named by the derived id `game-mechanics` defines; every `design/pillars/<slug>.md` record whose `status` is `approved`, in full |
 | GDD section, a section of `design/gdd.md` | that section's text; the record it addresses, by the path or identifier the section names (`game-gdd` guarantees every rendered section names its record); every `design/pillars/<slug>.md` record whose `status` is `approved`, in full |
 
 **The taxonomy index** is every mechanic entry's `name`, `parent` and
@@ -127,9 +136,23 @@ properties of the taxonomy's *shape* that cannot be read off a single entry.
 It stays three fields wide for the same reason one unit per dispatch is the
 rule: a list of slugs is a bounded read, a directory of entries is not.
 
-Related entries travel as title-plus-description rather than in full, and the
-economy graph travels only as the nodes the unit names, for that same reason —
-the bound on the read is what preserves the critique.
+**Linked entries travel because the unit depends on them.** `game-mechanics`
+records modulation — one mechanic changing another's rate, cost, or
+availability — as a `[[mechanic:<slug>]]` wikilink in prose rather than a
+relation field, and `game-authoring` has a record cite another's fact rather
+than restate it. So the facts a mechanic depends on most often live in the
+entries its body links to. A critic that never receives them raises points
+those entries already settle, and cannot run a check that needs them.
+
+The bound on the read still holds: what travels is trimmed entries the unit
+itself names, capped. Relations and linked entries travel in the same trimmed
+form — `title`, `## Description`, `## Consequences` — never in full, and at
+most 12 linked entries travel. A linked entry that already travels as a
+relation is carried once and not counted toward the 12. Past the cap, the
+remaining slugs are listed under "Linked but not carried"; a check that needed
+one is recorded as applicable but unrunnable, naming the slug. The economy
+graph travels only as the nodes the unit names, for the same reason. The
+unit's own text sets the bound, never the size of the design.
 
 **Invalid when a connection in `design/economy.md` has no `id`, or when the
 file carries block-style edges or slash-joined headings:** this skill writes
@@ -226,7 +249,8 @@ One file per persona per pass, at
 - `<persona>` — the persona's name exactly as the persona table spells it.
 - `<unit-slug>` — the unit's own slug: for a pillar record or mechanic entry,
   its filename without `.md`; for a GDD section, the section heading
-  lowercased with non-alphanumerics replaced by hyphens.
+  lowercased, each run of non-alphanumerics replaced by one hyphen, with
+  none left at either end.
 
 **Same-day repeats.** If that exact path already exists, the new note takes
 the suffix `-2` before `.md`. If `-2` also exists, it takes `-3`, and so on to
@@ -245,14 +269,21 @@ Frontmatter:
 - `date` — the `YYYY-MM-DD` in the filename.
 - `unit` — the path of the record critiqued (`design/pillars/<slug>.md`,
   `design/mechanics/<slug>.md`), or the name of the GDD section critiqued.
-- `status` — `open`, `addressed`, or `withdrawn`. A persona only ever writes
-  `open`. `addressed` is set once the owner has changed the design or
-  accepted the finding; `withdrawn` is set only when every finding in the note
-  has been withdrawn under the re-grounding rule above.
+- `status` — `open`, `addressed`, or `withdrawn`. A persona writes `open`
+  when it creates the note and never changes it: during a follow-up it edits
+  its findings in place and leaves `status` alone. This session sets the
+  other two values. It sets `addressed` once the owner has changed the design
+  or accepted the finding, and `withdrawn` only when a follow-up returns with
+  every finding in the note withdrawn under the re-grounding rule above.
+  Neither is set until each resolution is written into the record that owns
+  it (**Write the resolution into the record**, below).
 
-Body: one finding per check that failed, each naming the check it came from,
-in the finding shape that persona's reference file defines, plus any check the
-persona recorded as applicable but unrunnable against its payload. A pass in
+Body: every check the persona's reference file names, by number, each with
+its outcome — passed, not applicable, applicable but unrunnable, or failed.
+Each failed check carries one finding in the finding shape that persona's
+reference file defines; each unrunnable one names the material that was
+missing. Listing every check is what shows the persona read its whole brief:
+a check missing from the note was never run. A pass in
 which every check that applied and could run passed still writes its note, with
 a body stating that and no findings — a clean pass is a recorded result, not a
 missing file. An unrunnable check reported here is a defect in the dispatch
@@ -268,19 +299,41 @@ payload above, not in the design under review; take it to the payload table.
 3. **Check the budget.** Multiply persona count by unit count. If it exceeds
    9, apply the overflow rule above and settle a smaller pass before
    dispatching anything.
-4. **Assemble each unit's dispatch payload** per the payload table above,
-   including the taxonomy index for every mechanic entry. Where
-   `design/gdd.md` is absent, drop GDD-section units and tell the owner once.
-5. **Dispatch.** For each persona-unit pair, make the **dispatch call** with a
-   prompt carrying, in this order: the persona reference file's full text; the
-   unit; that unit's dispatch payload from step 4; and the critique-note path
-   and shape above. Record the agent identifier the call returns — that
-   identifier is what the follow-up call addresses.
-6. **Collect the notes.** Confirm each dispatched persona wrote its note at
-   the expected path. A persona that returned findings without writing the
-   file has not completed its pass; re-dispatch it rather than writing the
-   note on its behalf.
-7. **Report** the note paths to the owner, one line each. Do not merge the
+4. **Settle the model.** Tell the owner the pass will dispatch N agents, N
+   being the product from step 3, and that each is a full agent session
+   costing tens of thousands of tokens. An owner on a plan whose usage cap
+   resets on a rolling window may want to start the pass at the beginning of
+   a fresh window rather than partway through one. Critics run by default on
+   the host's **critic model** — a capable model cheaper than its strongest,
+   named per host in the Adapter. It costs less, and a model other than the
+   one that authored the design adds independence, for the same reason a
+   fresh agent does. Ask whether they want the host's strongest model
+   instead. Use the answer for every dispatch and follow-up in this
+   invocation.
+5. **Build each brief.** For each persona-unit pair, run from the consuming
+   project's root, with `<skill>` the directory this file sits in:
+
+   ```
+   python3 <skill>/scripts/build_payload.py --persona <name> --unit <unit>
+   ```
+
+   `<unit>` is the record's path (`design/pillars/<slug>.md`,
+   `design/mechanics/<slug>.md`) or a `design/gdd.md` section's heading. The
+   script writes the brief to the OS temp directory, never into `design/`,
+   with the note path's same-day ordinal already resolved, and prints the
+   file's path and line count. Where it refuses — an invalid economy graph,
+   a GDD section with no `design/gdd.md` — relay its message to the owner and
+   drop that unit; where `design/gdd.md` is absent, tell the owner once.
+6. **Dispatch.** For each brief, make the **dispatch call** with a short
+   prompt: read the file at `<path>` (`<N>` lines) in full before doing
+   anything else; it is your whole brief. Record the agent identifier the
+   call returns — that identifier is what the follow-up call addresses.
+7. **Collect the notes.** Confirm each dispatched persona wrote its note at
+   the expected path, and that the note lists every check its reference file
+   names. A persona that returned findings without writing the file, or whose
+   note skips a check, has not completed its pass; re-dispatch it rather than
+   writing or completing the note on its behalf.
+8. **Report** the note paths to the owner, one line each. Do not merge the
    notes into a single verdict or reconcile disagreements between personas —
    the disagreement is information the owner reads, and reconciling it here
    would substitute this session's judgement for the frameworks'.
@@ -288,39 +341,74 @@ payload above, not in the design under review; take it to the payload table.
 ## Follow-up: pushing back on a finding
 
 The owner reads a note, disagrees with a finding, and wants to argue with the
-critic rather than receive a fixed objection list.
+critic rather than receive a fixed objection list. A follow-up is for that
+pushback only: the owner disagrees and the design is unchanged.
 
-1. Make the **follow-up call** to that persona's agent identifier from step 5,
+1. Make the **follow-up call** to that persona's agent identifier from step 6,
    carrying the owner's pushback and nothing from any other persona.
 2. The persona answers under the re-grounding rule, and either states that the
    finding stands or states which check now passes and why.
 3. Where a finding was revised or withdrawn, the persona edits its existing
-   note in place. Where every finding in the note was withdrawn, the note's
-   `status` becomes `withdrawn`.
+   note in place and leaves `status` alone. When the follow-up returns with
+   every finding in the note withdrawn, this session sets the note's `status`
+   to `withdrawn`.
+
+**When the owner changes the design instead, no agent is contacted.** The
+owner changed a record in response to a finding, so there is nothing to argue
+and nothing for the persona to re-ground. This session marks that finding
+resolved in the note, with one line under it naming the record that changed,
+and sets the note's `status` to `addressed`. Sending the persona a follow-up
+to confirm the change would spend a whole agent session to learn what the
+owner already decided.
+
+A re-check of a changed record is a new pass, not a follow-up: it writes a
+same-day repeat note (`-2`, per the repeat rule above) and runs only when the
+owner asks for one.
+
+**Write the resolution into the record.** Before a finding is marked
+resolved, or a note is set to `addressed` or `withdrawn`, the resolution is
+written into the record that owns the fact — not only into the critique note.
+That holds when the owner changed the design, and when a finding was
+withdrawn because the owner gave a reason the record did not state. A
+critique note is never part of a later dispatch payload, so a resolution kept
+only there is invisible to the next critic, who raises the same objection
+again. This skill writes no design record itself: invoke the skill that owns
+the record (`game-mechanics`, `game-pillars`, or `game-tech`) to make the
+write, which loads `game-authoring` and its rule on writing settled decisions
+down. A finding withdrawn because the persona misread what the record
+already states needs no write.
 
 ## Adapter — host dispatch and follow-up mechanisms
 
 The only section that names a host's tools. Everything above is written in
-terms of the two calls named here; a move to another host rewrites this
-section and nothing else.
+terms of the two calls and the critic model named here; a move to another
+host rewrites this section and nothing else.
 
 | Call | On a Claude Code host | Notes |
 | --- | --- | --- |
-| **dispatch call** | the agent-dispatch tool (`Agent`, `Task` in some builds), with `subagent_type` set to a general-purpose fresh agent and the whole dispatch prompt in `prompt` | returns an agent identifier the follow-up call addresses. `subagent_type: "fork"` is the context-inheriting form the dispatch contract bars — never select it here |
+| **dispatch call** | the agent-dispatch tool (`Agent`, `Task` in some builds), with `subagent_type` set to a general-purpose fresh agent, the short dispatch prompt from Procedure step 6 in `prompt`, and `model` set to the model settled in Procedure step 4 | returns an agent identifier the follow-up call addresses. `subagent_type: "fork"` is the context-inheriting form the dispatch contract bars — never select it here |
 | **follow-up call** | the agent-messaging tool (`SendMessage`), addressed by the identifier the dispatch call returned | reaches only an agent dispatched by this same session |
+| **critic model** | `"sonnet"` by default; `"opus"` when the owner asks for the strongest model | always set `model` on the dispatch call: omitting it runs the critic on this session's own model |
 
 **A host with no addressable dispatch.** Codex receives this skill under the
 same global distribution and has a fresh-agent equivalent of the dispatch call
-but no follow-up call. There, everything through step 7 of the Procedure runs
-unchanged: the personas are dispatched, they read their inlined reference
-files, and they write their critique notes. What is unavailable is the live
-follow-up conversation. Handle the owner's pushback there by making a fresh
-**dispatch call** carrying the persona's reference file, the same unit and its
-material, the prior critique note, and the pushback — the persona then answers
+but no follow-up call. There, everything through step 8 of the Procedure runs
+unchanged: the personas are dispatched, they read their assembled briefs, and
+they write their critique notes. What is unavailable is the live follow-up
+conversation. Handle the owner's pushback there by rebuilding the persona's
+brief with `scripts/build_payload.py` and making a fresh **dispatch call**
+whose short prompt also carries the prior critique note's text and the
+pushback, and tells the persona to edit that prior note in place at its own
+path rather than write the new path the brief names. The persona then answers
 under the re-grounding rule against that note.
+
+On Codex, the **critic model** is a model cheaper than its strongest that
+its fresh-agent call can select, and the strongest is the alternative
+Procedure step 4 offers. Where the call offers no model selection, tell the
+owner the critics will run on this session's model, and skip the question.
 
 **Addressability is session-bound.** Even where the follow-up call exists, it
 reaches a persona only within the session that dispatched it. A later session
 cannot resume the original agent, and must not pretend to: it re-dispatches
-the persona fresh, with its reference file, the unit, and the prior critique
-note as input — the same procedure the no-follow-up-call host uses above.
+the persona fresh, with a rebuilt brief and the prior critique note — the same
+procedure the no-follow-up-call host uses above.

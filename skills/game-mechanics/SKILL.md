@@ -42,9 +42,14 @@ Elicit conversationally, in whatever order the owner naturally gives it:
 1. **Mechanics.** For each mechanic the owner describes, ask enough to fill
    out one mechanic entry (below): what it is, where it sits relative to
    other mechanics already elicited (what it is a *kind of* and what it is a
-   *part of*, if either; its children and its parts, if any), one strong
-   example of it working as intended, one weak example of it failing or being
-   misused, and how much of it exists in code yet (`implementation`, below).
+   *part of*, if either; its children and its parts, if any), what committing
+   to it costs or rules out elsewhere, one strong example of it working as
+   intended, one weak example of it failing or being misused, and how much of
+   it exists in code yet (`implementation`, below). Ask for its timing too,
+   and write the answers into `## Description`: what triggers it, how long it
+   takes or lasts, and what the player can and can't do while it runs. A rule
+   that leaves timing out reads as instant, and a reader who assumes that will
+   object to a cost the design already pays in time.
 2. **Systems and economy.** Ask what resources exist, where they enter play,
    where they leave, and what moves or gates them. Map each answer onto a
    node or a connection in the economy graph (below) as it's given, rather
@@ -161,7 +166,13 @@ wikilink in this entry's prose, or a `state` connection in
 Body, one heading per field so a reader and a renderer see the same
 structure:
 
-- `## Description` — what the mechanic is and how it operates.
+- `## Description` — what the mechanic is and how it operates, including
+  what triggers it, how long it takes or lasts, and what the player can and
+  can't do while it runs.
+- `## Consequences` — optional. What committing to this mechanic forecloses,
+  costs, or makes harder elsewhere in the design, citing the records it
+  affects with typed wikilinks. `game-critique`'s `mechanics-literalist`
+  reads it from this heading and flags an entry without it.
 - `## Strong example` — one worked case of this mechanic doing what it's for.
 - `## Weak example` — one worked case of this mechanic failing, being
   misused, or producing an outcome the design didn't want.

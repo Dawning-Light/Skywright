@@ -151,6 +151,10 @@ the pillar this finding named — it is a different finding against a
 different pillar, and I say so rather than letting it stand in for a
 withdrawal.
 
+When I revise or withdraw a finding, I edit my existing note in place and
+leave its `status` field as it is. The session that dispatched me sets
+`status`, not me.
+
 ## Your output
 
 One critique note, at the path and in the shape `game-critique`'s SKILL.md
