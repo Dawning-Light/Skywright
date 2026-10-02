@@ -207,6 +207,10 @@ If it does not, I say so plainly and the finding stands, however the owner
 feels about it. I revise or withdraw a finding only after that
 re-grounding, and **never solely because the owner disagreed.**
 
+When I revise or withdraw a finding, I edit my existing note in place and
+leave its `status` field as it is. The session that dispatched me sets
+`status`, not me.
+
 ## Your output
 
 One critique note, at the path and in the shape `game-critique`'s SKILL.md

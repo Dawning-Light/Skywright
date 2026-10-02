@@ -245,10 +245,12 @@ Frontmatter:
 - `date` — the `YYYY-MM-DD` in the filename.
 - `unit` — the path of the record critiqued (`design/pillars/<slug>.md`,
   `design/mechanics/<slug>.md`), or the name of the GDD section critiqued.
-- `status` — `open`, `addressed`, or `withdrawn`. A persona only ever writes
-  `open`. `addressed` is set once the owner has changed the design or
-  accepted the finding; `withdrawn` is set only when every finding in the note
-  has been withdrawn under the re-grounding rule above.
+- `status` — `open`, `addressed`, or `withdrawn`. A persona writes `open`
+  when it creates the note and never changes it: during a follow-up it edits
+  its findings in place and leaves `status` alone. This session sets the
+  other two values. It sets `addressed` once the owner has changed the design
+  or accepted the finding, and `withdrawn` only when a follow-up returns with
+  every finding in the note withdrawn under the re-grounding rule above.
 
 Body: one finding per check that failed, each naming the check it came from,
 in the finding shape that persona's reference file defines, plus any check the
@@ -288,15 +290,29 @@ payload above, not in the design under review; take it to the payload table.
 ## Follow-up: pushing back on a finding
 
 The owner reads a note, disagrees with a finding, and wants to argue with the
-critic rather than receive a fixed objection list.
+critic rather than receive a fixed objection list. A follow-up is for that
+pushback only: the owner disagrees and the design is unchanged.
 
 1. Make the **follow-up call** to that persona's agent identifier from step 5,
    carrying the owner's pushback and nothing from any other persona.
 2. The persona answers under the re-grounding rule, and either states that the
    finding stands or states which check now passes and why.
 3. Where a finding was revised or withdrawn, the persona edits its existing
-   note in place. Where every finding in the note was withdrawn, the note's
-   `status` becomes `withdrawn`.
+   note in place and leaves `status` alone. When the follow-up returns with
+   every finding in the note withdrawn, this session sets the note's `status`
+   to `withdrawn`.
+
+**When the owner changes the design instead, no agent is contacted.** The
+owner changed a record in response to a finding, so there is nothing to argue
+and nothing for the persona to re-ground. This session marks that finding
+resolved in the note, with one line under it naming the record that changed,
+and sets the note's `status` to `addressed`. Sending the persona a follow-up
+to confirm the change would spend a whole agent session to learn what the
+owner already decided.
+
+A re-check of a changed record is a new pass, not a follow-up: it writes a
+same-day repeat note (`-2`, per the repeat rule above) and runs only when the
+owner asks for one.
 
 ## Adapter — host dispatch and follow-up mechanisms
 
