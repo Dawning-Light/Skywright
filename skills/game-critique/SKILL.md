@@ -301,13 +301,15 @@ payload above, not in the design under review; take it to the payload table.
    dispatching anything.
 4. **Settle the model.** Tell the owner the pass will dispatch N agents, N
    being the product from step 3, and that each is a full agent session
-   costing tens of thousands of tokens. An owner on a usage-capped plan, such
-   as Claude Pro's 5-hour window, may want to start the pass at the beginning
-   of a fresh window rather than partway through one. Critics run on Sonnet
-   by default: it costs less than Opus, and a model other than the one that
-   authored the design adds independence, for the same reason a fresh agent
-   does. Ask whether they want Opus instead. Use the answer for every
-   dispatch and follow-up in this invocation.
+   costing tens of thousands of tokens. An owner on a plan whose usage cap
+   resets on a rolling window may want to start the pass at the beginning of
+   a fresh window rather than partway through one. Critics run by default on
+   the host's **critic model** — a capable model cheaper than its strongest,
+   named per host in the Adapter. It costs less, and a model other than the
+   one that authored the design adds independence, for the same reason a
+   fresh agent does. Ask whether they want the host's strongest model
+   instead. Use the answer for every dispatch and follow-up in this
+   invocation.
 5. **Build each brief.** For each persona-unit pair, run from the consuming
    project's root, with `<skill>` the directory this file sits in:
 
@@ -379,13 +381,14 @@ already states needs no write.
 ## Adapter — host dispatch and follow-up mechanisms
 
 The only section that names a host's tools. Everything above is written in
-terms of the two calls named here; a move to another host rewrites this
-section and nothing else.
+terms of the two calls and the critic model named here; a move to another
+host rewrites this section and nothing else.
 
 | Call | On a Claude Code host | Notes |
 | --- | --- | --- |
-| **dispatch call** | the agent-dispatch tool (`Agent`, `Task` in some builds), with `subagent_type` set to a general-purpose fresh agent, the short dispatch prompt from Procedure step 6 in `prompt`, and `model` set to `"sonnet"`, or `"opus"` when the owner asked for it in Procedure step 4 — always set it, since omitting it runs the critic on this session's own model | returns an agent identifier the follow-up call addresses. `subagent_type: "fork"` is the context-inheriting form the dispatch contract bars — never select it here |
+| **dispatch call** | the agent-dispatch tool (`Agent`, `Task` in some builds), with `subagent_type` set to a general-purpose fresh agent, the short dispatch prompt from Procedure step 6 in `prompt`, and `model` set to the model settled in Procedure step 4 | returns an agent identifier the follow-up call addresses. `subagent_type: "fork"` is the context-inheriting form the dispatch contract bars — never select it here |
 | **follow-up call** | the agent-messaging tool (`SendMessage`), addressed by the identifier the dispatch call returned | reaches only an agent dispatched by this same session |
+| **critic model** | `"sonnet"` by default; `"opus"` when the owner asks for the strongest model | always set `model` on the dispatch call: omitting it runs the critic on this session's own model |
 
 **A host with no addressable dispatch.** Codex receives this skill under the
 same global distribution and has a fresh-agent equivalent of the dispatch call
@@ -399,11 +402,10 @@ pushback, and tells the persona to edit that prior note in place at its own
 path rather than write the new path the brief names. The persona then answers
 under the re-grounding rule against that note.
 
-Sonnet and Opus are Claude models, so on Codex Procedure step 4 changes:
-where its fresh-agent call offers model selection, offer the owner a cheaper
-model than this session's as the default and this session's own as the
-alternative. Where it offers none, tell the owner the critics will run on
-this session's model, and skip the question.
+On Codex, the **critic model** is a model cheaper than its strongest that
+its fresh-agent call can select, and the strongest is the alternative
+Procedure step 4 offers. Where the call offers no model selection, tell the
+owner the critics will run on this session's model, and skip the question.
 
 **Addressability is session-bound.** Even where the follow-up call exists, it
 reaches a persona only within the session that dispatched it. A later session
