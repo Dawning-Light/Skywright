@@ -275,8 +275,8 @@ output. Run it after any change to the script or to the record shapes it
 reads; `UPDATE=1` regenerates the expected files once a change to the
 render is intended. A valid fixture's stdout must hold the `rendered` line,
 and its stderr must be empty unless the fixture holds
-`expected-warnings.txt`, whose lines the stderr must each contain. `scripts/tests/test_economy_frontmatter.py` tests the
-shared module directly — its frontmatter span, the economy validator, and
+`expected-warnings.txt`, whose lines the stderr must each contain.
+`scripts/tests/test_economy_frontmatter.py` tests the shared module directly — its frontmatter span, the economy validator, and
 the serializer's byte-for-byte round trip — run with
 `python3 -m unittest scripts/tests/test_economy_frontmatter.py`.
 

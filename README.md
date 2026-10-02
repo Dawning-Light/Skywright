@@ -125,8 +125,9 @@ in Claude Code.
 
 ## Requirements
 
-- Python 3. `game-gdd`'s renderer and `game-mechanics`'s economy tool use the
-  standard library only, so there are no packages to install.
+- Python 3. `game-gdd`'s renderer, `game-mechanics`'s economy tool, and
+  `game-critique`'s brief builder use the standard library only, so there are
+  no packages to install.
 - bash and awk, for `game-mechanics`'s curve fitting.
 - `research` ships in this plugin. `game-comp-analysis` and `game-critique`
   delegate their web research to it, so there's nothing extra to install.
