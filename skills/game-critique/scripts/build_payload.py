@@ -340,8 +340,10 @@ def mechanic_payload(root, slug):
     related = set([parent, part_of] + children + parts) - {""}
     carried, not_carried = linked_entries(unit, related)
 
-    economy = load_economy_or_refuse(root)
+    # The economy graph is read only when the unit names part of it, so an
+    # invalid graph refuses only the units that would carry a slice of it.
     names = cited(unit["body"], ("node", "family", "connection"))
+    economy = load_economy_or_refuse(root) if names else None
     if economy is None:
         slice_parts = (
             ["`design/economy.md` does not exist; the unit names %s."
@@ -416,8 +418,9 @@ def find_gdd_section(gdd_text, name):
         )
     if len(matches) > 1:
         raise Refusal(
-            "design/gdd.md has %d sections headed `%s`; name a record path "
-            "instead, or a heading that appears once." % (len(matches), wanted)
+            "design/gdd.md has %d sections headed `%s`, and a GDD-section unit "
+            "must name a heading that appears once. A pillar or mechanic can "
+            "be named by its record path instead." % (len(matches), wanted)
         )
     start, level, text = matches[0]
     end = len(lines)
@@ -428,30 +431,46 @@ def find_gdd_section(gdd_text, name):
     return text, "\n".join(lines[start:end]).rstrip("\n")
 
 
-def addressed_record(root, section_text):
-    """The record the section's ``Source:`` caption names, as payload parts."""
+def source_caption(heading, section_text):
+    """``(rel, kind, ident)`` from the ``Source:`` caption directly under the
+    heading. A section without one -- a chapter such as ``## Mechanics``, or a
+    grouping such as ``### Nodes`` -- holds many units rather than one, and is
+    refused."""
     for line in section_text.split("\n")[1:]:
         if not line.strip():
             continue
         match = _SOURCE_RE.match(line.strip())
-        if not match:
-            return []
-        rel, kind, ident = match.groups()
-        if rel == "design/economy.md" and kind:
-            economy = load_economy_or_refuse(root)
-            if economy is None:
-                return ["`design/economy.md` does not exist."]
-            ident = ident.lstrip("@")
-            return ["`design/economy.md`, %s `%s`" % (kind, ident)] + economy_slice(
-                economy, [(kind, ident)]
-            )
-        path = os.path.join(root, os.pardir, *rel.split("/"))
-        if not os.path.isfile(path):
-            return ["`%s` does not exist." % rel]
-        if rel == "design/economy.md":
-            load_economy_or_refuse(root)
-        return ["`%s`\n\n%s" % (rel, fenced(read_text(path).rstrip("\n")))]
-    return []
+        if match:
+            return match.groups()
+        break
+    raise Refusal(
+        "design/gdd.md section `%s` names no single record — it groups "
+        "several, and a critic takes exactly one unit. Name the section of "
+        "one record inside it instead." % heading
+    )
+
+
+def addressed_record(root, heading, section_text):
+    """The record the section's ``Source:`` caption names, as payload parts."""
+    rel, kind, ident = source_caption(heading, section_text)
+    if rel == "design/economy.md" and not kind:
+        raise Refusal(
+            "design/gdd.md section `%s` covers the whole economy graph — many "
+            "units, not one. Name one node, family, or connection section "
+            "instead." % heading
+        )
+    if rel == "design/economy.md":
+        economy = load_economy_or_refuse(root)
+        if economy is None:
+            return ["`design/economy.md` does not exist."]
+        ident = ident.lstrip("@")
+        return ["`design/economy.md`, %s `%s`" % (kind, ident)] + economy_slice(
+            economy, [(kind, ident)]
+        )
+    path = os.path.join(root, os.pardir, *rel.split("/"))
+    if not os.path.isfile(path):
+        return ["`%s` does not exist." % rel]
+    return ["`%s`\n\n%s" % (rel, fenced(read_text(path).rstrip("\n")))]
 
 
 def gdd_payload(root, name):
@@ -464,7 +483,7 @@ def gdd_payload(root, name):
     heading, text = find_gdd_section(read_text(gdd_path), name)
     return heading, [
         section("The unit under review", ["Section `%s` of `design/gdd.md`" % heading, fenced(text)]),
-        section("The record it addresses", addressed_record(root, text)),
+        section("The record it addresses", addressed_record(root, heading, text)),
         section("Approved pillars", pillar_parts(root)),
     ]
 
@@ -521,7 +540,13 @@ def note_part(persona, unit_name, path, today):
         "status: open",
         "```",
         "",
-        "The note's path and shape, as `game-critique` defines them:",
+        "Your note's path above is already resolved, same-day ordinal "
+        "included: write exactly that path. The note's shape, as "
+        "`game-critique` defines it, follows; it is copied from that skill's "
+        "own file, so where it points at another section of that file, the "
+        "section is not part of your brief and you do not need it. Where it "
+        "speaks of the dispatching session, it means the session that "
+        "dispatched you, not you.",
         "",
         note_shape(skill),
     ]
