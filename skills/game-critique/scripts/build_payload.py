@@ -59,7 +59,7 @@ from economy_frontmatter import (  # noqa: E402
 )
 from render_gdd import iter_wikilink_hits  # noqa: E402
 
-LINKED_CAP = 8
+LINKED_CAP = 12
 NONE = "none"
 
 

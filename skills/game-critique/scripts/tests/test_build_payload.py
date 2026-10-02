@@ -117,15 +117,15 @@ class MechanicEntryTests(PayloadTestCase):
         self.assertIn("Spending a turn on it rules out moving.", parent)
         self.assertNotIn("## Strong example", parent)
 
-    def test_linked_entries_are_capped_at_eight(self):
+    def test_linked_entries_are_capped_at_twelve(self):
         text = self.build("mechanics-literalist", "design/mechanics/hub.md")
         linked = self.section(text, "Entries it links to")
-        for i in range(1, 9):
+        for i in range(1, 13):
             self.assertIn("design/mechanics/link-%d.md" % i, linked)
             self.assertIn("Link %d forecloses running while it charges." % i, linked)
         self.assertEqual(linked.count("design/mechanics/link-1.md"), 1)
-        self.assertNotIn("link-9", linked)
-        self.assertEqual(self.section(text, "Linked but not carried").strip(), "- `link-9`")
+        self.assertNotIn("link-13", linked)
+        self.assertEqual(self.section(text, "Linked but not carried").strip(), "- `link-13`")
 
     def test_relation_and_self_links_are_not_counted(self):
         text = self.build("mechanics-literalist", "design/mechanics/hub.md")
@@ -150,7 +150,7 @@ class MechanicEntryTests(PayloadTestCase):
         text = self.build("mechanics-literalist", "design/mechanics/hub.md")
         index = self.section(text, "Taxonomy index").strip().split("\n")
         self.assertIn("- name: hub · parent: base · part_of: none", index)
-        self.assertEqual(len(index), 12)
+        self.assertEqual(len(index), 16)
 
     def test_economy_slice_carries_named_nodes_and_expanded_families(self):
         text = self.build("mechanics-literalist", "design/mechanics/hub.md")

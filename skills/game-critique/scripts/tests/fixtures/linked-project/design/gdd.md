@@ -64,7 +64,8 @@ A worked case of Base Action failing.
 
 #### Description
 
-A specialization of [[mechanic:base]] that also reads [[mechanic:hub]], [[mechanic:link-1]], [[mechanic:link-2]], [[mechanic:link-3]], [[mechanic:link-4]], [[mechanic:link-5]], [[mechanic:link-6]], [[mechanic:link-7]], [[mechanic:link-8]], and [[mechanic:link-9]]. It draws from [[node:mana]] and feeds [[family:skills]]; [[mechanic:link-1]] is cited twice.
+A specialization of [[mechanic:base]] that also reads [[mechanic:hub]], [[mechanic:link-1]], [[mechanic:link-2]], [[mechanic:link-3]], [[mechanic:link-4]], [[mechanic:link-5]], [[mechanic:link-6]], [[mechanic:link-7]], [[mechanic:link-8]], [[mechanic:link-9]], [[mechanic:link-10]],
+[[mechanic:link-11]], [[mechanic:link-12]], and [[mechanic:link-13]]. It draws from [[node:mana]] and feeds [[family:skills]]; [[mechanic:link-1]] is cited twice.
 
 #### Consequences
 
@@ -102,6 +103,106 @@ A worked case of Link 1 doing what it is for.
 #### Weak example
 
 A worked case of Link 1 failing.
+
+### Link 10
+
+*Source: `design/mechanics/link-10.md` · Updated: 2026-10-01T09:00Z · Implementation: designed*
+
+- Parent: none
+- Children: none
+- Part of: none
+- Parts: none
+
+#### Description
+
+Link 10 takes two seconds to trigger.
+
+#### Consequences
+
+Link 10 forecloses running while it charges.
+
+#### Strong example
+
+A worked case of Link 10 doing what it is for.
+
+#### Weak example
+
+A worked case of Link 10 failing.
+
+### Link 11
+
+*Source: `design/mechanics/link-11.md` · Updated: 2026-10-01T09:00Z · Implementation: designed*
+
+- Parent: none
+- Children: none
+- Part of: none
+- Parts: none
+
+#### Description
+
+Link 11 takes two seconds to trigger.
+
+#### Consequences
+
+Link 11 forecloses running while it charges.
+
+#### Strong example
+
+A worked case of Link 11 doing what it is for.
+
+#### Weak example
+
+A worked case of Link 11 failing.
+
+### Link 12
+
+*Source: `design/mechanics/link-12.md` · Updated: 2026-10-01T09:00Z · Implementation: designed*
+
+- Parent: none
+- Children: none
+- Part of: none
+- Parts: none
+
+#### Description
+
+Link 12 takes two seconds to trigger.
+
+#### Consequences
+
+Link 12 forecloses running while it charges.
+
+#### Strong example
+
+A worked case of Link 12 doing what it is for.
+
+#### Weak example
+
+A worked case of Link 12 failing.
+
+### Link 13
+
+*Source: `design/mechanics/link-13.md` · Updated: 2026-10-01T09:00Z · Implementation: designed*
+
+- Parent: none
+- Children: none
+- Part of: none
+- Parts: none
+
+#### Description
+
+Link 13 takes two seconds to trigger.
+
+#### Consequences
+
+Link 13 forecloses running while it charges.
+
+#### Strong example
+
+A worked case of Link 13 doing what it is for.
+
+#### Weak example
+
+A worked case of Link 13 failing.
 
 ### Link 2
 

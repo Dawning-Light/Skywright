@@ -124,7 +124,7 @@ unit type:
 | Unit type | What travels with it |
 | --- | --- |
 | Pillar record, `design/pillars/<slug>.md` | that file's full text; `design/concept.md`'s body |
-| Mechanic entry, `design/mechanics/<slug>.md` | that file's full text; the taxonomy index (below); the `title`, `## Description`, and `## Consequences` only of its `parent`, of each entry in its `children`, of its `part_of`, and of each entry in its `parts`; the same trimmed form of each mechanic entry the unit's own body cites as `[[mechanic:<slug>]]`, up to 8, in the order the body first cites them, not counting an entry already carried as a relation; the slugs of any further cited entries, listed under "Linked but not carried"; the nodes and connections of `design/economy.md` that the entry's own text names, connections each named by its `id`; for each family the entry's own text names, both the family declaration and its expanded members, each named by the derived id `game-mechanics` defines; every `design/pillars/<slug>.md` record whose `status` is `approved`, in full |
+| Mechanic entry, `design/mechanics/<slug>.md` | that file's full text; the taxonomy index (below); the `title`, `## Description`, and `## Consequences` only of its `parent`, of each entry in its `children`, of its `part_of`, and of each entry in its `parts`; the same trimmed form of each mechanic entry the unit's own body cites as `[[mechanic:<slug>]]`, up to 12, in the order the body first cites them, not counting an entry already carried as a relation; the slugs of any further cited entries, listed under "Linked but not carried"; the nodes and connections of `design/economy.md` that the entry's own text names, connections each named by its `id`; for each family the entry's own text names, both the family declaration and its expanded members, each named by the derived id `game-mechanics` defines; every `design/pillars/<slug>.md` record whose `status` is `approved`, in full |
 | GDD section, a section of `design/gdd.md` | that section's text; the record it addresses, by the path or identifier the section names (`game-gdd` guarantees every rendered section names its record); every `design/pillars/<slug>.md` record whose `status` is `approved`, in full |
 
 **The taxonomy index** is every mechanic entry's `name`, `parent` and
@@ -147,8 +147,8 @@ those entries already settle, and cannot run a check that needs them.
 The bound on the read still holds: what travels is trimmed entries the unit
 itself names, capped. Relations and linked entries travel in the same trimmed
 form — `title`, `## Description`, `## Consequences` — never in full, and at
-most 8 linked entries travel. A linked entry that already travels as a
-relation is carried once and not counted toward the 8. Past the cap, the
+most 12 linked entries travel. A linked entry that already travels as a
+relation is carried once and not counted toward the 12. Past the cap, the
 remaining slugs are listed under "Linked but not carried"; a check that needed
 one is recorded as applicable but unrunnable, naming the slug. The economy
 graph travels only as the nodes the unit names, for the same reason. The
@@ -301,11 +301,13 @@ payload above, not in the design under review; take it to the payload table.
    dispatching anything.
 4. **Settle the model.** Tell the owner the pass will dispatch N agents, N
    being the product from step 3, and that each is a full agent session
-   costing tens of thousands of tokens. Ask which model they should run on:
-   this session's own model, or a cheaper one the host offers (see the
-   Adapter). A model different from the one that authored the design also
-   adds independence, for the same reason a fresh agent does. Use the answer
-   for every dispatch and follow-up in this invocation.
+   costing tens of thousands of tokens. An owner on a usage-capped plan, such
+   as Claude Pro's 5-hour window, may want to start the pass at the beginning
+   of a fresh window rather than partway through one. Critics run on Sonnet
+   by default: it costs less than Opus, and a model other than the one that
+   authored the design adds independence, for the same reason a fresh agent
+   does. Ask whether they want Opus instead. Use the answer for every
+   dispatch and follow-up in this invocation.
 5. **Build each brief.** For each persona-unit pair, run from the consuming
    project's root, with `<skill>` the directory this file sits in:
 
@@ -382,7 +384,7 @@ section and nothing else.
 
 | Call | On a Claude Code host | Notes |
 | --- | --- | --- |
-| **dispatch call** | the agent-dispatch tool (`Agent`, `Task` in some builds), with `subagent_type` set to a general-purpose fresh agent, the short dispatch prompt from Procedure step 6 in `prompt`, and the model settled in Procedure step 4 in `model` (omit it to run on this session's own model) | returns an agent identifier the follow-up call addresses. `subagent_type: "fork"` is the context-inheriting form the dispatch contract bars — never select it here |
+| **dispatch call** | the agent-dispatch tool (`Agent`, `Task` in some builds), with `subagent_type` set to a general-purpose fresh agent, the short dispatch prompt from Procedure step 6 in `prompt`, and `model` set to `"sonnet"`, or `"opus"` when the owner asked for it in Procedure step 4 — always set it, since omitting it runs the critic on this session's own model | returns an agent identifier the follow-up call addresses. `subagent_type: "fork"` is the context-inheriting form the dispatch contract bars — never select it here |
 | **follow-up call** | the agent-messaging tool (`SendMessage`), addressed by the identifier the dispatch call returned | reaches only an agent dispatched by this same session |
 
 **A host with no addressable dispatch.** Codex receives this skill under the
@@ -397,9 +399,11 @@ pushback, and tells the persona to edit that prior note in place at its own
 path rather than write the new path the brief names. The persona then answers
 under the re-grounding rule against that note.
 
-For Procedure step 4 on Codex, pass the chosen model through whatever model
-selection its fresh-agent call offers. Where it offers none, tell the owner
-the critics will run on this session's model, and skip the question.
+Sonnet and Opus are Claude models, so on Codex Procedure step 4 changes:
+where its fresh-agent call offers model selection, offer the owner a cheaper
+model than this session's as the default and this session's own as the
+alternative. Where it offers none, tell the owner the critics will run on
+this session's model, and skip the question.
 
 **Addressability is session-bound.** Even where the follow-up call exists, it
 reaches a persona only within the session that dispatched it. A later session
