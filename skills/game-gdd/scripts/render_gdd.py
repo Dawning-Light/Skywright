@@ -21,7 +21,8 @@ timestamp outside ``YYYY-MM-DDTHH:MMZ``, each stop the render. Both forms are
 defined by ``game-authoring``. One condition warns instead of blocking: an
 accepted technical decision record whose ``## Decision`` runs past
 ``DECISION_BUDGET`` lines prints one ``warning:`` line to stderr, and the
-render still writes and exits 0.
+render still writes and exits 0. A render that writes prints one
+``rendered ...`` line to stdout, counting what it rendered.
 
 Stdlib only. Deterministic: byte-identical output for byte-identical input.
 """
@@ -2331,9 +2332,25 @@ def main(argv=None):
 
     seed_fonts(os.path.join(os.path.dirname(template), "fonts"), root, args.reset_css)
 
+    sys.stdout.write("%s\n" % success_line(data, warnings))
     for warning in warnings:
         sys.stderr.write("%s\n" % warning)
     return 0
+
+
+def success_line(data, warnings):
+    """The one stdout line a successful render prints, so a clean run never
+    looks the same as a run that did nothing."""
+
+    def count(n, noun):
+        return "%d %s%s" % (n, noun, "" if n == 1 else "s")
+
+    return "rendered design/gdd.md and design/gdd.html: %s, %s, %s, %s" % (
+        count(len(data["mechanics"]), "mechanic"),
+        count(len(data["pillars"]), "pillar"),
+        count(len(data["tech_live"]), "tech record"),
+        count(len(warnings), "warning"),
+    )
 
 
 def seed_fonts(fonts_dir, root, reset):

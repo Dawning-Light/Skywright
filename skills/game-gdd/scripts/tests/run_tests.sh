@@ -100,6 +100,13 @@ run_valid_fixture() {
   fi
   pass "$name: exits 0"
 
+  # A successful render says so on stdout, so it never looks like a no-op.
+  if grep -q '^rendered design/gdd.md and design/gdd.html: ' "$WORK/out"; then
+    pass "$name: stdout reports the render"
+  else
+    fail "$name: stdout reports the render" "stdout was: $(cat "$WORK/out")"
+  fi
+
   # A valid render may still warn. `expected-warnings.txt` lists lines the
   # stderr must each contain; a fixture without one must print nothing.
   if [ -f "$FIXTURES/$name/expected-warnings.txt" ]; then
